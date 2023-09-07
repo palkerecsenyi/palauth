@@ -13,5 +13,10 @@ model User {
   email String @unique
   displayName String
   passwordHash String
-  passwordSalt String
+}
+
+model Invite {
+  token String @id @default(uuid())
+  expires DateTime?
+  singleUse Boolean
 }

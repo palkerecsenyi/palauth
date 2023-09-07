@@ -1,4 +1,6 @@
 extends layouts/main
+include components/csrf
+include components/hcaptcha
 
 block prepend title
     | Sign in
@@ -8,12 +10,20 @@ block header
     p One account, all of Pal
 
 block content
-    form(method="post", action="/signin")
+    form(method="post", action="/auth/signin")
+        +csrf_input(csrf)
+
         label(for="email") Email address
-        input#email(type="email", name="email")
+        input#email(type="email", name="email", required)
 
         label(for="password") Password
         input#password(type="password", name="password")
 
+        +hcaptcha
+
         br
         input(type="submit", value="Pal!")
+
+    p
+        | Need an account?&nbsp;
+        a(href="/auth/signup") Create one!

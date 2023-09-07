@@ -2,6 +2,8 @@
   "extends": "@tsconfig/node18/tsconfig.json",
   "include": ["src/**/*.ts"],
   "compilerOptions": {
-    "outDir": "build"
+    "outDir": "build",
+    "strict": true,
+    "allowSyntheticDefaultImports": true
   }
 }

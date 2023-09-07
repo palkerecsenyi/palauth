@@ -1,45 +1,38 @@
 import express from "express"
 import cookieSession from "cookie-session"
-import * as process from "process";
-import {DBClient} from "./database/client";
+import authRouter from "./routes/auth";
+import bodyParser from "body-parser";
+import cookieParser from "cookie-parser"
+import {getSecretKeys} from "./helpers/secretKeys";
+import {doubleCsrfProtection} from "./helpers/csrf";
+import flash from "connect-flash"
 
 const app = express()
 app.set("view engine", "pug")
 app.set("views", "./templates")
 
-const secrets = process.env["PAL_SECRETS"]
-if (!secrets) {
-    throw new Error("PAL_SECRETS not defined")
-}
-const parsedSecrets = JSON.parse(secrets)
 app.use(cookieSession({
     name: "pal_sesh",
-    keys: parsedSecrets,
+    keys: getSecretKeys(),
     maxAge: 7 * 24 * 60 * 60 * 1000,
 }))
-
-const appListenPromise = () => new Promise<void>(resolve => {
-    app.listen(8080, () => resolve())
+app.use(bodyParser.urlencoded({
+    extended: false,
+}))
+app.use(cookieParser())
+app.use(doubleCsrfProtection)
+app.use(flash())
+app.use((req, res, next) => {
+    res.locals.messages = req.flash()
+    next()
 })
 
-async function main() {
-    app.get("/", async (req, res) => {
-        res.send("System ok :)")
-    })
+app.get("/", async (req, res) => {
+    res.send("System ok :)")
+})
 
-    app.get("/signin", async (req, res) => {
-        res.render("signin")
-    })
+app.use("/auth", authRouter)
 
-    await appListenPromise()
-}
-
-main()
-    .then(async () => {
-        await DBClient.disconnect()
-    })
-    .catch(async e => {
-        console.error(e)
-        await DBClient.disconnect()
-        process.exit(1)
-    })
+app.listen(8080, () => {
+    console.log("Listening :)")
+})

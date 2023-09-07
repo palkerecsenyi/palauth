@@ -6,11 +6,18 @@ html
         meta(name="viewport", content="width=device-width, initial-scale=1.0")
         meta(charset="utf-8")
         link(href="https://cdn.simplecss.org/simple.min.css", rel="stylesheet")
-
+        style.
+            .flash.error {
+                color: red;
+            }
     body
         header
             block header
         main
+            each flashType in ['info', 'warn', 'error']
+                if messages[flashType]
+                    p(class=[flashType, "flash"])= messages[flashType]
+
             block content
         footer
             p &copy; 2023 Pal Kerecsenyi

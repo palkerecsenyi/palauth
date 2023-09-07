@@ -1,4 +1,15 @@
 import {PrismaClient} from "./generated-models";
+import {TransactionType} from "../types/prisma";
+
+class TransactionInterruptError extends Error {
+    constructor() {
+        super("TRANSACTION_INTERRUPT");
+    }
+}
+
+interface InterruptibleTransaction extends TransactionType {
+    rollback(): void
+}
 
 export class DBClient {
     private static client: PrismaClient = new PrismaClient()
@@ -15,5 +26,23 @@ export class DBClient {
         }
         await this.client.$disconnect()
         this.disconnected = true
+    }
+
+    static async interruptibleTransaction<T>(callback: (tx: InterruptibleTransaction) => Promise<T>) {
+        const client = DBClient.getClient()
+        try {
+            return await client.$transaction(async tx => {
+                return callback({
+                    ...tx,
+                    rollback() {
+                        throw new TransactionInterruptError()
+                    }
+                })
+            })
+        } catch (e) {
+            if (e instanceof TransactionInterruptError) {
+                return undefined
+            }
+        }
     }
 }

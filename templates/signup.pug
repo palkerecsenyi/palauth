@@ -1,0 +1,40 @@
+extends layouts/main
+include components/csrf
+include components/hcaptcha
+
+block prepend title
+    | Sign up
+
+block header
+    h1 Sign up
+    p One account, all of Pal
+
+block content
+    p All fields are required.
+
+    form(method="post", action="/auth/signup")
+        +csrf_input(csrf)
+
+        label(for="displayName") Display name
+        input#displayName(type="displayName", name="displayName", required)
+
+        label(for="email") Email address
+        input#email(type="email", name="email", required)
+
+        label(for="password") Password
+        input#password(type="password", name="password", required)
+
+        label(for="passwordConfirm") Confirm password
+        input#passwordConfirm(type="password", name="passwordConfirm", required)
+
+        label(for="token") Invite token
+        input#token(type="text", name="token", required)
+
+        +hcaptcha
+
+        br
+        input(type="submit", value="Pal!")
+
+    p
+        | Already have an account?&nbsp;
+        a(href="/auth/signin") Sign in!

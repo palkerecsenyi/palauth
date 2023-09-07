@@ -1,0 +1,13 @@
+extends layouts/main
+
+block title
+    | Home
+
+block header
+    h1 Hi!
+    p You're signed in as #{user.displayName}
+
+block content
+    p
+        | Had enough Pal?&nbsp;
+        a(href="/auth/signout") Sign out

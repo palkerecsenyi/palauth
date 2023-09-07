@@ -1,6 +1,5 @@
 import {NextFunction, Request, Response} from "express";
 
-
 export class FlowManager {
     private readonly flowName: string
     constructor(flowName: string) {
@@ -11,7 +10,7 @@ export class FlowManager {
         return `flow-dest-${this.flowName}`
     }
 
-    private static parseDestination(req: Request) {
+    static parseDestination(req: Request) {
         const destination = req.query["destination"]
         if (typeof destination !== "string") {
             throw new Error("destination missing")

@@ -1,11 +1,12 @@
 import express from "express"
 import cookieSession from "cookie-session"
-import authRouter from "./routes/auth";
+import authRouter, {signOutRoute} from "./routes/auth";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser"
 import {getSecretKeys} from "./helpers/secretKeys";
 import {doubleCsrfProtection} from "./helpers/csrf";
 import flash from "connect-flash"
+import testRouter from "./routes/test";
 
 const app = express()
 app.set("view engine", "pug")
@@ -27,11 +28,9 @@ app.use((req, res, next) => {
     next()
 })
 
-app.get("/", async (req, res) => {
-    res.send("System ok :)")
-})
-
+app.get("/auth/signout", signOutRoute)
 app.use("/auth", authRouter)
+app.use("/", testRouter)
 
 app.listen(8080, () => {
     console.log("Listening :)")

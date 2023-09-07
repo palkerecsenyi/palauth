@@ -1,4 +1,4 @@
-import express from "express";
+import express, {Response} from "express";
 import {authMiddleware, setUserId} from "../helpers/auth";
 import {AuthenticatedRequest, ValidatedRequest} from "../types/express";
 import {generateToken} from "../helpers/csrf";
@@ -15,6 +15,7 @@ const authRouter = express.Router()
 authRouter.use(authMiddleware({
     authRequirement: "require-not-authenticated",
     redirectTo: "/",
+    useDestinationQuery: true,
 }))
 
 const flowManager = new FlowManager("authentication")
@@ -57,6 +58,7 @@ authRouter.post(
             return
         }
 
+        setUserId(req, user.id)
         flowManager.continueToDestination(req, res, "/auth/signin")
     }
 )
@@ -138,3 +140,8 @@ authRouter.post(
 )
 
 export default authRouter
+
+export const signOutRoute = (req: AuthenticatedRequest, res: Response) => {
+    setUserId(req, undefined)
+    res.redirect("/auth/signin?destination=/")
+}

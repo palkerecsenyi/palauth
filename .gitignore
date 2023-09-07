@@ -1,0 +1,7 @@
+.yarn
+.pnp.*
+build
+.idea
+.env
+/src/database/generated-models/
+/node_modules/

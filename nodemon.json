@@ -1,0 +1,6 @@
+{
+  "ignore": [],
+  "watch": ["src"],
+  "exec": "yarn run start",
+  "ext": "ts"
+}

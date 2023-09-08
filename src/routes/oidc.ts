@@ -2,11 +2,14 @@ import express, {Response} from "express";
 import {OAuthClientController} from "../database/oauth.js";
 import {OIDCFlow} from "../helpers/oidc/oidc-flow.js";
 import {authMiddleware, setUserId} from "../helpers/auth.js";
-import {AuthenticatedRequest, OIDCFlowRequest} from "../types/express.js";
+import {AuthenticatedRequest, BearerTokenRequest, OIDCFlowRequest} from "../types/express.js";
 import {OAuthAccessTokenResponse} from "../types/oidc.js";
 import {AuthorizationCode} from "../helpers/oidc/authorization-code.js";
 import {OAuthToken} from "../database/generated-models/index.js";
 import {DateTime} from "luxon";
+import {OAuthTokenWrapper} from "../database/tokens.js";
+import {UserController} from "../database/users.js";
+import {OIDCScopes} from "../helpers/oidc/scopes.js";
 
 const oidcRouter = express.Router()
 
@@ -79,8 +82,8 @@ oidcRouter.get(
     async (req: AuthenticatedRequest & OIDCFlowRequest, res) => {
         const flow = req.oidcFlow!
 
-        const ungrantedScopes = await flow.checkScopeGrantStatus(req.user!.id)
-        if (ungrantedScopes.length === 0) {
+        const {nonGrantedScopes} = await flow.checkScopeGrantStatus(req.user!.id)
+        if (nonGrantedScopes.length === 0) {
             res.redirect(flow.successExitURL(req.user!.id))
             return
         }
@@ -99,7 +102,7 @@ oidcRouter.get(
     async (req: AuthenticatedRequest & OIDCFlowRequest, res) => {
         const flow = req.oidcFlow!
 
-        const scopesToGrant = await flow.checkScopeGrantStatus(req.user!.id)
+        const {nonGrantedScopes, grantedScopes} = await flow.checkScopeGrantStatus(req.user!.id)
         const clientController = await OAuthClientController.getByClientId(flow.client_id)
         if (!clientController) {
             return oauthErrorPage(res, "client_id invalid or not found")
@@ -107,7 +110,8 @@ oidcRouter.get(
 
         res.render("oauth/scopes.pug", {
             client: clientController.getClient(),
-            scopesToGrant,
+            scopesToGrant: nonGrantedScopes,
+            grantedScopes,
         })
     }
 )
@@ -129,8 +133,8 @@ oidcRouter.get(
             return
         }
 
-        const scopesToGrant = await flow.checkScopeGrantStatus(req.user!.id)
-        await flow.grantScopes(scopesToGrant, req.user!.id)
+        const {nonGrantedScopes} = await flow.checkScopeGrantStatus(req.user!.id)
+        await flow.grantScopes(nonGrantedScopes, req.user!.id)
 
         res.redirect(flow.successExitURL(req.user!.id))
         flow.end(req)
@@ -192,14 +196,16 @@ oidcRouter.post(
 
         const tm = oauthClient.getTokenManager(parsedCode.data.userId)
         let accessToken: string
-        let tokenObject: OAuthToken
+        let refreshToken: string
+        let accessTokenObject: OAuthToken
         try {
             const response = await tm.codeExchange({
                 ...parsedCode.data,
                 originalCode: code,
             })
-            accessToken = response.code
-            tokenObject = response.tokenObject
+            accessToken = response.accessToken.code
+            accessTokenObject = response.accessToken.tokenObject
+            refreshToken = response.refreshToken.code
         } catch (e) {
             console.error(e)
             res.json({
@@ -208,16 +214,33 @@ oidcRouter.post(
             return
         }
 
-        const tokenExpiry = DateTime.fromJSDate(tokenObject.expires)
+        const tokenExpiry = DateTime.fromJSDate(accessTokenObject.expires)
         const idToken = tm.generateIdToken(tokenExpiry)
 
         res.json({
             access_token: accessToken,
+            refresh_token: refreshToken,
             expires_in: Math.round(tokenExpiry.diffNow().as("seconds")),
             token_type: "Bearer",
             id_token: idToken,
         } as OAuthAccessTokenResponse)
     }
 )
+
+const userInfoHandler = async (req: BearerTokenRequest, res: Response) => {
+    const user = await req.tokenWrapper!.mustGetUser()
+    res.json(UserController.for(user).toUserInfo(req.tokenWrapper!.hasScope(OIDCScopes.Email)))
+}
+const openIdScopeMiddleware = OAuthTokenWrapper.middleware([OIDCScopes.Profile])
+oidcRouter
+    .route("/userinfo")
+    .get(openIdScopeMiddleware, userInfoHandler)
+    .post(openIdScopeMiddleware, userInfoHandler)
+
+oidcRouter.get("/jwks", (req, res) => {
+    res.json({
+        keys: [],
+    })
+})
 
 export default oidcRouter

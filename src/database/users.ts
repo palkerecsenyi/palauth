@@ -2,6 +2,7 @@ import {User} from "./generated-models/index.js";
 import argon2 from "argon2"
 import {DBClient} from "./client.ts";
 import {TransactionType} from "../types/prisma.ts";
+import {OIDCUserInfoResponse} from "../types/oidc.js";
 
 export class UserController {
     static async createUser(
@@ -43,5 +44,17 @@ export class UserController {
 
     checkPassword(password: string) {
         return argon2.verify(this.user.passwordHash, password)
+    }
+
+    toUserInfo(includeEmail: boolean): OIDCUserInfoResponse {
+        const obj: OIDCUserInfoResponse = {
+            sub: this.user.id,
+            name: this.user.displayName,
+        }
+        if (includeEmail) {
+            obj.email = this.user.email
+            obj.email_verified = true
+        }
+        return obj
     }
 }

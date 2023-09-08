@@ -39,3 +39,25 @@ export interface OAuthAccessTokenSuccessResponse {
 }
 
 export type OAuthAccessTokenResponse = OAuthAccessTokenErrorResponse | OAuthAccessTokenSuccessResponse
+
+export interface OIDCUserInfoResponse {
+    sub: string
+    name?: string
+    given_name?: string
+    middle_name?: string
+    family_name?: string
+    nickname?: string
+    profile?: string
+    website?: string
+    preferred_username?: string
+    picture?: string
+    email?: string
+    email_verified?: boolean
+    gender?: "female" | "male" | string
+    birthdate?: string
+    zoneinfo?: string
+    locale?: string
+    phone_number?: string
+    phone_number_verified?: boolean
+    updated_at?: number
+}

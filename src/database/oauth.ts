@@ -1,10 +1,9 @@
 import {Prisma} from "./generated-models/index.js";
 import {DBClient} from "./client.js";
 import argon2 from "argon2";
-import OAuthClientGetPayload = Prisma.OAuthClientGetPayload;
-import {TokenManager} from "./tokens.js";
+import {TokenManager} from "./token-manager.js";
 
-type OAuthControllerClient = OAuthClientGetPayload<{
+type OAuthControllerClient = Prisma.OAuthClientGetPayload<{
     include: { redirectURIs: true, admin: true, },
 }>
 

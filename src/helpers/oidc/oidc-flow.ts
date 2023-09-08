@@ -135,7 +135,8 @@ export class OIDCFlow {
     }
 
     /**
-     * Returns a subset of the requested scopes that have not yet been granted by the user
+     * Returns a subset of the requested scopes that have not yet been granted by the user, as well as the scopes
+     * that have been granted.
      * @param userId - The user to check the scopes of
      */
     async checkScopeGrantStatus(userId: string) {
@@ -147,7 +148,10 @@ export class OIDCFlow {
             }
         })
 
-        return this.scopes.filter(s => grantedScopes.find(e => e.scope === s) === undefined)
+        return {
+            nonGrantedScopes: this.scopes.filter(s => grantedScopes.find(e => e.scope === s) === undefined),
+            grantedScopes: grantedScopes.map(e => e.scope),
+        }
     }
 
     async grantScopes(scopes: string[], userId: string) {

@@ -13,3 +13,12 @@ export const getSecretKeys = () => {
     }
     return parsedSecrets as string[]
 }
+
+export const getJWTPrivateKey = () => {
+    const jwtKey = process.env["PAL_JWT_PRIVATE_KEY"]
+    if (!jwtKey) {
+        throw new Error("PAL_JWT_PRIVATE_KEY is not defined")
+    }
+    const b = Buffer.from(jwtKey, "base64")
+    return b.toString("utf-8")
+}

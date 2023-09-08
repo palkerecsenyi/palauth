@@ -1,94 +1,115 @@
-import {OAuthClientController} from "./oauth.js";
-import {AuthorizationCodeWithOriginal} from "../helpers/oidc/authorization-code.js";
+import {Prisma} from "./generated-models/index.js";
 import {DBClient} from "./client.js";
-import {randomBytes} from "crypto";
-import {OAuthToken} from "./generated-models/index.js";
+import {NextFunction, Response} from "express";
 import {DateTime} from "luxon";
-import {IDToken} from "../types/oidc.js";
-import {getProjectOIDCID} from "../helpers/hostname.js";
-import {JWTSigner} from "../helpers/oidc/jwt.js";
+import {BearerTokenRequest} from "../types/express.js";
+import {UserController} from "./users.js";
 
-export class TokenManager {
-    userId: string
-    clientController: OAuthClientController
-    private constructor(userId: string, clientController: OAuthClientController) {
-        this.userId = userId
-        this.clientController = clientController
+type OAuthTokenWrapperData = Prisma.OAuthTokenGetPayload<{
+    include: {scopes: true}
+}>
+
+export class OAuthTokenWrapper {
+    data: OAuthTokenWrapperData
+    private constructor(data: OAuthTokenWrapperData) {
+        this.data = data
     }
 
-    static fromOAuthClientController(clientController: OAuthClientController, userId: string) {
-        return new TokenManager(userId, clientController)
-    }
-
-    private static generateCode() {
-        const buf = randomBytes(64)
-        return buf.toString("hex")
-    }
-
-    private async createToken(
-        {
-            type,
-            expires,
-            fromCode,
-            scopes,
-        }: Pick<OAuthToken, "type" | "fromCode"> & {
-            expires: DateTime
-            scopes: string[]
-        }
-    ) {
+    static async fromTokenValue(value: string) {
         const dbClient = DBClient.getClient()
-        const code = TokenManager.generateCode()
-        const tokenObject = await dbClient.oAuthToken.create({
-            data: {
-                type,
-                value: code,
-                expires: expires.toJSDate(),
-                fromCode,
-                userId: this.userId,
-                clientId: this.clientController.getClient().clientId,
-                scopes: {
-                    create: scopes.map(scope => ({
-                        scope,
-                    })),
-                },
-            },
-        })
-
-        return {
-            tokenObject,
-            code,
-        }
-    }
-
-    async codeExchange(data: AuthorizationCodeWithOriginal) {
-        const dbClient = DBClient.getClient()
-        const existingCodeUsage = await dbClient.oAuthToken.findFirst({
+        const tokenObj = await dbClient.oAuthToken.findFirst({
             where: {
-                fromCode: data.originalCode,
+                value,
+            },
+            include: {
+                scopes: true,
             }
         })
-        if (existingCodeUsage) {
-            throw new Error("code already used")
+        if (!tokenObj) {
+            return undefined
         }
 
-        return this.createToken({
-            type: "Access",
-            expires: DateTime.now().plus({ day: 3 }),
-            fromCode: data.originalCode,
-            scopes: data.scope.split(" "),
-        })
+        return new OAuthTokenWrapper(tokenObj)
     }
 
-    generateIdToken(expires: DateTime, nonce?: string) {
-        const idToken: IDToken = {
-            iss: getProjectOIDCID(),
-            sub: this.userId,
-            aud: this.clientController.getClient().clientId,
-            exp: expires.toUnixInteger(),
-            iat: DateTime.now().toUnixInteger(),
-            nonce,
+    static fromToken(token: OAuthTokenWrapperData) {
+        return new OAuthTokenWrapper(token)
+    }
+
+    get isValid() {
+        return DateTime.fromJSDate(this.data.expires) > DateTime.now()
+    }
+
+    get scopes() {
+        return this.data.scopes.map(e => e.scope)
+    }
+
+    hasScope(scope: string) {
+        return this.scopes.includes(scope)
+    }
+
+    getUser() {
+        return UserController.getById(this.data.userId)
+    }
+
+    async mustGetUser() {
+        const u = await this.getUser()
+        if (!u) {
+            throw new Error("Token user not found")
         }
 
-        return JWTSigner.sign(idToken)
+        return u
+    }
+
+    static middleware(
+        requiredScopes: string[]
+    ) {
+        return async (req: BearerTokenRequest, res: Response, next: NextFunction) => {
+            const authHeader = req.headers.authorization
+            if (!authHeader) {
+                // https://datatracker.ietf.org/doc/html/rfc6750#section-3.1
+                res.setHeader("WWW-Authenticate", `Bearer error="invalid_request"`)
+                res.sendStatus(401)
+                return
+            }
+
+            if (!authHeader.startsWith("Bearer ")) {
+                // https://datatracker.ietf.org/doc/html/rfc6750#section-3
+                res.setHeader("WWW-Authenticate", `Bearer error="invalid_token"`)
+                res.sendStatus(401)
+                return
+            }
+
+            const bearerToken = authHeader.substring(7)
+            const tokenWrapper = await OAuthTokenWrapper.fromTokenValue(bearerToken)
+            if (!tokenWrapper) {
+                res.setHeader("WWW-Authenticate", `Bearer error="invalid_token"`)
+                res.sendStatus(401)
+                return
+            }
+
+            // cannot use a refresh token for authenticating requests
+            if (tokenWrapper.data.type === "Refresh") {
+                res.setHeader("WWW-Authenticate", `Bearer error="invalid_token", error_description="Cannot use a refresh token"`)
+                res.sendStatus(401)
+                return
+            }
+
+            if (!tokenWrapper.isValid) {
+                res.setHeader("WWW-Authenticate", `Bearer error="invalid_token", error_description="Token expired"`)
+                res.sendStatus(401)
+                return
+            }
+
+            const scopesMet = requiredScopes.every(requiredScope => tokenWrapper.scopes.includes(requiredScope))
+            if (!scopesMet) {
+                res.setHeader("WWW-Authenticate", `Bearer error="insufficient_scope"`)
+                res.sendStatus(401)
+                return
+            }
+
+            req.tokenWrapper = tokenWrapper
+            next()
+        }
     }
 }

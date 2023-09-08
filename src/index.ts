@@ -7,6 +7,7 @@ import {getSecretKeys} from "./helpers/secretKeys.ts";
 import flash from "connect-flash"
 import testRouter from "./routes/test.ts";
 import oidcRouter from "./routes/oidc.js";
+import wellKnownRouter from "./routes/well-known.js";
 
 const app = express()
 app.set("view engine", "pug")
@@ -27,6 +28,7 @@ app.use((req, res, next) => {
     next()
 })
 
+app.use("/.well-known", wellKnownRouter)
 app.use("/oidc", oidcRouter)
 app.get("/auth/signout", signOutRoute)
 app.use("/auth", authRouter)

@@ -1,4 +1,5 @@
 extends ../layouts/main
+include ../components/scope_label
 
 block title
     | Grant scopes
@@ -17,12 +18,11 @@ block content
     blockquote= client.usageDescription
 
     h3 Access requested
-    ul
-        each scope in scopesToGrant
-            li
-                case scope
-                    when "openid"
-                        | General profile information
+    +scope_list(scopesToGrant)
+
+    if grantedScopes.length !== 0
+        h3 Access already granted
+        +scope_list(grantedScopes)
 
     p
         a.button(href="/oidc/auth/grant-scopes-feedback?grant=yes") Grant access

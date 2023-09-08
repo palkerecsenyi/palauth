@@ -1,0 +1,14 @@
+mixin scope_label(scope)
+    case scope
+        when "openid"
+            | Log in to the app with your account
+        when "profile"
+            | General profile information (excluding email)
+        when "email"
+            | Your email address
+
+mixin scope_list(scopes)
+    ul
+        each scope in scopes
+            li
+                +scope_label(scope)

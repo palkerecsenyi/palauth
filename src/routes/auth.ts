@@ -1,15 +1,15 @@
 import express, {Response} from "express";
-import {authMiddleware, setUserId} from "../helpers/auth";
-import {AuthenticatedRequest, ValidatedRequest} from "../types/express";
-import {generateToken} from "../helpers/csrf";
-import {DBClient} from "../database/client";
-import {UserController} from "../database/users";
-import {FlowManager} from "../helpers/flow";
-import {verifyCaptcha} from "../helpers/captcha";
+import {authMiddleware, setUserId} from "../helpers/auth.ts";
+import {AuthenticatedRequest, ValidatedRequest} from "../types/express.ts";
+import {doubleCsrfProtection, generateToken} from "../helpers/csrf.ts";
+import {DBClient} from "../database/client.ts";
+import {UserController} from "../database/users.ts";
+import {FlowManager} from "../helpers/flow.ts";
+import {verifyCaptcha} from "../helpers/captcha.ts";
 import {body} from "express-validator"
-import {ensureValidators} from "../helpers/validators";
-import {InviteController} from "../database/invites";
-import {Prisma} from "../database/generated-models";
+import {ensureValidators} from "../helpers/validators.ts";
+import {InviteController} from "../database/invites.ts";
+import {Prisma} from "../database/generated-models/index.js";
 
 const authRouter = express.Router()
 authRouter.use(authMiddleware({
@@ -17,6 +17,7 @@ authRouter.use(authMiddleware({
     redirectTo: "/",
     useDestinationQuery: true,
 }))
+authRouter.use(doubleCsrfProtection)
 
 const flowManager = new FlowManager("authentication")
 

@@ -1,7 +1,7 @@
 // @ts-ignore
 import {doubleCsrf} from "csrf-csrf";
 import {Request} from "express";
-import {getSecretKeys} from "./secretKeys";
+import {getSecretKeys} from "./secretKeys.ts";
 
 const {
     generateToken,

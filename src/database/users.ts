@@ -1,7 +1,7 @@
-import {User} from "./generated-models";
+import {User} from "./generated-models/index.js";
 import argon2 from "argon2"
-import {DBClient} from "./client";
-import {TransactionType} from "../types/prisma";
+import {DBClient} from "./client.ts";
+import {TransactionType} from "../types/prisma.ts";
 
 export class UserController {
     static async createUser(

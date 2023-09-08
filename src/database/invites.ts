@@ -1,4 +1,4 @@
-import {TransactionType} from "../types/prisma";
+import {TransactionType} from "../types/prisma.ts";
 import {DateTime} from "luxon"
 
 export class InviteController {

@@ -1,5 +1,5 @@
-import {PrismaClient} from "./generated-models";
-import {TransactionType} from "../types/prisma";
+import {PrismaClient} from "./generated-models/index.js";
+import {TransactionType} from "../types/prisma.ts";
 
 class TransactionInterruptError extends Error {
     constructor() {

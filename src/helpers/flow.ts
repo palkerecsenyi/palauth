@@ -1,4 +1,5 @@
 import {NextFunction, Request, Response} from "express";
+import {getProjectHostname} from "./hostname.js";
 
 export class FlowManager {
     private readonly flowName: string
@@ -17,7 +18,7 @@ export class FlowManager {
         }
 
         const hostname = req.hostname
-        if (hostname !== process.env["PAL_HOSTNAME"]) {
+        if (hostname !== getProjectHostname()) {
             throw new Error("incorrect hostname in request")
         }
 

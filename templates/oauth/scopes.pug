@@ -1,0 +1,30 @@
+extends ../layouts/main
+
+block title
+    | Grant scopes
+
+block header
+    h1 #{client.name} requesting permission
+    p Review the data the application is requesting
+
+block content
+    p #{client.name} is owned by&nbsp;
+        strong #{client.admin.displayName}
+        | &nbsp;(
+        a(href="mailto:" + client.admin.email)= client.admin.email
+        | )
+
+    blockquote= client.usageDescription
+
+    h3 Access requested
+    ul
+        each scope in scopesToGrant
+            li
+                case scope
+                    when "openid"
+                        | General profile information
+
+    p
+        a.button(href="/oidc/auth/grant-scopes-feedback?grant=yes") Grant access
+    p
+        a(href="/oidc/auth/grant-scopes-feedback?grant=no") Cancel

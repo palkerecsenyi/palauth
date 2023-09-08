@@ -1,0 +1,11 @@
+extends ../layouts/main
+
+block title
+    | OAuth Error
+
+block header
+    h1 OAuth Error
+    p Something went wrong while signing you in
+
+block content
+    pre= errorMessage

@@ -1,7 +1,7 @@
 import type {NextFunction, Request, Response} from "express";
-import {AuthenticatedRequest} from "../types/express";
-import {UserController} from "../database/users";
-import {FlowManager} from "./flow";
+import {AuthenticatedRequest} from "../types/express.ts";
+import {UserController} from "../database/users.ts";
+import {FlowManager} from "./flow.ts";
 
 export const getUserId = (req: Request) => {
     if (req.session === undefined || req.session === null) {
@@ -22,11 +22,11 @@ export const setUserId = (req: Request, userId: string | undefined) => {
 
 type AuthMiddlewareConfig = {
     authRequirement: "none" | "require-not-authenticated" | "require-authenticated"
-    redirectTo: string
+    redirectTo?: string
     useDestinationQuery?: boolean
 }
 export const authMiddleware = (config: AuthMiddlewareConfig) => async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    let actualRedirectTarget = config.redirectTo
+    let actualRedirectTarget = config.redirectTo ?? ""
     if (config.useDestinationQuery) {
         try {
             actualRedirectTarget = FlowManager.parseDestination(req)

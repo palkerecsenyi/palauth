@@ -1,12 +1,12 @@
 import express from "express"
 import cookieSession from "cookie-session"
-import authRouter, {signOutRoute} from "./routes/auth";
+import authRouter, {signOutRoute} from "./routes/auth.ts";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser"
-import {getSecretKeys} from "./helpers/secretKeys";
-import {doubleCsrfProtection} from "./helpers/csrf";
+import {getSecretKeys} from "./helpers/secretKeys.ts";
 import flash from "connect-flash"
-import testRouter from "./routes/test";
+import testRouter from "./routes/test.ts";
+import oidcRouter from "./routes/oidc.js";
 
 const app = express()
 app.set("view engine", "pug")
@@ -21,13 +21,13 @@ app.use(bodyParser.urlencoded({
     extended: false,
 }))
 app.use(cookieParser())
-app.use(doubleCsrfProtection)
 app.use(flash())
 app.use((req, res, next) => {
     res.locals.messages = req.flash()
     next()
 })
 
+app.use("/oidc", oidcRouter)
 app.get("/auth/signout", signOutRoute)
 app.use("/auth", authRouter)
 app.use("/", testRouter)

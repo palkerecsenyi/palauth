@@ -1,6 +1,6 @@
-import {OAuthClient, Prisma, User} from "./generated-models/index.js";
+import {OAuthClient, Prisma, PrismaClient, User} from "./generated-models/index.js";
 import argon2 from "argon2"
-import {DBClient} from "./client.js";
+import {DBClient, InterruptibleTransaction} from "./client.js";
 import {TransactionType} from "../types/prisma.js";
 import {OIDCUserInfoResponse} from "../types/oidc.js";
 
@@ -36,8 +36,7 @@ export class UserController {
         return new UserController(user)
     }
 
-    static getById(userId: string) {
-        const client = DBClient.getClient()
+    static getById(userId: string, client: PrismaClient | InterruptibleTransaction = DBClient.getClient()) {
         return client.user.findFirst({
             where: {
                 id: userId,

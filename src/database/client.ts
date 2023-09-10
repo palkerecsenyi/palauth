@@ -7,7 +7,7 @@ class TransactionInterruptError extends Error {
     }
 }
 
-interface InterruptibleTransaction extends TransactionType {
+export interface InterruptibleTransaction extends TransactionType {
     rollback(): void
 }
 

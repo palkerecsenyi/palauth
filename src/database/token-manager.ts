@@ -7,6 +7,7 @@ import {DateTime} from "luxon";
 import {IDToken} from "../types/oidc.js";
 import {getProjectOIDCID} from "../helpers/hostname.js";
 import {JWTSigner} from "../helpers/oidc/jwt.js";
+import {UserController} from "./users.js";
 
 export class TokenManager {
     userId: string
@@ -101,5 +102,23 @@ export class TokenManager {
         }
 
         return JWTSigner.sign(idToken)
+    }
+
+    async revokeAllAccess() {
+        await DBClient.interruptibleTransaction(async tx => {
+            await tx.userOAuthGrant.deleteMany({
+                where: {
+                    userId: this.userId,
+                    clientId: this.clientController.getClient().clientId,
+                }
+            })
+
+            await tx.oAuthToken.deleteMany({
+                where: {
+                    userId: this.userId,
+                    clientId: this.clientController.getClient().clientId,
+                }
+            })
+        })
     }
 }

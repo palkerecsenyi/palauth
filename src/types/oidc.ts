@@ -6,6 +6,7 @@ export interface IDToken {
     iat: number
     auth_time?: number
     nonce?: string
+    revoke_id?: string
 }
 
 export type OIDCResponseType = "code"

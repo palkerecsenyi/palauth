@@ -11,13 +11,16 @@ html
             .flash.error {
                 color: red;
             }
+            .flash.success {
+                color: green;
+            }
     body
         header
             block header
         main
-            each flashType in ['info', 'warn', 'error']
+            each flashType in ['info', 'warn', 'error', 'success']
                 if messages[flashType]
-                    p(class=[flashType, "flash"])= messages[flashType]
+                    p(class=[flashType, "flash", "notice"])= messages[flashType]
 
             block content
         footer

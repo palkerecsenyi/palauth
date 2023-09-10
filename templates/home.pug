@@ -15,8 +15,8 @@ block content
 
     if scopesByClient.length > 0
         h3 My applications
-        ul
-            each clientMapping in scopesByClient
-                li
-                    =clientMapping.client.name
-                    +scope_list(clientMapping.scopes)
+        each clientMapping in scopesByClient
+            h4= clientMapping.client.name
+            a(href="/account/revoke-grants/" + clientMapping.client.clientId) Revoke access
+
+            +scope_list(clientMapping.scopes)

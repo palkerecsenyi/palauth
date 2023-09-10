@@ -14,12 +14,11 @@ export class UserController {
         }: Pick<User, "displayName" | "email"> & {
             password: string
         },
-        tx?: TransactionType
+        tx: TransactionType = DBClient.getClient(),
     ) {
         const passwordHash = await argon2.hash(password)
 
-        const client = tx ?? DBClient.getClient()
-        const user = await client.user.create({
+        const user = await tx.user.create({
             data: {
                 displayName, email, passwordHash,
             }
@@ -29,14 +28,16 @@ export class UserController {
     }
 
     user: UserControllerUser
-    private constructor(user: UserControllerUser) {
+    transaction: TransactionType
+    private constructor(user: UserControllerUser, transaction: TransactionType) {
         this.user = user
+        this.transaction = transaction
     }
-    static for(user: UserControllerUser) {
-        return new UserController(user)
+    static for(user: UserControllerUser, transaction: TransactionType = DBClient.getClient()) {
+        return new UserController(user, transaction)
     }
 
-    static getById(userId: string, client: PrismaClient | InterruptibleTransaction = DBClient.getClient()) {
+    static getById(userId: string, client: TransactionType = DBClient.getClient()) {
         return client.user.findFirst({
             where: {
                 id: userId,
@@ -51,8 +52,7 @@ export class UserController {
         })
     }
 
-    static getByEmail(email: string) {
-        const client = DBClient.getClient()
+    static getByEmail(email: string, client: TransactionType = DBClient.getClient()) {
         return client.user.findFirst({
             where: {
                 email,

@@ -8,7 +8,7 @@ type OAuthControllerClient = Prisma.OAuthClientGetPayload<{
 }>
 
 export class OAuthClientController {
-    private oauthClient: OAuthControllerClient
+    private readonly oauthClient: OAuthControllerClient
     private constructor(client: OAuthControllerClient) {
         this.oauthClient = client
     }

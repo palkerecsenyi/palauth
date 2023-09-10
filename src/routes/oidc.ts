@@ -148,7 +148,6 @@ oidcRouter.post(
             grant_type,
             code,
             redirect_uri,
-            client_secret,
         } = req.body
 
         if (grant_type !== "authorization_code") {
@@ -182,16 +181,26 @@ oidcRouter.post(
             return
         }
 
+        let { client_secret } = req.body
+        if (!client_secret) {
+            const authHeader = req.headers.authorization
+            if (authHeader?.startsWith("Basic ")) {
+                client_secret = authHeader.substring(6)
+            }
+        }
+
         if (typeof client_secret !== "string") {
             res.json({
                 error: "invalid_client",
             } as OAuthAccessTokenResponse)
+            return
         }
         const secretCorrect = oauthClient.checkClientSecret(client_secret)
         if (!secretCorrect) {
             res.json({
                 error: "invalid_client",
             } as OAuthAccessTokenResponse)
+            return
         }
 
         const tm = oauthClient.getTokenManager(parsedCode.data.userId)

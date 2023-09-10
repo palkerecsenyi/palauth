@@ -43,6 +43,7 @@ export class DBClient {
             if (e instanceof TransactionInterruptError) {
                 return undefined
             }
+            throw e
         }
     }
 }

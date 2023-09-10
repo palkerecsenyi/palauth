@@ -105,18 +105,29 @@ export class TokenManager {
     }
 
     async revokeAllAccess() {
-        await DBClient.interruptibleTransaction(async tx => {
+        return await DBClient.interruptibleTransaction(async tx => {
+            const query = [
+                {
+                    userId: {
+                        equals: this.userId,
+                    },
+                },
+                {
+                    clientId: {
+                        equals: this.clientController.getClient().clientId,
+                    },
+                },
+            ]
+
             await tx.userOAuthGrant.deleteMany({
                 where: {
-                    userId: this.userId,
-                    clientId: this.clientController.getClient().clientId,
+                    AND: query,
                 }
             })
 
             await tx.oAuthToken.deleteMany({
                 where: {
-                    userId: this.userId,
-                    clientId: this.clientController.getClient().clientId,
+                    AND: query,
                 }
             })
         })

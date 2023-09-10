@@ -1,14 +1,14 @@
 import express, {Response} from "express";
-import {authMiddleware, setUserId} from "../helpers/auth.ts";
-import {AuthenticatedRequest, ValidatedRequest} from "../types/express.ts";
-import {doubleCsrfProtection, generateToken} from "../helpers/csrf.ts";
-import {DBClient} from "../database/client.ts";
-import {UserController} from "../database/users.ts";
-import {FlowManager} from "../helpers/flow.ts";
-import {verifyCaptcha} from "../helpers/captcha.ts";
+import {authMiddleware, setUserId} from "../helpers/auth.js";
+import {AuthenticatedRequest, ValidatedRequest} from "../types/express.js";
+import {doubleCsrfProtection, generateToken} from "../helpers/csrf.js";
+import {DBClient} from "../database/client.js";
+import {UserController} from "../database/users.js";
+import {FlowManager} from "../helpers/flow.js";
+import {verifyCaptcha} from "../helpers/captcha.js";
 import {body} from "express-validator"
-import {ensureValidators} from "../helpers/validators.ts";
-import {InviteController} from "../database/invites.ts";
+import {ensureValidators} from "../helpers/validators.js";
+import {InviteController} from "../database/invites.js";
 import {Prisma} from "../database/generated-models/index.js";
 
 const authRouter = express.Router()
@@ -41,11 +41,7 @@ authRouter.post(
     async (req: AuthenticatedRequest & ValidatedRequest, res) => {
         const {email, password} = req.validatedData!
 
-        const user = await DBClient.getClient().user.findFirst({
-            where: {
-                email,
-            }
-        })
+        const user = await UserController.getByEmail(email)
         if (!user) {
             req.flash("error", "Email or password incorrect")
             res.redirect("/auth/signin")

@@ -1,4 +1,5 @@
 extends layouts/main
+include components/scope_label
 
 block title
     | Home
@@ -11,3 +12,11 @@ block content
     p
         | Had enough Pal?&nbsp;
         a(href="/auth/signout") Sign out
+
+    if scopesByClient.length > 0
+        h3 My applications
+        ul
+            each clientMapping in scopesByClient
+                li
+                    =clientMapping.client.name
+                    +scope_list(clientMapping.scopes)

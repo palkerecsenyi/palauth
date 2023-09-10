@@ -1,26 +1,30 @@
-import {Duration} from "luxon";
-import jwt, {SignOptions} from "jsonwebtoken";
-import {getJWTPrivateKey} from "../secretKeys.js";
+import {DateTime, Duration} from "luxon";
+import {getJWKAlg, getJWTPrivateKey, getJWTPublicKey} from "../secretKeys.js";
+import * as jose from "jose"
+import {getProjectOIDCID} from "../hostname.js";
 
 export class JWTSigner {
-    static sign(data: any, duration?: Duration) {
-        const opt: SignOptions = {
-            algorithm: "RS256",
-        }
+    static async sign(data: any, duration?: Duration) {
+        const privKey = await getJWTPrivateKey()
+
+        const jwt = new jose.SignJWT(data)
         if (duration) {
-            opt.expiresIn = duration.as("seconds")
+            jwt.setExpirationTime(DateTime.now().plus(duration).toUnixInteger())
         }
-        return jwt.sign(data, getJWTPrivateKey(), opt)
+        jwt.setProtectedHeader({
+            alg: getJWKAlg()
+        })
+        return jwt.sign(privKey)
     }
 
-    static parse(data: string) {
+    static async parse(data: string) {
         try {
-            const verifiedToken = jwt.verify(data, getJWTPrivateKey())
-            if (typeof verifiedToken === "string") {
-                return undefined
-            }
+            const pubKey = await getJWTPublicKey()
+            const verifiedToken = await jose.jwtVerify(data, pubKey, {
+                issuer: getProjectOIDCID(),
+            })
 
-            return verifiedToken
+            return verifiedToken.payload
         } catch (e) {
             return undefined
         }

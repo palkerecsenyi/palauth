@@ -1,10 +1,10 @@
 import type {Request} from "express";
-import type {User} from "../database/generated-models/index.js";
 import {OIDCFlow} from "../helpers/oidc/oidc-flow.js";
 import {OAuthTokenWrapper} from "../database/tokens.js";
+import {UserControllerUser} from "../database/users.js";
 
 export interface AuthenticatedRequest extends Request {
-    user?: User
+    user?: UserControllerUser
 }
 
 export interface ValidatedRequest extends Request {

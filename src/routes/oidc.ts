@@ -84,7 +84,7 @@ oidcRouter.get(
 
         const {nonGrantedScopes} = await flow.checkScopeGrantStatus(req.user!.id)
         if (nonGrantedScopes.length === 0) {
-            res.redirect(flow.successExitURL(req.user!.id))
+            res.redirect(await flow.successExitURL(req.user!.id))
             return
         }
 
@@ -136,7 +136,7 @@ oidcRouter.get(
         const {nonGrantedScopes} = await flow.checkScopeGrantStatus(req.user!.id)
         await flow.grantScopes(nonGrantedScopes, req.user!.id)
 
-        res.redirect(flow.successExitURL(req.user!.id))
+        res.redirect(await flow.successExitURL(req.user!.id))
         flow.end(req)
     }
 )
@@ -159,7 +159,7 @@ oidcRouter.post(
             return
         }
 
-        const parsedCode = AuthorizationCode.parse(code)
+        const parsedCode = await AuthorizationCode.parse(code)
         if (!parsedCode) {
             res.json({
                 error: "invalid_grant"
@@ -215,7 +215,7 @@ oidcRouter.post(
         }
 
         const tokenExpiry = DateTime.fromJSDate(accessTokenObject.expires)
-        const idToken = tm.generateIdToken(tokenExpiry)
+        const idToken = await tm.generateIdToken(tokenExpiry, parsedCode.data.nonce)
 
         res.json({
             access_token: accessToken,
@@ -236,11 +236,5 @@ oidcRouter
     .route("/userinfo")
     .get(openIdScopeMiddleware, userInfoHandler)
     .post(openIdScopeMiddleware, userInfoHandler)
-
-oidcRouter.get("/jwks", (req, res) => {
-    res.json({
-        keys: [],
-    })
-})
 
 export default oidcRouter

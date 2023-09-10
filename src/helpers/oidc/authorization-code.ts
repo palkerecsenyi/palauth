@@ -1,5 +1,6 @@
 import {Duration} from "luxon";
 import {JWTSigner} from "./jwt.js";
+import {getProjectOIDCID} from "../hostname.js";
 
 type AuthorizationCodeData = {
     userId: string,
@@ -20,11 +21,14 @@ export class AuthorizationCode {
     }
 
     sign() {
-        return JWTSigner.sign(this.data, Duration.fromObject({ minute: 10 }))
+        return JWTSigner.sign({
+            ...this.data,
+            iss: getProjectOIDCID(),
+        }, Duration.fromObject({ minute: 10 }))
     }
 
-    static parse(from: string) {
-        const verifiedToken = JWTSigner.parse(from)
+    static async parse(from: string) {
+        const verifiedToken = await JWTSigner.parse(from)
         if (!verifiedToken) return undefined
         return new AuthorizationCode(verifiedToken as AuthorizationCodeData)
     }

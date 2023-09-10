@@ -9,7 +9,7 @@ export const getOIDCDiscoveryData = () => {
         authorization_endpoint: new URL("/oidc/auth", oidcUrl),
         token_endpoint: new URL("/oidc/token", oidcUrl),
         userinfo_endpoint: new URL("/oidc/userinfo", oidcUrl),
-        jwks_uri: new URL("/oidc/jwks", oidcUrl),
+        jwks_uri: new URL("/.well-known/jwks.json", oidcUrl),
         scopes_supported: OIDCScopes.supportedScopes,
         response_types_supported: ["code"],
         grant_types_supported: ["authorization_code"],

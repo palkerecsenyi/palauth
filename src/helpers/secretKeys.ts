@@ -1,3 +1,5 @@
+import * as jose from "jose";
+
 export const getSecretKeys = () => {
     const secrets = process.env["PAL_SECRETS"]
     if (!secrets) {
@@ -14,11 +16,22 @@ export const getSecretKeys = () => {
     return parsedSecrets as string[]
 }
 
-export const getJWTPrivateKey = () => {
-    const jwtKey = process.env["PAL_JWT_PRIVATE_KEY"]
+const getJSONEnv = (env: string) => {
+    const jwtKey = process.env[env]
     if (!jwtKey) {
-        throw new Error("PAL_JWT_PRIVATE_KEY is not defined")
+        throw new Error(`${env} is not defined`)
     }
     const b = Buffer.from(jwtKey, "base64")
-    return b.toString("utf-8")
+    const string = b.toString("utf-8")
+    return JSON.parse(string)
 }
+
+const getJWT = (env: string) => {
+    const json = getJSONEnv(env)
+    return jose.importJWK(json, getJWKAlg())
+}
+
+export const getJWTPrivateKey = () => getJWT("PAL_PRIVATE_JWK")
+export const getJWTPublicKey = () => getJWT("PAL_PUBLIC_JWK")
+export const getJWTRawPublicKey = () => getJSONEnv("PAL_PUBLIC_JWK")
+export const getJWKAlg = () => "RS256"

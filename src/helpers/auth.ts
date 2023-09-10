@@ -1,7 +1,7 @@
 import type {NextFunction, Request, Response} from "express";
-import {AuthenticatedRequest} from "../types/express.ts";
-import {UserController} from "../database/users.ts";
-import {FlowManager} from "./flow.ts";
+import {AuthenticatedRequest} from "../types/express.js";
+import {UserController} from "../database/users.js";
+import {FlowManager} from "./flow.js";
 
 export const getUserId = (req: Request) => {
     if (req.session === undefined || req.session === null) {

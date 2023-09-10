@@ -174,16 +174,16 @@ export class OIDCFlow {
         return this.redirect_uri + "?" + q.toString()
     }
 
-    successExitURL(userId: string) {
+    async successExitURL(userId: string) {
         const authCode = new AuthorizationCode({
             userId,
             clientId: this.client_id,
             scope: this.scope,
             redirectURI: this.redirect_uri,
             nonce: this.nonce,
-        }).sign()
+        })
         const q = new URLSearchParams()
-        q.append("code", authCode)
+        q.append("code", await authCode.sign())
         if (this.state) {
             q.append("state", this.state)
         }
@@ -198,6 +198,7 @@ export class OIDCFlow {
             scope: this.scope,
             nonce: this.nonce,
             prompt: this.prompt,
+            state: this.state,
         }
     }
 

@@ -1,11 +1,11 @@
 import express from "express"
 import cookieSession from "cookie-session"
-import authRouter, {signOutRoute} from "./routes/auth.ts";
+import authRouter, {signOutRoute} from "./routes/auth.js";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser"
-import {getSecretKeys} from "./helpers/secretKeys.ts";
+import {getSecretKeys} from "./helpers/secretKeys.js";
 import flash from "connect-flash"
-import testRouter from "./routes/test.ts";
+import accountRouter from "./routes/account.js";
 import oidcRouter from "./routes/oidc.js";
 import wellKnownRouter from "./routes/well-known.js";
 
@@ -32,8 +32,16 @@ app.use("/.well-known", wellKnownRouter)
 app.use("/oidc", oidcRouter)
 app.get("/auth/signout", signOutRoute)
 app.use("/auth", authRouter)
-app.use("/", testRouter)
+app.use("/", accountRouter)
 
-app.listen(8080, () => {
+const envPort = process.env["PORT"]
+let port: number
+if (envPort) {
+    port = parseInt(envPort)
+} else {
+    port = 8080
+}
+
+app.listen(port, () => {
     console.log("Listening :)")
 })

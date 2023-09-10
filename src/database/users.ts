@@ -1,9 +1,12 @@
-import {User} from "./generated-models/index.js";
+import {OAuthClient, Prisma, User} from "./generated-models/index.js";
 import argon2 from "argon2"
-import {DBClient} from "./client.ts";
-import {TransactionType} from "../types/prisma.ts";
+import {DBClient} from "./client.js";
+import {TransactionType} from "../types/prisma.js";
 import {OIDCUserInfoResponse} from "../types/oidc.js";
 
+export type UserControllerUser = Prisma.UserGetPayload<{
+    include: {oauthGrants: {include: {client: true}}}
+}>
 export class UserController {
     static async createUser(
         {
@@ -25,11 +28,11 @@ export class UserController {
         return user.id
     }
 
-    user: User
-    private constructor(user: User) {
+    user: UserControllerUser
+    private constructor(user: UserControllerUser) {
         this.user = user
     }
-    static for(user: User) {
+    static for(user: UserControllerUser) {
         return new UserController(user)
     }
 
@@ -38,6 +41,29 @@ export class UserController {
         return client.user.findFirst({
             where: {
                 id: userId,
+            },
+            include: {
+                oauthGrants: {
+                    include: {
+                        client: true,
+                    },
+                },
+            }
+        })
+    }
+
+    static getByEmail(email: string) {
+        const client = DBClient.getClient()
+        return client.user.findFirst({
+            where: {
+                email,
+            },
+            include: {
+                oauthGrants: {
+                    include: {
+                        client: true,
+                    }
+                },
             }
         })
     }
@@ -56,5 +82,25 @@ export class UserController {
             obj.email_verified = true
         }
         return obj
+    }
+
+    scopesByClient() {
+        const clients: {
+            client: OAuthClient
+            scopes: string[]
+        }[] = []
+        for (const grant of this.user.oauthGrants) {
+            const existingClient = clients.find(e => e.client.clientId === grant.clientId)
+            if (existingClient) {
+                existingClient.scopes.push(grant.scope)
+            } else {
+                clients.push({
+                    client: grant.client,
+                    scopes: [grant.scope],
+                })
+            }
+        }
+
+        return clients
     }
 }

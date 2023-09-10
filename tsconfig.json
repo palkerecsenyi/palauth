@@ -1,11 +1,10 @@
 {
   "extends": "@tsconfig/node18/tsconfig.json",
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/database/generated-models"],
   "compilerOptions": {
     "outDir": "build",
     "strict": true,
     "allowSyntheticDefaultImports": true,
-    "allowImportingTsExtensions": true
   },
   "ts-node": {
     "esm": true,

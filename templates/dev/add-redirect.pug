@@ -1,0 +1,23 @@
+extends ../layouts/main
+include ../components/csrf
+include ../components/submit-button
+include ../components/hcaptcha
+
+block title
+    | Add redirect URI
+
+block header
+    p
+        a(href="/dev/" + client.clientId) Client settings
+    h1 Add redirect URI
+    p To #{client.name}
+
+block content
+    form(action="/dev/" + client.clientId + "/redirectURIs/create", method="post")
+        +csrf_input(csrf)
+
+        label(for="uri") URI
+        input#uri(type="url", name="uri", required)
+
+        +hcaptcha
+        +submit_button

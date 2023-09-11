@@ -21,7 +21,7 @@ export class TokenManager {
         return new TokenManager(userId, clientController)
     }
 
-    private static generateCode() {
+    static generateCode() {
         const buf = randomBytes(64)
         return buf.toString("hex")
     }

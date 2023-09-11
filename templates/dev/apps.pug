@@ -1,0 +1,25 @@
+extends ../layouts/main
+
+block title
+    | Developer
+
+block header
+    p
+        a(href="/") Home
+    h1 Developers
+    p A list of your apps
+
+block content
+    if ownedClients.length === 0
+        p You don't have any apps right now :(
+
+    p
+        a.button(href="/dev/register") Register app
+
+    each client in ownedClients
+        h3= client.name
+        p
+            | Client ID:&nbsp;
+            code= client.clientId
+        p
+            a(href="/dev/" + client.clientId) Configure

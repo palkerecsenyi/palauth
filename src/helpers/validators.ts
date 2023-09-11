@@ -1,8 +1,8 @@
-import {NextFunction, Response} from "express";
+import {NextFunction, Request, Response} from "express";
 import {matchedData, validationResult} from "express-validator";
 import type {ValidatedRequest} from "../types/express.ts";
 
-export const ensureValidators = (failureURL: string) => (req: ValidatedRequest, res: Response, next: NextFunction) => {
+export const ensureValidators = (failureURL: string | ((req: Request) => string)) => (req: ValidatedRequest, res: Response, next: NextFunction) => {
     const result = validationResult(req)
 
     if (result.isEmpty()) {
@@ -22,5 +22,9 @@ export const ensureValidators = (failureURL: string) => (req: ValidatedRequest, 
         req.flash("error", "Invalid data")
     }
 
-    res.redirect(failureURL)
+    if (typeof failureURL === "string") {
+        res.redirect(failureURL)
+    } else {
+        res.redirect(failureURL(req))
+    }
 }

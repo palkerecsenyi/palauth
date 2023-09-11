@@ -3,14 +3,21 @@ import {verify} from "hcaptcha"
 
 const secret = process.env["PAL_HCAPTCHA_SECRET"]
 
-export const verifyCaptcha = (failureURL: string) => async (req: Request, res: Response, next: NextFunction) => {
+export const verifyCaptcha = (failureURL: string | ((req: Request) => string)) => async (req: Request, res: Response, next: NextFunction) => {
     if (!secret) throw new Error("hcaptcha secret missing")
+
+    let actualFailureURL: string
+    if (typeof failureURL === "string") {
+        actualFailureURL = failureURL
+    } else {
+        actualFailureURL = failureURL(req)
+    }
 
     const token = req.body["h-captcha-response"]
     if (typeof token !== "string") {
         res.status(400)
         req.flash("error", "Captcha was missing")
-        res.redirect(failureURL)
+        res.redirect(actualFailureURL)
         return
     }
 
@@ -18,7 +25,7 @@ export const verifyCaptcha = (failureURL: string) => async (req: Request, res: R
     if (!response.success) {
         res.status(400)
         req.flash("error", "Captcha was invalid")
-        res.redirect(failureURL)
+        res.redirect(actualFailureURL)
         return
     }
 

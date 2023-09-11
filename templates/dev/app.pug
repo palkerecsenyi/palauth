@@ -1,0 +1,39 @@
+extends ../layouts/main
+
+block title
+    | OAuth App #{client.name}
+
+block header
+    p
+        a(href="/dev") All apps
+    h1= client.name
+    p Configure your OAuth app
+
+block content
+    p
+        | Client ID:&nbsp;
+        code= client.clientId
+    p
+        | Client secret:&nbsp;
+        code(title="This is only shown once when you create the app") ***********
+    p
+        | Usage description (
+        a(href="/dev/" + client.clientId + "/edit") edit
+        | ):
+        blockquote= client.usageDescription
+
+    p
+        a.button(href="/dev/" + client.clientId + "/delete") Delete app
+
+    h3 Redirect URIs
+    if client.redirectURIs.length === 0
+        p You don't have any valid redirect URIs
+    ul
+        each uriObj in client.redirectURIs
+            li
+                code= uriObj.uri
+                ul
+                    li
+                        a(href="/dev/" + client.clientId + "/redirectURIs/" + uriObj.id + "/delete") Delete
+    p
+        a.button(href="/dev/" + client.clientId + "/redirectURIs/add") Add

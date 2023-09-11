@@ -1,0 +1,21 @@
+extends ../layouts/main
+include ../components/csrf
+include ../components/submit-button
+include ../components/hcaptcha
+
+block title
+    | Edit #{client.name}
+
+block header
+    p
+        a(href="/dev/" + client.clientId) Client settings
+    h1 Edit #{client.name}
+
+block content
+    form(action="/dev/" + client.clientId + "/update", method="post")
+        +csrf_input(csrf)
+        label(for="usageDescription") Usage description
+        textarea#usageDescription(name="usageDescription")= client.usageDescription
+
+        +hcaptcha
+        +submit_button

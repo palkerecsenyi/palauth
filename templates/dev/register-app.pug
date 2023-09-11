@@ -1,0 +1,27 @@
+extends ../layouts/main
+include ../components/csrf
+include ../components/submit-button
+include ../components/hcaptcha
+
+block title
+    | Register an app
+
+block header
+    p
+        a(href="/dev") All apps
+    h1 Register an app
+
+block content
+    form(action="/dev/register", method="post")
+        +csrf_input(csrf)
+
+        label(for="name") Client name
+        input#name(type="text", name="name", required)
+
+        label(for="usageDescription") Usage description
+        textarea#usageDescription(name="usageDescription", required)
+
+        p You can add your redirect URI(s) after registering the app.
+
+        +hcaptcha
+        +submit_button

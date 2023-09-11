@@ -1,6 +1,7 @@
 extends layouts/main
 include components/csrf
 include components/hcaptcha
+include components/submit-button
 
 block title
     | Sign up
@@ -32,8 +33,7 @@ block content
 
         +hcaptcha
 
-        br
-        input(type="submit", value="Pal!")
+        +submit_button
 
     p
         | Already have an account?&nbsp;

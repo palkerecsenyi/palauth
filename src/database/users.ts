@@ -5,7 +5,10 @@ import {TransactionType} from "../types/prisma.js";
 import {OIDCUserInfoResponse} from "../types/oidc.js";
 
 export type UserControllerUser = Prisma.UserGetPayload<{
-    include: {oauthGrants: {include: {client: true}}}
+    include: {
+        oauthGrants: {include: {client: true}},
+        ownedClients: true,
+    }
 }>
 export class UserController {
     static async createUser(
@@ -48,6 +51,7 @@ export class UserController {
                         client: true,
                     },
                 },
+                ownedClients: true,
             }
         })
     }
@@ -63,6 +67,7 @@ export class UserController {
                         client: true,
                     }
                 },
+                ownedClients: true,
             }
         })
     }

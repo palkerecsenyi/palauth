@@ -8,6 +8,7 @@ import flash from "connect-flash"
 import accountRouter from "./routes/account.js";
 import oidcRouter from "./routes/oidc.js";
 import wellKnownRouter from "./routes/well-known.js";
+import devRouter from "./routes/developer.js";
 
 const app = express()
 app.set("view engine", "pug")
@@ -30,6 +31,7 @@ app.use((req, res, next) => {
 
 app.use("/.well-known", wellKnownRouter)
 app.use("/oidc", oidcRouter)
+app.use("/dev", devRouter)
 app.get("/auth/signout", signOutRoute)
 app.use("/auth", authRouter)
 app.use("/", accountRouter)

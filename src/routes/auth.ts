@@ -23,7 +23,7 @@ const flowManager = new FlowManager("authentication")
 
 authRouter.get(
     "/signin",
-    flowManager.saveDestinationMiddleware.bind(flowManager),
+    flowManager.saveDestinationMiddleware,
     async (req: AuthenticatedRequest, res) => {
         res.render("signin.pug", {
             csrf: generateToken(req, res),
@@ -62,7 +62,7 @@ authRouter.post(
 
 authRouter.get(
     "/signup",
-    flowManager.saveDestinationMiddleware.bind(flowManager),
+    flowManager.saveDestinationMiddleware,
     async (req, res) => {
         res.render("signup.pug", {
             csrf: generateToken(req, res)

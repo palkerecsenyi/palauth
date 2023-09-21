@@ -32,7 +32,7 @@ export class FlowManager {
 
     saveDestination(req: Request) {
         const existingDestination = this.extractDestinationFromSession(req)
-        if (existingDestination) return existingDestination
+        if (existingDestination && !req.query.hasOwnProperty("destination")) return existingDestination
 
         const destination = FlowManager.parseDestination(req)
         req.session![this.sessionKey] = destination

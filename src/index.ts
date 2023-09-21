@@ -34,6 +34,7 @@ app.use("/oidc", oidcRouter)
 app.use("/dev", devRouter)
 app.get("/auth/signout", signOutRoute)
 app.use("/auth", authRouter)
+app.get("/favicon.ico", (req, res) => res.sendStatus(404))
 app.use("/", accountRouter)
 
 const envPort = process.env["PORT"]

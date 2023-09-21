@@ -63,7 +63,7 @@ oidcRouter.get(
 
             setUserId(req, undefined)
             res.redirect(
-                "/auth/signin?destination=/oidc/auth/sign-in-callback"
+                "/auth/signin?destination=/oidc/auth/grant-scopes"
             )
             return
         }
@@ -76,7 +76,7 @@ oidcRouter.get(
     "/auth/grant-scopes",
     authMiddleware({
         authRequirement: "require-authenticated",
-        redirectTo: "/oidc/auth/grant-scopes"
+        redirectTo: "/auth/signin?destination=/oidc/auth/grant-scopes"
     }),
     OIDCFlow.middleware(),
     async (req: AuthenticatedRequest & OIDCFlowRequest, res) => {
@@ -106,7 +106,7 @@ oidcRouter.get(
     "/auth/grant-scopes-feedback",
     authMiddleware({
         authRequirement: "require-authenticated",
-        redirectTo: "/oidc/auth/grant-scopes",
+        redirectTo: "/auth/signin?destination=/oidc/auth/grant-scopes",
     }),
     OIDCFlow.middleware(),
     async (req: AuthenticatedRequest & OIDCFlowRequest, res) => {

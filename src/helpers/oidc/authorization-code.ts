@@ -1,6 +1,6 @@
 import {Duration} from "luxon";
 import {JWTSigner} from "./jwt.js";
-import {getProjectOIDCID} from "../hostname.js";
+import {getProjectOIDCID} from "../constants/hostname.js";
 
 type AuthorizationCodeData = {
     userId: string,

@@ -1,6 +1,6 @@
 import express from "express";
 import {getOIDCDiscoveryData} from "../helpers/oidc/discovery.js";
-import {getJWTRawPublicKey} from "../helpers/secretKeys.js";
+import {getJWTRawPublicKey} from "../helpers/constants/secretKeys.js";
 
 const wellKnownRouter = express.Router()
 

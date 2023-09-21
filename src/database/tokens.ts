@@ -52,6 +52,22 @@ export class OAuthTokenWrapper {
         return UserController.getById(this.data.userId)
     }
 
+    get userId() {
+        return this.data.userId
+    }
+
+    belongsToClient(clientId: string) {
+        return this.data.clientId === clientId
+    }
+
+    get isAccessToken() {
+        return this.data.type === "Access"
+    }
+
+    get isRefreshToken() {
+        return this.data.type === "Refresh"
+    }
+
     async mustGetUser() {
         const u = await this.getUser()
         if (!u) {
@@ -89,7 +105,7 @@ export class OAuthTokenWrapper {
             }
 
             // cannot use a refresh token for authenticating requests
-            if (tokenWrapper.data.type === "Refresh") {
+            if (tokenWrapper.isRefreshToken) {
                 res.setHeader("WWW-Authenticate", `Bearer error="invalid_token", error_description="Cannot use a refresh token"`)
                 res.sendStatus(401)
                 return

@@ -1,9 +1,9 @@
 import {NextFunction, Request, Response} from "express";
 import {verify} from "hcaptcha"
-
-const secret = process.env["PAL_HCAPTCHA_SECRET"]
+import {getHCaptchaSecret} from "./constants/secretKeys.js";
 
 export const verifyCaptcha = (failureURL: string | ((req: Request) => string)) => async (req: Request, res: Response, next: NextFunction) => {
+    const secret = getHCaptchaSecret()
     if (!secret) throw new Error("hcaptcha secret missing")
 
     let actualFailureURL: string

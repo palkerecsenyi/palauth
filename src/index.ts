@@ -3,7 +3,7 @@ import cookieSession from "cookie-session"
 import authRouter, {signOutRoute} from "./routes/auth.js";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser"
-import {getSecretKeys} from "./helpers/secretKeys.js";
+import {getSecretKeys} from "./helpers/constants/secretKeys.js";
 import flash from "connect-flash"
 import accountRouter from "./routes/account.js";
 import oidcRouter from "./routes/oidc.js";

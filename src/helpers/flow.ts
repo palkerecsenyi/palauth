@@ -1,5 +1,5 @@
 import {NextFunction, Request, Response} from "express";
-import {getProjectHostname} from "./hostname.js";
+import {getProjectHostname} from "./constants/hostname.js";
 
 export class FlowManager {
     private readonly flowName: string

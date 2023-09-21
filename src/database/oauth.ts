@@ -3,6 +3,8 @@ import {DBClient} from "./client.js";
 import argon2 from "argon2";
 import {TokenManager} from "./token-manager.js";
 import {TransactionType} from "../types/prisma.js";
+import {Request, Response} from "express";
+import {OAuthAccessTokenResponse} from "../types/oidc.js";
 
 export type OAuthControllerClient = Prisma.OAuthClientGetPayload<{
     include: { redirectURIs: true, admin: true, },
@@ -40,6 +42,32 @@ export class OAuthClientController {
 
     checkClientSecret(secret: string) {
         return argon2.verify(this.oauthClient.clientSecretHash, secret)
+    }
+
+    async checkClientSecretFromHeaders(req: Request, res: Response) {
+        let { client_secret } = req.body
+        if (!client_secret) {
+            const authHeader = req.headers.authorization
+            if (authHeader?.startsWith("Basic ")) {
+                client_secret = authHeader.substring(6)
+            }
+        }
+
+        if (typeof client_secret !== "string") {
+            res.json({
+                error: "invalid_client",
+            } as OAuthAccessTokenResponse)
+            return false
+        }
+        const secretCorrect = await this.checkClientSecret(client_secret)
+        if (!secretCorrect) {
+            res.json({
+                error: "invalid_client",
+            } as OAuthAccessTokenResponse)
+            return false
+        }
+
+        return true
     }
 
     checkRedirectURI(redirectURI: string) {

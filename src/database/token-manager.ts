@@ -5,9 +5,10 @@ import {randomBytes} from "crypto";
 import {OAuthToken} from "./generated-models/index.js";
 import {DateTime} from "luxon";
 import {IDToken} from "../types/oidc.js";
-import {getProjectOIDCID} from "../helpers/hostname.js";
+import {getProjectOIDCID} from "../helpers/constants/hostname.js";
 import {JWTSigner} from "../helpers/oidc/jwt.js";
-import {UserController} from "./users.js";
+import {OAuthTokenWrapper} from "./tokens.js";
+import {calculateTokenExpiry} from "../helpers/constants/token-duration.js";
 
 export class TokenManager {
     userId: string
@@ -75,13 +76,13 @@ export class TokenManager {
         const scopes = data.scope.split(" ")
         const accessToken = await this.createToken({
             type: "Access",
-            expires: DateTime.now().plus({ day: 3 }),
+            expires: calculateTokenExpiry("Access"),
             fromCode: data.originalCode,
             scopes,
         })
         const refreshToken = await this.createToken({
             type: "Refresh",
-            expires: DateTime.now().plus({ year: 1 }),
+            expires: calculateTokenExpiry("Refresh"),
             scopes,
             fromCode: null,
         })
@@ -89,6 +90,15 @@ export class TokenManager {
         return {
             accessToken, refreshToken,
         }
+    }
+
+    refresh(refreshToken: OAuthTokenWrapper) {
+        return this.createToken({
+            type: "Access",
+            expires: calculateTokenExpiry("Access"),
+            fromCode: null,
+            scopes: refreshToken.scopes,
+        })
     }
 
     generateIdToken(expires: DateTime, nonce?: string) {

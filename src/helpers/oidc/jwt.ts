@@ -1,7 +1,7 @@
 import {DateTime, Duration} from "luxon";
-import {getJWKAlg, getJWTPrivateKey, getJWTPublicKey} from "../secretKeys.js";
+import {getJWKAlg, getJWTPrivateKey, getJWTPublicKey} from "../constants/secretKeys.js";
 import * as jose from "jose"
-import {getProjectOIDCID} from "../hostname.js";
+import {getProjectOIDCID} from "../constants/hostname.js";
 
 export class JWTSigner {
     static async sign(data: any, duration?: Duration) {

@@ -1,4 +1,4 @@
-import {getProjectOIDCID} from "../hostname.js";
+import {getProjectOIDCID} from "../constants/hostname.js";
 import {OIDCScopes} from "./scopes.js";
 
 export const getOIDCDiscoveryData = () => {
@@ -12,7 +12,7 @@ export const getOIDCDiscoveryData = () => {
         jwks_uri: new URL("/.well-known/jwks.json", oidcUrl),
         scopes_supported: OIDCScopes.supportedScopes,
         response_types_supported: ["code"],
-        grant_types_supported: ["authorization_code"],
+        grant_types_supported: ["authorization_code", "refresh_token"],
         subject_types_supported: ["public"],
         id_token_signing_alg_values_supported: ["RS256"],
     }

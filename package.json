@@ -40,6 +40,12 @@
     "prod": "node build/index.js",
     "start": "tsx src/index.ts",
     "build": "tsc && cp -r src/database/generated-models build/database",
-    "db:generate": "prisma generate"
+    "docker:build": "docker build -t europe-west1-docker.pkg.dev/palk-util/palauth-build/palauth:latest --platform linux/amd64 .",
+    "docker:push": "docker push europe-west1-docker.pkg.dev/palk-util/palauth-build/palauth",
+    "gcloud:deploy": "gcloud run deploy palauth --image=europe-west1-docker.pkg.dev/palk-util/palauth-build/palauth:latest --region=europe-west1",
+    "full-deploy:local": "yarn run docker:build && yarn run docker:push && yarn run gcloud:deploy",
+    "full-deploy:gcp": "gcloud builds submit --region=europe-west1 --tag europe-west1-docker.pkg.dev/palk-util/palauth-build/palauth:latest && yarn run gcloud:deploy",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev"
   }
 }

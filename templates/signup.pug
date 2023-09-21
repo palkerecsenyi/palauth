@@ -29,7 +29,7 @@ block content
         input#passwordConfirm(type="password", name="passwordConfirm", required)
 
         label(for="token") Invite token
-        input#token(type="text", name="token", required)
+        input#token(type="text", name="token", value=inviteToken, readonly=!!inviteToken, required)
 
         +hcaptcha
 

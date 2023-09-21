@@ -65,7 +65,8 @@ authRouter.get(
     flowManager.saveDestinationMiddleware.bind(flowManager),
     async (req, res) => {
         res.render("signup.pug", {
-            csrf: generateToken(req, res)
+            csrf: generateToken(req, res),
+            inviteToken: req.query.invite,
         })
     }
 )

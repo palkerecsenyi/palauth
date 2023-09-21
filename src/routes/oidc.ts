@@ -83,6 +83,12 @@ oidcRouter.get(
         const flow = req.oidcFlow!
 
         const {nonGrantedScopes, grantedScopes} = await flow.checkScopeGrantStatus(req.user!.id)
+        if (nonGrantedScopes.length === 0) {
+            flow.end(req)
+            res.redirect(await flow.successExitURL(req.user!.id))
+            return
+        }
+
         const clientController = await OAuthClientController.getByClientId(flow.client_id)
         if (!clientController) {
             return oauthErrorPage(res, "client_id invalid or not found")
@@ -108,16 +114,16 @@ oidcRouter.get(
 
         const scopesGranted = req.query.grant === "yes"
         if (!scopesGranted) {
-            res.redirect(flow.errorExitURL("access_denied", "client did not grant the requested scope(s)"))
             flow.end(req)
+            res.redirect(flow.errorExitURL("access_denied", "client did not grant the requested scope(s)"))
             return
         }
 
         const {nonGrantedScopes} = await flow.checkScopeGrantStatus(req.user!.id)
         await flow.grantScopes(nonGrantedScopes, req.user!.id)
 
-        res.redirect(await flow.successExitURL(req.user!.id))
         flow.end(req)
+        res.redirect(await flow.successExitURL(req.user!.id))
     }
 )
 

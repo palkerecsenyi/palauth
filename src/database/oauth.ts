@@ -49,7 +49,18 @@ export class OAuthClientController {
         if (!client_secret) {
             const authHeader = req.headers.authorization
             if (authHeader?.startsWith("Basic ")) {
-                client_secret = authHeader.substring(6)
+                const base64Auth = authHeader.substring(6)
+                const decodedAuth = Buffer.from(base64Auth, "base64").toString("utf-8").split(":")
+                if (decodedAuth.length !== 2) {
+                    res.json({
+                        error: "invalid_request",
+                        error_description: "Did not understand Authorization header"
+                    } as OAuthAccessTokenResponse)
+                    return
+                }
+
+                const [, decodedClientSecret] = decodedAuth
+                client_secret = decodedClientSecret
             }
         }
 

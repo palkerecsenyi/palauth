@@ -10,6 +10,7 @@ import {body} from "express-validator"
 import {ensureValidators} from "../helpers/validators.js";
 import {InviteController} from "../database/invites.js";
 import {Prisma} from "../database/generated-models/index.js";
+import EmailVerificationController from "../helpers/mail/email-verification.js";
 
 const authRouter = express.Router()
 authRouter.use(authMiddleware({
@@ -131,6 +132,8 @@ authRouter.post(
             res.redirect("/auth/signup")
             return
         }
+
+        const emailVerification = await EmailVerificationController.create(userId)
 
         setUserId(req, userId)
         flowManager.continueToDestination(req, res, "/auth/signup")

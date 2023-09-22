@@ -18,12 +18,22 @@ model User {
   ownedClients OAuthClient[]
   oauthGrants UserOAuthGrant[]
   oauthTokens OAuthToken[]
+  emailVerifications EmailVerification[]
 }
 
 model Invite {
   token String @id @default(uuid())
   expires DateTime?
   singleUse Boolean
+}
+
+model EmailVerification {
+  id String @id @default(uuid())
+  user User @relation(fields: [userId], references: [id])
+  userId String
+
+  created DateTime @default(now())
+  expires DateTime
 }
 
 model OAuthClient {

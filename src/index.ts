@@ -13,11 +13,14 @@ import devRouter from "./routes/developer.js";
 const app = express()
 app.set("view engine", "pug")
 app.set("views", "./templates")
+app.use("/static", express.static("static"))
 
 app.use(cookieSession({
     name: "pal_sesh",
     keys: getSecretKeys(),
     maxAge: 7 * 24 * 60 * 60 * 1000,
+    sameSite: "strict",
+    httpOnly: true,
 }))
 app.use(bodyParser.urlencoded({
     extended: false,

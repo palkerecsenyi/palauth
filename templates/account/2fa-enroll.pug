@@ -1,0 +1,13 @@
+extends ../layouts/main
+
+block title
+    | Enroll 2FA
+
+block header
+    p
+        a(href="/account/2fa") Back to 2FA settings
+    h1 Enroll 2FA
+
+block content
+    if type === "key"
+        include 2fa-enroll-key

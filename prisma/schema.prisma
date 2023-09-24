@@ -20,6 +20,7 @@ model User {
   oauthGrants UserOAuthGrant[]
   oauthTokens OAuthToken[]
   emailVerifications EmailVerification[]
+  secondFactors SecondAuthenticationFactor[]
 }
 
 model Invite {
@@ -38,6 +39,22 @@ model EmailVerification {
   created DateTime @default(now())
   expires DateTime
   sentAt DateTime?
+}
+
+enum SecondAuthenticationFactorType {
+  SecurityKey
+  TOTP
+}
+
+model SecondAuthenticationFactor {
+  id String @id @default(uuid())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  type SecondAuthenticationFactorType
+
+  keyCounter Int?
+  keyPublicKey String?
 }
 
 model OAuthClient {

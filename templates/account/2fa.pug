@@ -1,0 +1,29 @@
+extends ../layouts/main
+
+block title
+    | 2FA settings
+
+block header
+    p
+        a(href="/") Back home
+    h1 Two-factor authentication
+
+block content
+    if factors.length === 0
+        p You don't have any forms of two-factor authentication set up.
+    else
+        p You currently have the following methods of 2FA enabled:
+        ul
+            for factor in factors
+                if factor.type === "SecurityKey"
+                    li Security key
+                else
+                    li Authenticator app
+
+    h3 Enroll
+    if !factorTypes.includes("SecurityKey")
+        p
+            a(href="/account/2fa/enroll?type=key") Enroll a security key
+    if !factorTypes.includes("TOTP")
+        p
+            a(href="/account/2fa/enroll?type=totp") Enroll an authenticator app

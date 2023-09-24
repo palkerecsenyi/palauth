@@ -1,0 +1,8 @@
+p Enroll a security key
+
+button#enroll Click to enroll
+
+script(type="application/javascript", src="/static/js/webauthn.js")
+script.
+    const enroll = window["PAL_2FA_ENROLL"]
+    document.getElementById("enroll").addEventListener("click", enroll(!{JSON.stringify(options)}))

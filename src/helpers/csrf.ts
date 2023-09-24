@@ -13,6 +13,7 @@ const {
     getSecret() {
         return getSecretKeys()[0]
     },
+    cookieName: "pal_csrf",
 })
 
 export {generateToken, doubleCsrfProtection}

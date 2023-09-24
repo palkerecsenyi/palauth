@@ -1,5 +1,5 @@
-extends layouts/main
-include components/scope_label
+extends ../layouts/main
+include ../components/scope_label
 
 block title
     | Home
@@ -12,6 +12,9 @@ block content
     p
         | Had enough Pal?&nbsp;
         a(href="/auth/signout") Sign out
+
+    h3 Settings
+    a(href="/account/2fa") Configure two-factor authentication
 
     if scopesByClient.length > 0
         h3 My applications

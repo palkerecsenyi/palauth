@@ -1,0 +1,27 @@
+extends ../layouts/main
+include ../components/csrf
+include ../components/hcaptcha
+include ../components/submit-button
+
+block title
+    | Verify your email
+
+block header
+    h1 Verify your email
+
+block content
+    p We sent you an email to verify your account. Please enter the 6-digit code below:
+
+    form(action="/auth/verify", method="post")
+        +csrf_input(csrf)
+
+        input(type="hidden", name="email", value=email)
+
+        label(for="code") Code
+        input#code(type="text", name="code")
+
+        +hcaptcha
+        +submit_button
+
+    p Didn't receive an email?&nbsp;
+        a(href="/auth/verify/resend") Resend

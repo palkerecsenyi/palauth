@@ -2,17 +2,18 @@ import Mailgun from "mailgun.js";
 import * as FormData from "form-data";
 import {getMailgunSecret} from "../constants/secretKeys.js";
 
-const mailgun = new Mailgun(FormData)
+// @ts-ignore
+const mailgun = new Mailgun(FormData.default)
 const mg = mailgun.client({
-    url: "https://api.eu.mailgun.com",
+    url: "https://api.eu.mailgun.net",
     username: "api",
     key: getMailgunSecret(),
 })
 
 export abstract class EmailMessage {
-    private to: string
-    private subject: string
-    private body: string
+    private readonly to: string
+    private readonly subject: string
+    private readonly body: string
 
     protected constructor(to: string, subject: string, body: string) {
         this.to = to
@@ -23,6 +24,9 @@ export abstract class EmailMessage {
     send() {
         return mg.messages.create("auth.palk.me", {
             from: "PalAuth <noreply@auth.palk.me>",
+            to: this.to,
+            subject: this.subject,
+            text: this.body,
         })
     }
 }

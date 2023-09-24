@@ -26,7 +26,7 @@ authRouter.get(
     "/signin",
     flowManager.saveDestinationMiddleware.bind(flowManager),
     async (req: AuthenticatedRequest, res) => {
-        res.render("signin.pug", {
+        res.render("auth/signin.pug", {
             csrf: generateToken(req, res),
         })
     }
@@ -49,6 +49,12 @@ authRouter.post(
             return
         }
 
+        if (!user.emailVerified) {
+            req.flash("error", "Please verify your email to continue signing in")
+            res.redirect("/auth/verify")
+            return
+        }
+
         const passwordCorrect = await UserController.for(user).checkPassword(password)
         if (!passwordCorrect) {
             req.flash("error", "Email or password incorrect")
@@ -65,7 +71,7 @@ authRouter.get(
     "/signup",
     flowManager.saveDestinationMiddleware.bind(flowManager),
     async (req, res) => {
-        res.render("signup.pug", {
+        res.render("auth/signup.pug", {
             csrf: generateToken(req, res),
             inviteToken: req.query.invite,
         })
@@ -79,9 +85,8 @@ authRouter.post(
     body("email").isEmail(),
     body("password").isStrongPassword({
         minLength: 12,
-        minSymbols: 1,
         minNumbers: 1,
-    }).withMessage("Must be at least 12 characters with 1 symbol and 1 number"),
+    }).withMessage("Must be at least 12 characters with 1 number"),
     body("passwordConfirm").notEmpty(),
     body("token").notEmpty(),
     ensureValidators("/auth/signup"),
@@ -110,10 +115,11 @@ authRouter.post(
                 return
             }
 
+            let userId: string
             try {
-                return await UserController.createUser({
+                userId = await UserController.createUser({
                     displayName, email, password
-                })
+                }, tx)
             } catch (e) {
                 if (e instanceof Prisma.PrismaClientKnownRequestError && e.meta?.target === "User_email_key") {
                     req.flash("error", "That email address is already in use")
@@ -126,6 +132,10 @@ authRouter.post(
                 tx.rollback()
                 return
             }
+
+            const emailVerification = await EmailVerificationController.create(userId, tx)
+            await emailVerification.send()
+            return userId
         })
 
         if (!userId) {
@@ -133,10 +143,79 @@ authRouter.post(
             return
         }
 
-        const emailVerification = await EmailVerificationController.create(userId)
+        req.session!["verify_email"] = email
+        res.redirect(`/auth/verify`)
+    }
+)
 
-        setUserId(req, userId)
-        flowManager.continueToDestination(req, res, "/auth/signup")
+authRouter.get(
+    "/verify",
+    flowManager.ensureCanContinue("/auth/signin"),
+    (req, res) => {
+        const verifyEmail = req.session!["verify_email"]
+        if (!verifyEmail) {
+            req.flash("Please sign in to verify your email")
+            res.redirect("/auth/signin")
+            return
+        }
+
+        res.render("auth/verify-email.pug", {
+            csrf: generateToken(req, res),
+            email: verifyEmail,
+        })
+    }
+)
+
+authRouter.get(
+    "/verify/resend",
+    flowManager.ensureCanContinue("/auth/signin"),
+    async (req, res) => {
+        const verifyEmail = req.session!["verify_email"]
+        if (!verifyEmail) {
+            res.redirect("/auth/verify")
+            return
+        }
+
+        const verificationController = await EmailVerificationController.fromEmailAddress(verifyEmail)
+        if (!verificationController) {
+            req.flash("error", "Can't find which email to resend to")
+            res.redirect("/auth/verify")
+            return
+        }
+
+        await verificationController.send()
+        req.flash("success", "Resent the verification email!")
+        res.redirect("/auth/verify")
+    }
+)
+
+authRouter.post(
+    "/verify",
+    flowManager.ensureCanContinue("/auth/signin"),
+    body("code").notEmpty().trim().isLength({min: 6, max: 6}),
+    body("email").notEmpty(),
+    ensureValidators("/auth/verify"),
+    verifyCaptcha("/auth/verify"),
+    async (req, res) => {
+        const success = await DBClient.interruptibleTransaction(async tx => {
+            const verificationController = await EmailVerificationController.fromRequest(req, tx)
+            if (!verificationController) {
+                req.flash("error", "That code was not found")
+                tx.rollback()
+                return false
+            }
+
+            await verificationController.markVerified()
+            return true
+        })
+
+        if (!success) {
+            res.redirect("/auth/verify")
+            return
+        }
+
+        req.flash("success", "Your email was verified! Please sign in to continue.")
+        res.redirect("/auth/signin")
     }
 )
 

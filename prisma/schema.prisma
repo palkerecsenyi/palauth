@@ -12,6 +12,7 @@ datasource db {
 model User {
   id String @id @default(uuid())
   email String @unique
+  emailVerified Boolean @default(false)
   displayName String
   passwordHash String
 
@@ -29,11 +30,14 @@ model Invite {
 
 model EmailVerification {
   id String @id @default(uuid())
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
+
+  code String
 
   created DateTime @default(now())
   expires DateTime
+  sentAt DateTime?
 }
 
 model OAuthClient {

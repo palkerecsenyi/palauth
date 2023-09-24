@@ -5,6 +5,7 @@ build
 .env
 /src/database/generated-models/
 /node_modules/
+/webauthn-frontend/node_modules
 *.key
 *.pem
 *.crt

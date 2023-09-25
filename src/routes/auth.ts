@@ -9,21 +9,28 @@ import {verifyCaptcha} from "../helpers/captcha.js";
 import {body} from "express-validator"
 import {ensureValidators} from "../helpers/validators.js";
 import {InviteController} from "../database/invites.js";
-import {Prisma} from "../database/generated-models/index.js";
+import {Prisma, SecondAuthenticationFactorType} from "../database/generated-models/index.js";
 import EmailVerificationController from "../helpers/mail/email-verification.js";
 
 const authRouter = express.Router()
-authRouter.use(authMiddleware({
+authRouter.use(doubleCsrfProtection)
+
+const notAuthenticatedMiddleware = authMiddleware({
     authRequirement: "require-not-authenticated",
     redirectTo: "/",
     useDestinationQuery: true,
-}))
-authRouter.use(doubleCsrfProtection)
+})
+
+const provisionalAuthenticatedMiddleware = authMiddleware({
+    authRequirement: "require-provisional-authenticated",
+    redirectTo: "/auth/signin",
+})
 
 const flowManager = new FlowManager("authentication")
 
 authRouter.get(
     "/signin",
+    notAuthenticatedMiddleware,
     flowManager.saveDestinationMiddleware.bind(flowManager),
     async (req: AuthenticatedRequest, res) => {
         res.render("auth/signin.pug", {
@@ -34,6 +41,7 @@ authRouter.get(
 
 authRouter.post(
     "/signin",
+    notAuthenticatedMiddleware,
     body("email").isEmail(),
     body("password").notEmpty(),
     ensureValidators("/auth/signin"),
@@ -75,24 +83,35 @@ authRouter.post(
 )
 
 authRouter.get(
-    "/auth/signin/2fa",
+    "/signin/2fa",
+    provisionalAuthenticatedMiddleware,
     flowManager.ensureCanContinue("/auth/signin"),
-    async (req, res) => {
-        const provisionalUserId = getProvisionalUserId(req)
-        if (!provisionalUserId) {
-            req.flash("error", "Please sign in first")
-            res.redirect("/auth/signin")
-            return
-        }
-        const user = await UserController.getById(provisionalUserId)
-        if (!user) {
-            setProvisionalUserId(req, undefined)
-            req.flash("error", "That user doesn't exist")
+    async (req: AuthenticatedRequest, res) => {
+        const uc = UserController.for(req.user!)
+        if (!uc.requiresTwoFactor) {
+            req.flash("error", "Your account doesn't require 2FA")
             res.redirect("/auth/signin")
             return
         }
 
+        res.render("auth/2fa.pug", {
+            methods: uc.twoFactorMethods,
+        })
+    }
+)
 
+authRouter.get(
+    "/signin/2fa/:method",
+    provisionalAuthenticatedMiddleware,
+    flowManager.ensureCanContinue("/auth/signin"),
+    async (req: AuthenticatedRequest, res) => {
+        const uc = UserController.for(req.user!)
+        const twoFaController = uc.getTwoFactorController()
+        if (!twoFaController.registrationOfTypeExists(req.param("method") as SecondAuthenticationFactorType)) {
+            req.flash("error", "Your account isn't registered for that method of 2FA")
+            res.redirect("/auth/signin/2fa")
+            return
+        }
     }
 )
 

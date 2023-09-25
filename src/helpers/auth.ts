@@ -47,12 +47,18 @@ export const authMiddleware = (config: AuthMiddlewareConfig) => async (req: Auth
     const userFail = () => {
         setUserId(req, undefined)
         setProvisionalUserId(req, undefined)
-        if (config.authRequirement === "require-authenticated") {
+        if (config.authRequirement === "require-authenticated" || config.authRequirement === "require-provisional-authenticated") {
             req.flash("error", "Please sign in first")
             res.redirect(actualRedirectTarget)
             return
         }
         next()
+    }
+
+    if (config.authRequirement === "require-not-authenticated" && getProvisionalUserId(req)) {
+        setProvisionalUserId(req, undefined)
+        res.redirect("/auth/signin")
+        return
     }
 
     const userId = config.authRequirement === "require-provisional-authenticated" ? getProvisionalUserId(req) : getUserId(req)

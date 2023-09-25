@@ -1,4 +1,5 @@
 extends ../layouts/main
+include ../components/two-fa-label
 
 block title
     | 2FA settings
@@ -15,10 +16,8 @@ block content
         p You currently have the following methods of 2FA enabled:
         ul
             for factor in factors
-                if factor.type === "SecurityKey"
-                    li Security key
-                else
-                    li Authenticator app
+                li
+                    +two_fa_label(factor.type)
 
     h3 Enroll
     if !factorTypes.includes("SecurityKey")

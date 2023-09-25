@@ -1,0 +1,16 @@
+extends ../layouts/main
+include ../components/two-fa-label
+
+block title
+    | Two factor authentication
+
+block header
+    h1 2FA
+
+block content
+    p Please select how you'd like to verify your identity
+    ul
+        for method in methods
+            li
+                a(href="/auth/signin/2fa/" + method)
+                    +two_fa_label(method)

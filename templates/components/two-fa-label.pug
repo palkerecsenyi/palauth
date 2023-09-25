@@ -1,0 +1,7 @@
+mixin two_fa_label(type)
+    if type === "SecurityKey"
+        | Security key
+    else if type === "TOTP"
+        | Authenticator app
+    else
+        | Unknown

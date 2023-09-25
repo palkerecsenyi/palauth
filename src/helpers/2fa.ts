@@ -55,6 +55,10 @@ export default class TwoFactorController {
         return r
     }
 
+    static forUser(user: UserWithSecondFactors, tx: TransactionType = DBClient.getClient()) {
+        return new TwoFactorController(user, tx)
+    }
+
     get factors() {
         return this.user.secondFactors
     }

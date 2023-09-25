@@ -1,6 +1,6 @@
-import {OAuthClient, Prisma, PrismaClient, User} from "./generated-models/index.js";
+import {OAuthClient, Prisma, User} from "./generated-models/index.js";
 import argon2 from "argon2"
-import {DBClient, InterruptibleTransaction} from "./client.js";
+import {DBClient} from "./client.js";
 import {TransactionType} from "../types/prisma.js";
 import {OIDCUserInfoResponse} from "../types/oidc.js";
 
@@ -8,6 +8,7 @@ export type UserControllerUser = Prisma.UserGetPayload<{
     include: {
         oauthGrants: {include: {client: true}},
         ownedClients: true,
+        secondFactors: true,
     }
 }>
 export class UserController {
@@ -52,6 +53,7 @@ export class UserController {
                     },
                 },
                 ownedClients: true,
+                secondFactors: true,
             }
         })
     }
@@ -68,6 +70,7 @@ export class UserController {
                     }
                 },
                 ownedClients: true,
+                secondFactors: true,
             }
         })
     }
@@ -106,5 +109,9 @@ export class UserController {
         }
 
         return clients
+    }
+
+    get requiresTwoFactor() {
+        return this.user.secondFactors.length !== 0
     }
 }

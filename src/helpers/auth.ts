@@ -3,25 +3,36 @@ import {AuthenticatedRequest} from "../types/express.js";
 import {UserController} from "../database/users.js";
 import {FlowManager} from "./flow.js";
 
-export const getUserId = (req: Request) => {
-    if (req.session === undefined || req.session === null) {
-        return undefined
+const sessionGetterSetters = (key: string) => {
+    return {
+        getter(req: Request) {
+            if (req.session === undefined || req.session === null) {
+                return undefined
+            }
+            return req.session[key] as string | undefined
+        },
+        setter(req: Request, value: string | undefined) {
+            if (!req.session) return
+            if (!value) {
+                delete req.session[key]
+                return
+            }
+
+            req.session[key] = value
+        },
     }
-    return req.session["userID"] as string | undefined
 }
 
-export const setUserId = (req: Request, userId: string | undefined) => {
-    if (!req.session) return
-    if (!userId) {
-        delete req.session["userID"]
-        return
-    }
-
-    req.session["userID"] = userId
+const {getter: _getUserId, setter: _setUserId} = sessionGetterSetters("userID")
+export const getUserId = _getUserId
+export const setUserId = (req: Request, value: string | undefined) => {
+    _setUserId(req, value)
+    setProvisionalUserId(req, undefined)
 }
+export const {getter: getProvisionalUserId, setter: setProvisionalUserId} = sessionGetterSetters("prov_userID")
 
 type AuthMiddlewareConfig = {
-    authRequirement: "none" | "require-not-authenticated" | "require-authenticated"
+    authRequirement: "none" | "require-not-authenticated" | "require-authenticated" | "require-provisional-authenticated"
     redirectTo?: string
     useDestinationQuery?: boolean
 }
@@ -35,6 +46,7 @@ export const authMiddleware = (config: AuthMiddlewareConfig) => async (req: Auth
 
     const userFail = () => {
         setUserId(req, undefined)
+        setProvisionalUserId(req, undefined)
         if (config.authRequirement === "require-authenticated") {
             req.flash("error", "Please sign in first")
             res.redirect(actualRedirectTarget)
@@ -43,7 +55,7 @@ export const authMiddleware = (config: AuthMiddlewareConfig) => async (req: Auth
         next()
     }
 
-    const userId = getUserId(req)
+    const userId = config.authRequirement === "require-provisional-authenticated" ? getProvisionalUserId(req) : getUserId(req)
     if (!userId) {
         userFail()
         return

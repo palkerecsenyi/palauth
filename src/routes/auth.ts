@@ -1,5 +1,5 @@
 import express, {Response} from "express";
-import {authMiddleware, setUserId} from "../helpers/auth.js";
+import {authMiddleware, getProvisionalUserId, setProvisionalUserId, setUserId} from "../helpers/auth.js";
 import {AuthenticatedRequest, ValidatedRequest} from "../types/express.js";
 import {doubleCsrfProtection, generateToken} from "../helpers/csrf.js";
 import {DBClient} from "../database/client.js";
@@ -55,15 +55,44 @@ authRouter.post(
             return
         }
 
-        const passwordCorrect = await UserController.for(user).checkPassword(password)
+        const uc = UserController.for(user)
+        const passwordCorrect = await uc.checkPassword(password)
         if (!passwordCorrect) {
             req.flash("error", "Email or password incorrect")
             res.redirect("/auth/signin")
             return
         }
 
+        if (uc.requiresTwoFactor) {
+            setProvisionalUserId(req, user.id)
+            res.redirect("/auth/signin/2fa")
+            return
+        }
+
         setUserId(req, user.id)
         flowManager.continueToDestination(req, res, "/auth/signin")
+    }
+)
+
+authRouter.get(
+    "/auth/signin/2fa",
+    flowManager.ensureCanContinue("/auth/signin"),
+    async (req, res) => {
+        const provisionalUserId = getProvisionalUserId(req)
+        if (!provisionalUserId) {
+            req.flash("error", "Please sign in first")
+            res.redirect("/auth/signin")
+            return
+        }
+        const user = await UserController.getById(provisionalUserId)
+        if (!user) {
+            setProvisionalUserId(req, undefined)
+            req.flash("error", "That user doesn't exist")
+            res.redirect("/auth/signin")
+            return
+        }
+
+
     }
 )
 

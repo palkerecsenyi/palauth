@@ -95,6 +95,11 @@ accountRouter.post(
         const twoFaController = await TwoFactorController.mustFromAuthenticatedRequest(req)
 
         if (type === "key") {
+            if (twoFaController.registrationOfTypeExists("SecurityKey")) {
+                res.sendStatus(409)
+                return
+            }
+
             const success = await twoFaController.saveKeyRegistration(req, req.body)
             if (!success) {
                 res.sendStatus(401)

@@ -1,9 +1,9 @@
-import {Prisma} from "../database/generated-models/index.js";
+import {Prisma, SecondAuthenticationFactorType} from "../database/generated-models/index.js";
 import UserGetPayload = Prisma.UserGetPayload;
 import {TransactionType} from "../types/prisma.js";
 import {AuthenticatedRequest} from "../types/express.js";
 import {DBClient} from "../database/client.js";
-import {AttestationResult, ExpectedAttestationResult, Fido2AttestationResult, Fido2Lib} from "fido2-lib";
+import {ExpectedAttestationResult, Fido2AttestationResult, Fido2Lib} from "fido2-lib";
 import {getProjectHostname, getProjectOIDCID} from "./constants/hostname.js";
 import {Request} from "express";
 
@@ -57,6 +57,10 @@ export default class TwoFactorController {
 
     get factors() {
         return this.user.secondFactors
+    }
+
+    registrationOfTypeExists(type: SecondAuthenticationFactorType) {
+        return this.factors.some(e => e.type === type)
     }
 
     async generateKeyRegistrationOptions(req: Request) {

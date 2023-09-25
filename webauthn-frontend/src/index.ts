@@ -9,20 +9,35 @@ const enroll = (options: any) => {
         const credential = await create(parsedOptions)
 
         if (!credential) {
-            throw new Error("no credential")
+            alert("Process cancelled - please try again")
+            return
         }
 
         if (credential.type !== "public-key") {
-            throw new Error("not public-key")
+            alert("Something went wrong. Please try again.")
+            return
         }
 
-        await fetch("/account/2fa/enroll?type=key", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(credential),
-        })
+        try {
+            const resp = await fetch("/account/2fa/enroll?type=key", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(credential),
+            })
+
+            if (resp.status === 409) {
+                alert("You have already enrolled a security key. Please delete the old one first.")
+                return
+            }
+        } catch (e) {
+            alert("Something went wrong. Please try a different key.")
+            return
+        }
+
+        alert("Successfully enrolled your security key!")
+        window.location.href = "/account/2fa"
     }
 }
 

@@ -63,14 +63,40 @@ export default class TwoFactorController {
         return this.user.secondFactors
     }
 
+    getFactor(type: SecondAuthenticationFactorType) {
+        return this.factors.find(e => e.type === type)
+    }
+
     registrationOfTypeExists(type: SecondAuthenticationFactorType) {
         return this.factors.some(e => e.type === type)
+    }
+
+    private static keyRegistrationSessionKey = "2fa_key_reg_challenge"
+    private static keyAuthenticationSessionKey = "2fa_key_auth_challenge"
+
+    async generateKeyAuthenticationOptions(req: Request) {
+        if (!this.registrationOfTypeExists("SecurityKey")) throw new Error("Method not supported")
+
+        const options = await f2l.assertionOptions()
+        const encodedChallenge = Buffer.from(options.challenge).toString("base64")
+        req.session![TwoFactorController.keyAuthenticationSessionKey] = encodedChallenge
+
+        const keyFactor = this.getFactor("SecurityKey")!
+        const allowCredentials = [{
+            type: "public-key",
+            id: keyFactor.keyPublicKey,
+        }]
+        return {
+            ...options,
+            challenge: encodedChallenge,
+            allowCredentials,
+        }
     }
 
     async generateKeyRegistrationOptions(req: Request) {
         const options = await f2l.attestationOptions()
         const encodedChallenge = Buffer.from(options.challenge).toString("base64")
-        req.session!["2fa_key_challenge"] = encodedChallenge
+        req.session![TwoFactorController.keyRegistrationSessionKey] = encodedChallenge
         options.user.id = this.user.id
         options.user.name = this.user.displayName
         options.user.displayName = this.user.displayName
@@ -81,7 +107,7 @@ export default class TwoFactorController {
     }
 
     async saveKeyRegistration(req: Request, clientResponse: any) {
-        const clientChallenge = req.session!["2fa_key_challenge"]
+        const clientChallenge = req.session![TwoFactorController.keyRegistrationSessionKey]
         if (typeof clientChallenge !== "string") {
             return false
         }
@@ -108,9 +134,9 @@ export default class TwoFactorController {
         }
 
         const counter = registrationResult.authnrData.get("counter") as number | undefined
-        const publicKey = registrationResult.authnrData.get("credentialPublicKeyPem") as string | undefined
+        const publicKey = registrationResult.authnrData.get("credId") as ArrayBuffer | undefined
 
-        if (typeof counter !== "number" || typeof publicKey !== "string") {
+        if (typeof counter !== "number" || !(publicKey instanceof ArrayBuffer)) {
             return false
         }
 
@@ -119,7 +145,7 @@ export default class TwoFactorController {
                 userId: this.user.id,
                 type: "SecurityKey",
                 keyCounter: counter,
-                keyPublicKey: publicKey,
+                keyPublicKey: Buffer.from(publicKey).toString("base64"),
             }
         })
         return true

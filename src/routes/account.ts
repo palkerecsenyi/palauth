@@ -1,12 +1,10 @@
 import express from "express";
 import {authMiddleware} from "../helpers/auth.js";
 import {AuthenticatedRequest} from "../types/express.js";
-import {doubleCsrfProtection} from "../helpers/csrf.js";
 import {UserController} from "../database/users.js";
 import {OAuthClientController} from "../database/oauth.js";
 import TwoFactorController from "../helpers/2fa.js";
 import bodyParser from "body-parser";
-import {DBClient} from "../database/client.js";
 
 const accountRouter = express.Router()
 accountRouter.use(authMiddleware({

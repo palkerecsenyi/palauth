@@ -94,7 +94,7 @@ authRouter.get(
             return
         }
 
-        res.render("auth/2fa.pug", {
+        res.render("auth/2fa-method.pug", {
             methods: uc.twoFactorMethods,
         })
     }
@@ -107,10 +107,21 @@ authRouter.get(
     async (req: AuthenticatedRequest, res) => {
         const uc = UserController.for(req.user!)
         const twoFaController = uc.getTwoFactorController()
-        if (!twoFaController.registrationOfTypeExists(req.param("method") as SecondAuthenticationFactorType)) {
+
+        const twoFaMethod = req.params["method"] as SecondAuthenticationFactorType
+        if (!twoFaController.registrationOfTypeExists(twoFaMethod)) {
             req.flash("error", "Your account isn't registered for that method of 2FA")
             res.redirect("/auth/signin/2fa")
             return
+        }
+
+        if (twoFaMethod === "SecurityKey") {
+            res.render("auth/2fa-verify.pug", {
+                method: twoFaMethod,
+                keyOptions: await twoFaController.generateKeyAuthenticationOptions(req),
+            })
+        } else {
+            res.send("Unimplemented")
         }
     }
 )

@@ -1,0 +1,11 @@
+extends ../layouts/main
+
+block title
+    | Two factor authentication
+
+block header
+    h1 2FA
+
+block content
+    if method === "SecurityKey"
+        include 2fa-verify-key

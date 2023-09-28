@@ -1,0 +1,6 @@
+p Authenticate with a security key
+
+script(type="application/javascript", src="/static/js/webauthn.js")
+script.
+    const authenticate = window["PAL_2FA_AUTHENTICATE"]
+    document.addEventListener("DOMContentLoaded", authenticate(!{JSON.stringify(keyOptions)}))

@@ -1,4 +1,4 @@
-import {parseCreationOptionsFromJSON, create} from "@github/webauthn-json/browser-ponyfill"
+import {parseCreationOptionsFromJSON, create, get, parseRequestOptionsFromJSON} from "@github/webauthn-json/browser-ponyfill"
 
 const enroll = (options: any) => {
     const parsedOptions = parseCreationOptionsFromJSON({
@@ -41,6 +41,37 @@ const enroll = (options: any) => {
     }
 }
 
+const authenticate = (options: any) => {
+    const parsedOptions = parseRequestOptionsFromJSON({
+        publicKey: options,
+    })
+
+    return async () => {
+        console.log(parsedOptions)
+        const credential = await get(parsedOptions)
+        if (!credential) {
+            alert("Process cancelled — please reload to try again")
+            return
+        }
+
+        if (credential.type !== "public-key") {
+            alert("Something went wrong — please reload to try again")
+            return
+        }
+
+        try {
+            const resp = await fetch()
+        } catch (e) {
+            alert("Something went wrong. Please try a different key.")
+            return
+        }
+
+        console.log(credential)
+    }
+}
+
 
 // @ts-ignore
 window["PAL_2FA_ENROLL"] = enroll
+// @ts-ignore
+window["PAL_2FA_AUTHENTICATE"] = authenticate

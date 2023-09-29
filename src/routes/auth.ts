@@ -1,5 +1,5 @@
 import express, {Response} from "express";
-import {authMiddleware, getProvisionalUserId, setProvisionalUserId, setUserId} from "../helpers/auth.js";
+import {authMiddleware, setProvisionalUserId, setUserId} from "../helpers/auth.js";
 import {AuthenticatedRequest, ValidatedRequest} from "../types/express.js";
 import {doubleCsrfProtection, generateToken} from "../helpers/csrf.js";
 import {DBClient} from "../database/client.js";
@@ -11,9 +11,9 @@ import {ensureValidators} from "../helpers/validators.js";
 import {InviteController} from "../database/invites.js";
 import {Prisma, SecondAuthenticationFactorType} from "../database/generated-models/index.js";
 import EmailVerificationController from "../helpers/mail/email-verification.js";
+import bodyParser from "body-parser";
 
 const authRouter = express.Router()
-authRouter.use(doubleCsrfProtection)
 
 const notAuthenticatedMiddleware = authMiddleware({
     authRequirement: "require-not-authenticated",
@@ -41,6 +41,7 @@ authRouter.get(
 
 authRouter.post(
     "/signin",
+    doubleCsrfProtection,
     notAuthenticatedMiddleware,
     body("email").isEmail(),
     body("password").notEmpty(),
@@ -126,6 +127,45 @@ authRouter.get(
     }
 )
 
+authRouter.post(
+    "/signin/2fa/:method",
+    bodyParser.json(),
+    provisionalAuthenticatedMiddleware,
+    flowManager.ensureCanContinue("/auth/signin"),
+    async (req: AuthenticatedRequest, res) => {
+        const uc = UserController.for(req.user!)
+        const twoFaController = uc.getTwoFactorController()
+
+        const twoFaMethod = req.params["method"] as SecondAuthenticationFactorType
+        if (!twoFaController.registrationOfTypeExists(twoFaMethod)) {
+            res.sendStatus(204)
+            return
+        }
+
+        if (twoFaMethod === "SecurityKey") {
+            const keyCorrect = await twoFaController.checkKeyAuthentication(req, req.body)
+            if (!keyCorrect) {
+                res.sendStatus(403)
+                return
+            }
+        } else {
+            res.sendStatus(501)
+            return
+        }
+
+        setUserId(req, req.user!.id)
+        res.sendStatus(204)
+    }
+)
+
+authRouter.get(
+    "/continue",
+    flowManager.ensureCanContinue("/auth/signin"),
+    (req, res) => {
+        flowManager.continueToDestination(req, res, "/auth/signin")
+    }
+)
+
 authRouter.get(
     "/signup",
     flowManager.saveDestinationMiddleware.bind(flowManager),
@@ -139,6 +179,7 @@ authRouter.get(
 
 authRouter.post(
     "/signup",
+    doubleCsrfProtection,
     flowManager.ensureCanContinue("/auth/signup"),
     body("displayName").notEmpty().trim().isLength({ min: 2, max: 20 }),
     body("email").isEmail(),
@@ -250,6 +291,7 @@ authRouter.get(
 
 authRouter.post(
     "/verify",
+    doubleCsrfProtection,
     flowManager.ensureCanContinue("/auth/signin"),
     body("code").notEmpty().trim().isLength({min: 6, max: 6}),
     body("email").notEmpty(),

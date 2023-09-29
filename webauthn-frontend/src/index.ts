@@ -4,6 +4,7 @@ const enroll = (options: any) => {
     const parsedOptions = parseCreationOptionsFromJSON({
         publicKey: options,
     })
+    console.log(parsedOptions)
 
     return async () => {
         const credential = await create(parsedOptions)
@@ -31,6 +32,10 @@ const enroll = (options: any) => {
                 alert("You have already enrolled a security key. Please delete the old one first.")
                 return
             }
+
+            if (resp.status !== 204) {
+                throw new Error()
+            }
         } catch (e) {
             alert("Something went wrong. Please try a different key.")
             return
@@ -47,7 +52,6 @@ const authenticate = (options: any) => {
     })
 
     return async () => {
-        console.log(parsedOptions)
         const credential = await get(parsedOptions)
         if (!credential) {
             alert("Process cancelled — please reload to try again")
@@ -60,13 +64,24 @@ const authenticate = (options: any) => {
         }
 
         try {
-            const resp = await fetch()
+            const resp = await fetch("/auth/signin/2fa/SecurityKey", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(credential),
+            })
+
+            if (resp.status !== 204) {
+                throw new Error()
+            }
         } catch (e) {
             alert("Something went wrong. Please try a different key.")
             return
         }
 
-        console.log(credential)
+        document.getElementById("status")!.innerText = "Success! Redirecting..."
+        window.location.replace("/auth/continue")
     }
 }
 

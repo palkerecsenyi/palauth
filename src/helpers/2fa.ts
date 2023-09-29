@@ -3,7 +3,7 @@ import UserGetPayload = Prisma.UserGetPayload;
 import {TransactionType} from "../types/prisma.js";
 import {AuthenticatedRequest} from "../types/express.js";
 import {DBClient} from "../database/client.js";
-import {ExpectedAttestationResult, Fido2AttestationResult, Fido2Lib} from "fido2-lib";
+import {Audit, ExpectedAssertionResult, ExpectedAttestationResult, Fido2AssertionResult, Fido2AttestationResult, Fido2Lib} from "fido2-lib";
 import {getProjectHostname, getProjectOIDCID} from "./constants/hostname.js";
 import {Request} from "express";
 
@@ -12,7 +12,6 @@ const f2l = new Fido2Lib({
     rpName: "PalAuth",
     challengeSize: 128,
     attestation: "direct",
-    authenticatorAttachment: "platform",
     authenticatorUserVerification: "preferred",
 })
 
@@ -73,6 +72,18 @@ export default class TwoFactorController {
 
     private static keyRegistrationSessionKey = "2fa_key_reg_challenge"
     private static keyAuthenticationSessionKey = "2fa_key_auth_challenge"
+    private get securityKeyFactor() {
+        return this.getFactor("SecurityKey")!
+    }
+    private get allowCredentials() {
+        return [{
+            type: "public-key",
+            id: this.securityKeyFactor.keyPublicKeyId,
+        }]
+    }
+    private fidoAuditValid(audit: Audit) {
+        return audit.complete && audit.validRequest && audit.validExpectations
+    }
 
     async generateKeyAuthenticationOptions(req: Request) {
         if (!this.registrationOfTypeExists("SecurityKey")) throw new Error("Method not supported")
@@ -81,16 +92,43 @@ export default class TwoFactorController {
         const encodedChallenge = Buffer.from(options.challenge).toString("base64")
         req.session![TwoFactorController.keyAuthenticationSessionKey] = encodedChallenge
 
-        const keyFactor = this.getFactor("SecurityKey")!
-        const allowCredentials = [{
-            type: "public-key",
-            id: keyFactor.keyPublicKey,
-        }]
         return {
             ...options,
             challenge: encodedChallenge,
-            allowCredentials,
+            allowCredentials: this.allowCredentials,
         }
+    }
+
+    async checkKeyAuthentication(req: Request, clientResponse: any) {
+        const clientChallenge = req.session![TwoFactorController.keyAuthenticationSessionKey]
+        if (typeof clientChallenge !== "string") {
+            return false
+        }
+
+        const expectaions = {
+            challenge: clientChallenge,
+            origin: getProjectOIDCID(),
+            factor: "second",
+            publicKey: this.securityKeyFactor.keyPublicKey!,
+            prevCounter: this.securityKeyFactor.keyCounter!,
+            userHandle: this.user.id,
+        } as ExpectedAssertionResult
+
+        clientResponse.id = Buffer.from(clientResponse.id).buffer
+
+        let authnResult: Fido2AssertionResult
+        try {
+            authnResult = await f2l.assertionResult(clientResponse, expectaions)
+        } catch (e) {
+            console.warn(e)
+            return false
+        }
+
+        if (!this.fidoAuditValid(authnResult.audit)) {
+            return false
+        }
+
+        return true
     }
 
     async generateKeyRegistrationOptions(req: Request) {
@@ -128,15 +166,15 @@ export default class TwoFactorController {
             return false
         }
 
-        const isValidResponse = registrationResult.audit.complete && registrationResult.audit.validRequest && registrationResult.audit.validExpectations
-        if (!isValidResponse) {
+        if (!this.fidoAuditValid(registrationResult.audit)) {
             return false
         }
 
         const counter = registrationResult.authnrData.get("counter") as number | undefined
-        const publicKey = registrationResult.authnrData.get("credId") as ArrayBuffer | undefined
+        const publicKeyPem = registrationResult.authnrData.get("credentialPublicKeyPem") as string | undefined
+        const publicKeyId = registrationResult.clientData.get("rawId") as ArrayBuffer | undefined
 
-        if (typeof counter !== "number" || !(publicKey instanceof ArrayBuffer)) {
+        if (typeof counter !== "number" || typeof publicKeyPem !== "string" || !(publicKeyId instanceof ArrayBuffer)) {
             return false
         }
 
@@ -145,7 +183,8 @@ export default class TwoFactorController {
                 userId: this.user.id,
                 type: "SecurityKey",
                 keyCounter: counter,
-                keyPublicKey: Buffer.from(publicKey).toString("base64"),
+                keyPublicKeyId: Buffer.from(publicKeyId).toString("base64"),
+                keyPublicKey: publicKeyPem,
             }
         })
         return true

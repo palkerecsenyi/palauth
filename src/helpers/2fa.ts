@@ -105,7 +105,7 @@ export default class TwoFactorController {
             return false
         }
 
-        const expectaions = {
+        const expectations = {
             challenge: clientChallenge,
             origin: getProjectOIDCID(),
             factor: "second",
@@ -118,7 +118,7 @@ export default class TwoFactorController {
 
         let authnResult: Fido2AssertionResult
         try {
-            authnResult = await f2l.assertionResult(clientResponse, expectaions)
+            authnResult = await f2l.assertionResult(clientResponse, expectations)
         } catch (e) {
             console.warn(e)
             return false
@@ -127,6 +127,20 @@ export default class TwoFactorController {
         if (!this.fidoAuditValid(authnResult.audit)) {
             return false
         }
+
+        const counter = authnResult.authnrData.get("counter") as number | undefined
+        if (typeof counter !== "number") {
+            return false
+        }
+
+        await this.tx.secondAuthenticationFactor.update({
+            where: {
+                id: this.securityKeyFactor.id,
+            },
+            data: {
+                keyCounter: counter,
+            },
+        })
 
         return true
     }

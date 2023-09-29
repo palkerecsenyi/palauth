@@ -59,6 +59,7 @@ authRouter.post(
         }
 
         if (!user.emailVerified) {
+            req.session!["verify_email"] = user.email
             req.flash("error", "Please verify your email to continue signing in")
             res.redirect("/auth/verify")
             return

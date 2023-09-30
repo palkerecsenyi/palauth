@@ -19,7 +19,7 @@ app.use(cookieSession({
     name: "pal_sesh",
     keys: getSecretKeys(),
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    sameSite: "strict",
+    sameSite: "lax",
     httpOnly: true,
 }))
 app.use(bodyParser.urlencoded({

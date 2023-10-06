@@ -1,3 +1,6 @@
 mixin hcaptcha
-    div(class="h-captcha", data-sitekey="858cfedb-91b1-4576-9536-9f0f373e6c13")
-    script(src="https://js.hcaptcha.com/1/api.js", async, defer)
+    if disableCaptcha
+        p DEV: captcha disabled
+    else
+        div(class="h-captcha", data-sitekey="858cfedb-91b1-4576-9536-9f0f373e6c13")
+        script(src="https://js.hcaptcha.com/1/api.js", async, defer)

@@ -1,8 +1,15 @@
 import {NextFunction, Request, Response} from "express";
 import {verify} from "hcaptcha"
 import {getHCaptchaSecret} from "./constants/secretKeys.js";
+import DevModeSettings from "./constants/devMode.js";
+
 
 export const verifyCaptcha = (failureURL: string | ((req: Request) => string)) => async (req: Request, res: Response, next: NextFunction) => {
+    if (DevModeSettings.isCaptchaDisabled()) {
+        next()
+        return
+    }
+
     const secret = getHCaptchaSecret()
     if (!secret) throw new Error("hcaptcha secret missing")
 

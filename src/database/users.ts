@@ -19,6 +19,7 @@ export class UserController {
         }: Pick<User, "displayName" | "email"> & {
             password: string
         },
+        autoVerifyEmail = false,
         tx: TransactionType = DBClient.getClient(),
     ) {
         const passwordHash = await argon2.hash(password)
@@ -26,6 +27,7 @@ export class UserController {
         const user = await tx.user.create({
             data: {
                 displayName, email, passwordHash,
+                emailVerified: autoVerifyEmail,
             }
         })
 

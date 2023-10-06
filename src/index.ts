@@ -9,6 +9,7 @@ import accountRouter from "./routes/account.js";
 import oidcRouter from "./routes/oidc.js";
 import wellKnownRouter from "./routes/well-known.js";
 import devRouter from "./routes/developer.js";
+import DevModeSettings from "./helpers/constants/devMode.js";
 
 const app = express()
 app.set("view engine", "pug")
@@ -29,6 +30,7 @@ app.use(cookieParser())
 app.use(flash())
 app.use((req, res, next) => {
     res.locals.messages = req.flash()
+    res.locals.disableCaptcha = DevModeSettings.isCaptchaDisabled()
     next()
 })
 

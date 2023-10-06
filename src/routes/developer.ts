@@ -145,7 +145,9 @@ devRouter.get(
 
 devRouter.post(
     "/:clientId/redirectURIs/create",
-    body("uri").isURL(),
+    body("uri").isURL({
+        require_tld: false,
+    }),
     ensureValidators(req => `/dev/${req.params.clientId}/redirectURIs/add`),
     resolveClientMiddleware,
     verifyCaptcha(req => `/dev/${req.params.clientId}/redirectURIs/add`),

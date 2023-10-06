@@ -12,6 +12,7 @@ import {InviteController} from "../database/invites.js";
 import {Prisma, SecondAuthenticationFactorType} from "../database/generated-models/index.js";
 import EmailVerificationController from "../helpers/mail/email-verification.js";
 import bodyParser from "body-parser";
+import DevModeSettings from "../helpers/constants/devMode.js";
 
 const authRouter = express.Router()
 
@@ -184,10 +185,16 @@ authRouter.post(
     flowManager.ensureCanContinue("/auth/signup"),
     body("displayName").notEmpty().trim().isLength({ min: 2, max: 20 }),
     body("email").isEmail(),
-    body("password").isStrongPassword({
-        minLength: 12,
-        minNumbers: 1,
-    }).withMessage("Must be at least 12 characters with 1 number"),
+    (req, res, next) => {
+        if (DevModeSettings.isInsecurePasswordsAllowed()) {
+            return body("password").notEmpty()(req, res, next)
+        }
+
+        body("password").isStrongPassword({
+            minLength: 11,
+            minNumbers: 1,
+        }).withMessage("Must be at least 12 characters with 1 number, 1 uppercase, 1 lowercase, and 1 symbol.")(req, res, next)
+    },
     body("passwordConfirm").notEmpty(),
     body("token").notEmpty(),
     ensureValidators("/auth/signup"),
@@ -220,7 +227,7 @@ authRouter.post(
             try {
                 userId = await UserController.createUser({
                     displayName, email, password
-                }, tx)
+                }, DevModeSettings.skipEmailVerification(), tx)
             } catch (e) {
                 if (e instanceof Prisma.PrismaClientKnownRequestError && e.meta?.target === "User_email_key") {
                     req.flash("error", "That email address is already in use")
@@ -234,13 +241,22 @@ authRouter.post(
                 return
             }
 
-            const emailVerification = await EmailVerificationController.create(userId, tx)
-            await emailVerification.send()
+            if (!DevModeSettings.skipEmailVerification()) {
+                const emailVerification = await EmailVerificationController.create(userId, tx)
+                await emailVerification.send()
+            }
+
             return userId
         })
 
         if (!userId) {
             res.redirect("/auth/signup")
+            return
+        }
+
+        if (DevModeSettings.skipEmailVerification()) {
+            req.flash("success", "DEV: skipping email verification, signup complete")
+            res.redirect("/auth/signin")
             return
         }
 

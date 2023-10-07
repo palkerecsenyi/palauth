@@ -2,5 +2,5 @@ mixin hcaptcha
     if disableCaptcha
         p DEV: captcha disabled
     else
-        div(class="h-captcha", data-sitekey="858cfedb-91b1-4576-9536-9f0f373e6c13")
-        script(src="https://js.hcaptcha.com/1/api.js", async, defer)
+        div.frc-captcha(data-puzzle-endpoint=captchaURL+"/puzzle.php", data-sitekey="palauth")
+        script(type="module", src="https://cdn.jsdelivr.net/npm/friendly-challenge@0/widget.module.min.js", async, defer)

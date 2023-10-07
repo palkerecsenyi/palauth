@@ -749,6 +749,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^1.5.1":
+  version: 1.5.1
+  resolution: "axios@npm:1.5.1"
+  dependencies:
+    follow-redirects: ^1.15.0
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: 4444f06601f4ede154183767863d2b8e472b4a6bfc5253597ed6d21899887e1fd0ee2b3de792ac4f8459fe2e359d2aa07c216e45fd8b9e4e0688a6ebf48a5a8d
+  languageName: node
+  linkType: hard
+
 "babel-walk@npm:3.0.0-canary-5":
   version: 3.0.0-canary-5
   resolution: "babel-walk@npm:3.0.0-canary-5"
@@ -1694,13 +1705,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hcaptcha@npm:^0.1.1":
-  version: 0.1.1
-  resolution: "hcaptcha@npm:0.1.1"
-  checksum: 3dcad365da0b4611ba43f02f898eb343324f607445c21f403a60a7d8f4891501323a6553c24670e2a7dd77dc5184ca656a8b15e5b29bbf494b15cd7e0daae6e8
-  languageName: node
-  linkType: hard
-
 "http-cache-semantics@npm:^4.1.1":
   version: 4.1.1
   resolution: "http-cache-semantics@npm:4.1.1"
@@ -2423,6 +2427,7 @@ __metadata:
     "@types/luxon": ^3.3.2
     "@types/node": ^18.17.18
     argon2: ^0.31.1
+    axios: ^1.5.1
     body-parser: ^1.20.2
     connect-flash: ^0.1.1
     cookie-parser: ^1.4.6
@@ -2432,7 +2437,6 @@ __metadata:
     express-validator: ^7.0.1
     fido2-lib: ^3.4.1
     form-data: ^4.0.0
-    hcaptcha: ^0.1.1
     jose: ^4.14.6
     luxon: ^3.4.3
     mailgun.js: ^9.3.0

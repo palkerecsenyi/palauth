@@ -3,7 +3,7 @@ import cookieSession from "cookie-session"
 import authRouter, {signOutRoute} from "./routes/auth.js";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser"
-import {getSecretKeys} from "./helpers/constants/secretKeys.js";
+import {getCaptchaURL, getSecretKeys} from "./helpers/constants/secretKeys.js";
 import flash from "connect-flash"
 import accountRouter from "./routes/account.js";
 import oidcRouter from "./routes/oidc.js";
@@ -31,6 +31,7 @@ app.use(flash())
 app.use((req, res, next) => {
     res.locals.messages = req.flash()
     res.locals.disableCaptcha = DevModeSettings.isCaptchaDisabled()
+    res.locals.captchaURL = getCaptchaURL()
     next()
 })
 
@@ -39,7 +40,7 @@ app.use("/oidc", oidcRouter)
 app.use("/dev", devRouter)
 app.get("/auth/signout", signOutRoute)
 app.use("/auth", authRouter)
-app.get("/favicon.ico", (req, res) => res.sendStatus(404))
+app.get("/favicon.ico", (_, res) => res.sendStatus(404))
 app.use("/", accountRouter)
 
 const envPort = process.env["PORT"]

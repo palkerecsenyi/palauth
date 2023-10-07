@@ -36,5 +36,7 @@ export const getJWTPublicKey = () => getJWT("PAL_PUBLIC_JWK")
 export const getJWTRawPublicKey = () => getJSONEnv("PAL_PUBLIC_JWK")
 export const getJWKAlg = () => "RS256"
 
-export const getHCaptchaSecret = () => process.env["PAL_HCAPTCHA_SECRET"]
+export const getCaptchaURL = () => process.env["PAL_CAPTCHA_URL"]
+export const getCaptchaAPIKey = () => process.env["PAL_CAPTCHA_KEY"]
+
 export const getMailgunSecret = () => process.env["PAL_MAILGUN_KEY"]

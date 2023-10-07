@@ -2,6 +2,7 @@
 import {doubleCsrf} from "csrf-csrf";
 import {Request} from "express";
 import {getSecretKeys} from "./constants/secretKeys.js";
+import DevModeSettings from "./constants/devMode.js";
 
 const {
     generateToken,
@@ -14,6 +15,11 @@ const {
         return getSecretKeys()[0]
     },
     cookieName: "pal_csrf",
+    cookieOptions: {
+        sameSite: "strict",
+        path: "/",
+        secure: !DevModeSettings.isNodeDevMode(),
+    },
 })
 
 export {generateToken, doubleCsrfProtection}

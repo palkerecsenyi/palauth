@@ -18,4 +18,7 @@ export default class DevModeSettings {
     public static skipEmailVerification() {
         return this.allowed("SKIP_EMAIL_VERIFICATION")
     }
+    public static isNodeDevMode() {
+        return process.env.NODE_ENV === "development"
+    }
 }

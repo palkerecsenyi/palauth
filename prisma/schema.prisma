@@ -56,6 +56,8 @@ model SecondAuthenticationFactor {
   keyCounter Int?
   keyPublicKey String?
   keyPublicKeyId String?
+  
+  totpSecret String?
 }
 
 model OAuthClient {

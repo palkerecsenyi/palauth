@@ -123,6 +123,10 @@ authRouter.get(
                 method: twoFaMethod,
                 keyOptions: await twoFaController.securityKey.generateKeyAuthenticationOptions(req),
             })
+        } else if (twoFaMethod === "TOTP") {
+            res.render("auth/2fa-verify.pug", {
+                method: twoFaMethod,
+            })
         } else {
             res.send("Unimplemented")
         }
@@ -150,13 +154,25 @@ authRouter.post(
                 res.sendStatus(403)
                 return
             }
+        } else if (twoFaMethod === "TOTP") {
+            const tokenCorrect = twoFaController.totp.verify(req.body.token)
+            if (!tokenCorrect) {
+                req.flash("error", "Incorrect token")
+                res.redirect("/auth/signin/2fa/TOTP")
+                return
+            }
         } else {
             res.sendStatus(501)
             return
         }
 
         setUserId(req, req.user!.id)
-        res.sendStatus(204)
+
+        if (twoFaMethod === "SecurityKey") {
+            res.sendStatus(204)
+        } else {
+            res.redirect("/auth/continue")
+        }
     }
 )
 

@@ -1,0 +1,9 @@
+include ../components/submit-button.pug
+
+h3 Authenticate with your app
+
+form(method="post", action="/auth/signin/2fa/TOTP")
+    label(for="token") Code
+    input#token(name="token", type="text", required)
+
+    +submit_button

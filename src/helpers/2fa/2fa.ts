@@ -3,6 +3,9 @@ import { AuthenticatedRequest } from "../../types/express.js";
 import { DBClient } from "../../database/client.js";
 import BaseTwoFactorController, { UserWithSecondFactors } from "./general.js";
 import TwoFactorSecurityKeyController from "./securityKey.js";
+import { $Enums } from "../../database/generated-models/index.js";
+import TwoFactorTOTPController from "./totp.js";
+import type { TwoFactorMethodController, TwoFactorMethodControllerInstance } from "./types.js";
 
 export default class TwoFactorController extends BaseTwoFactorController {
     private static async fromUserId(userId: string, tx: TransactionType) {
@@ -36,16 +39,23 @@ export default class TwoFactorController extends BaseTwoFactorController {
         return new TwoFactorController(user, tx)
     }
 
-    private securityKeyController: TwoFactorSecurityKeyController | undefined = undefined
+    private static controllerInitialisers: Record<$Enums.SecondAuthenticationFactorType, TwoFactorMethodController> = {
+        "SecurityKey": TwoFactorSecurityKeyController,
+        "TOTP": TwoFactorTOTPController,
+    }
+    private controller: Partial<Record<$Enums.SecondAuthenticationFactorType, TwoFactorMethodControllerInstance>> = {}
+    private getController(type: $Enums.SecondAuthenticationFactorType) {
+        if (!Object.hasOwn(this.controller, type)) {
+            this.controller[type] = new TwoFactorController.controllerInitialisers[type](this.user, this.tx)
+        }
+
+        return this.controller[type]
+    }
+
     public get securityKey() {
-        if (!this.registrationOfTypeExists("SecurityKey")) {
-            throw new Error("Method not supported")
-        }
-
-        if (!this.securityKeyController) {
-            this.securityKeyController = new TwoFactorSecurityKeyController(this.user, this.tx)
-        }
-
-        return this.securityKeyController
+        return this.getController("SecurityKey") as TwoFactorSecurityKeyController
+    }
+    public get totp() {
+        return this.getController("TOTP") as TwoFactorTOTPController
     }
 }

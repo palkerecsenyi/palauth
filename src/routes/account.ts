@@ -74,8 +74,13 @@ accountRouter.get(
                 type,
                 options,
             })
-        } else {
-            res.send("Unimplemented")
+        } else if (type === "totp") {
+            const secret = await twoFaController.totp.generateSecret(req)
+            res.render("account/2fa-enroll", {
+                type,
+                qrDataUrl: secret.qrCodeUrl,
+                rawSecret: secret.rawSecret,
+            })
         }
     }
 )
@@ -103,6 +108,28 @@ accountRouter.post(
                 res.sendStatus(401)
                 return
             }
+        } else if (type === "totp") {
+            if (twoFaController.registrationOfTypeExists("TOTP")) {
+                req.flash("error", "You've already enrolled an authenticator app. Please delete it first.")
+                res.status(409).redirect("/account/2fa/enroll?type=totp")
+                return
+            }
+
+            const token = req.body.token
+            if (typeof token !== "string") {
+                res.status(400).send("No valid token provided")
+                return
+            }
+            const success = await twoFaController.totp.saveRegistration(token, req)
+
+            if (success) {
+                req.flash("success", "Added your authenticator app!")
+                res.redirect("/account/2fa")
+            } else {
+                req.flash("error", "Something went wrong. Maybe your code is too old?")
+                res.redirect("/account/2fa/enroll?type=totp")
+            }
+            return
         }
 
         res.sendStatus(204)

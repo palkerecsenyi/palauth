@@ -15,6 +15,8 @@
     "@types/jsonwebtoken": "^9.0.3",
     "@types/luxon": "^3.3.2",
     "@types/node": "^18.17.18",
+    "@types/qrcode": "^1.5.2",
+    "@types/speakeasy": "^2.0.8",
     "nodemon": "^3.0.1",
     "prisma": "5.3.1",
     "tsx": "^3.12.10",
@@ -37,7 +39,9 @@
     "jose": "^4.14.6",
     "luxon": "^3.4.3",
     "mailgun.js": "^9.3.0",
-    "pug": "^3.0.2"
+    "pug": "^3.0.2",
+    "qrcode": "^1.5.3",
+    "speakeasy": "^2.0.0"
   },
   "scripts": {
     "dev": "nodemon",

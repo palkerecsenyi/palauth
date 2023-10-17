@@ -1,0 +1,19 @@
+include ../components/submit-button.pug
+
+p Scan this QR code with your app:
+img(src=qrDataUrl, alt="QR code to enroll")
+
+p Or enter this secret:
+
+pre
+    code= rawSecret
+
+p
+    strong Done?
+    | &nbsp;Enter the code shown in the app:
+
+form(method="post", action="/account/2fa/enroll?type=totp")
+    label(for="token") Code
+    input#token(name="token", type="text", required)
+
+    +submit_button

@@ -121,7 +121,7 @@ authRouter.get(
         if (twoFaMethod === "SecurityKey") {
             res.render("auth/2fa-verify.pug", {
                 method: twoFaMethod,
-                keyOptions: await twoFaController.generateKeyAuthenticationOptions(req),
+                keyOptions: await twoFaController.securityKey.generateKeyAuthenticationOptions(req),
             })
         } else {
             res.send("Unimplemented")
@@ -145,7 +145,7 @@ authRouter.post(
         }
 
         if (twoFaMethod === "SecurityKey") {
-            const keyCorrect = await twoFaController.checkKeyAuthentication(req, req.body)
+            const keyCorrect = await twoFaController.securityKey.checkKeyAuthentication(req, req.body)
             if (!keyCorrect) {
                 res.sendStatus(403)
                 return

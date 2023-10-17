@@ -3,8 +3,8 @@ import {authMiddleware} from "../helpers/auth.js";
 import {AuthenticatedRequest} from "../types/express.js";
 import {UserController} from "../database/users.js";
 import {OAuthClientController} from "../database/oauth.js";
-import TwoFactorController from "../helpers/2fa.js";
 import bodyParser from "body-parser";
+import TwoFactorController from "../helpers/2fa/2fa.js";
 
 const accountRouter = express.Router()
 accountRouter.use(authMiddleware({
@@ -68,7 +68,7 @@ accountRouter.get(
         const twoFaController = await TwoFactorController.mustFromAuthenticatedRequest(req)
 
         if (type === "key") {
-            const options = await twoFaController.generateKeyRegistrationOptions(req)
+            const options = await twoFaController.securityKey.generateKeyRegistrationOptions(req)
 
             res.render("account/2fa-enroll", {
                 type,
@@ -98,7 +98,7 @@ accountRouter.post(
                 return
             }
 
-            const success = await twoFaController.saveKeyRegistration(req, req.body)
+            const success = await twoFaController.securityKey.saveKeyRegistration(req, req.body)
             if (!success) {
                 res.sendStatus(401)
                 return

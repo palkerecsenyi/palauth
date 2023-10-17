@@ -3,7 +3,7 @@ import argon2 from "argon2"
 import {DBClient} from "./client.js";
 import {TransactionType} from "../types/prisma.js";
 import {OIDCUserInfoResponse} from "../types/oidc.js";
-import TwoFactorController from "../helpers/2fa.js";
+import TwoFactorController from "../helpers/2fa/2fa.js";
 
 export type UserControllerUser = Prisma.UserGetPayload<{
     include: {

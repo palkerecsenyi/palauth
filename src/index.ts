@@ -22,7 +22,6 @@ app.use(cookieSession({
     maxAge: 7 * 24 * 60 * 60 * 1000,
     sameSite: "lax",
     httpOnly: true,
-    secure: !DevModeSettings.isNodeDevMode(),
 }))
 app.use(bodyParser.urlencoded({
     extended: false,

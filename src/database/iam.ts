@@ -21,31 +21,40 @@ export default class IAMController {
         return new IAMController(clientId, scopes, tx)
     }
 
-    async checkResource(request: {
-        userId: string,
-        scopePath: string,
-        resourceId: string,
-    }) {
-        if (!request.scopePath.startsWith("/")) {
+    private static validateScopePath(scopePath: string) {
+        if (!scopePath.startsWith("/")) {
             throw new TypeError("Scope path must start with /")
         }
+    }
 
-        const matchingScope = this.scopes.find(s => {
-            return s.path.startsWith(request.scopePath)
+    private findScope(scopePath: string) {
+        IAMController.validateScopePath(scopePath)
+        return this.scopes.find(s => {
+            return s.path.startsWith(scopePath)
         })
-        if (!matchingScope) {
-            return false
-        }
+    }
 
-        const resourceInScope = await this.tx.iAMResource.findFirst({
+    private findResource(scopeId: string, resourceId: string) {
+        return this.tx.iAMResource.findFirst({
             where: {
-                scopeId: matchingScope.id,
-                resourceId: request.resourceId,
+                scopeId: scopeId,
+                resourceId: resourceId,
             },
             include: {
                 grants: true,
             }
         })
+    }
+
+    async checkResource(request: {
+        userId: string,
+        scopePath: string,
+        resourceId: string,
+    }) {
+        const matchingScope = this.findScope(request.scopePath)
+        if (!matchingScope) return false
+
+        const resourceInScope = await this.findResource(matchingScope.id, request.resourceId)
         if (!resourceInScope) {
             return false
         }
@@ -54,5 +63,27 @@ export default class IAMController {
             return g.userId === request.userId
         })
         return matchingGrant !== undefined
+    }
+
+    async registerResource(resource: {
+        scopePath: string,
+        resourceId: string,
+    }) {
+        const matchingScope = this.findScope(resource.scopePath)
+        if (!matchingScope) throw new Error("Scope not found")
+
+        await this.tx.iAMResource.upsert({
+            where: {
+                scopeId_resourceId: {
+                    scopeId: matchingScope.id,
+                    resourceId: resource.resourceId,
+                }
+            },
+            update: {},
+            create: {
+                scopeId: matchingScope.id,
+                resourceId: resource.resourceId,
+            }
+        })
     }
 }

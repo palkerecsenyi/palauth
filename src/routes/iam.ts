@@ -2,12 +2,13 @@ import express from "express";
 import { IAMRequest } from "../types/express.js";
 import { oidcSecretMiddleware } from "../helpers/iam/oidc-middleware.js";
 import { iamMiddleware } from "../helpers/iam/iam-middleware.js";
+import { parseResourcePathMiddleware } from "../helpers/iam/resource-path.js";
 
 const iamRouter = express.Router()
 
 iamRouter.get(
     "/check/*",
-    iamMiddleware,
+    parseResourcePathMiddleware,
     async (req: IAMRequest, res) => {
         const iam = req.iamController!
 
@@ -17,18 +18,7 @@ iamRouter.get(
             return
         }
 
-        const resourcePathString = req.params[0] as string
-        if (!resourcePathString) {
-            res.status(400).send("Couldn't parse resource path")
-        }
-
-        const resourcePath = resourcePathString.split("/")
-        if (resourcePath.length < 2) {
-            res.status(400).send("Not enough components in resource path")
-        }
-
-        const resourceId = resourcePath[resourcePath.length - 1]
-        const scopePath = "/" + resourcePath.slice(0, -1).join("/")
+        const {scopePath, resourceId} = req.parsedPath!
 
         try {
             const result = await iam.checkResource({
@@ -49,6 +39,37 @@ iamRouter.get(
     }
 )
 
+iamRouter.put(
+    "/*",
+    parseResourcePathMiddleware,
+    async (req: IAMRequest, res) => {
+        const iam = req.iamController!
+        const {scopePath, resourceId} = req.parsedPath!
+
+        try {
+            await iam.registerResource({
+                scopePath,
+                resourceId,
+            })
+        } catch (e) {
+            console.error(e)
+            res.status(400).send("Failed to register resource")
+            return
+        }
+
+        res.sendStatus(204)
+    }
+)
+
+iamRouter.delete(
+    "/*",
+    parseResourcePathMiddleware,
+    async (req: IAMRequest, res) => {
+        const iam = req.iamController!
+        const {scopePath, resourceId} = req.parsedPath!
+    }
+)
+
 const _r = express.Router()
-_r.use("/:clientId", oidcSecretMiddleware, iamRouter)
+_r.use("/:clientId", oidcSecretMiddleware, iamMiddleware, iamRouter)
 export default _r

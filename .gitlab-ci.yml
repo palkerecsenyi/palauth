@@ -33,5 +33,5 @@ deploy-gcp:
     - docker push $GCP_DOCKER_TAG
 
     - gcloud config set project palk-util
-    - gcloud run deploy palk-redirect --image $GCP_DOCKER_TAG --region=europe-west1 --allow-unauthenticated
+    - gcloud run deploy palauth --image $GCP_DOCKER_TAG --region=europe-west1 --allow-unauthenticated
     - gcloud artifacts packages delete --async --location europe-west1 --repository palauth-build palauth

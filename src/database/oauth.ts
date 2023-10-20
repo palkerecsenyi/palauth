@@ -61,6 +61,17 @@ export class OAuthClientController {
 
                 const [, decodedClientSecret] = decodedAuth
                 client_secret = decodedClientSecret
+            } else if (authHeader?.startsWith("Bearer ")) {
+                const decodedSecret = authHeader.substring(7)
+                if (decodedSecret.length === 0) {
+                    res.json({
+                        error: "invalid_request",
+                        error_description: "Bearer token not long enough"
+                    } as OAuthAccessTokenResponse)
+                    return
+                }
+
+                client_secret = decodedSecret
             }
         }
 

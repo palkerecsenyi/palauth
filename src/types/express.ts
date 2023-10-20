@@ -1,7 +1,9 @@
 import type {Request} from "express";
-import {OIDCFlow} from "../helpers/oidc/oidc-flow.js";
-import {OAuthTokenWrapper} from "../database/tokens.js";
-import {UserControllerUser} from "../database/users.js";
+import type {OIDCFlow} from "../helpers/oidc/oidc-flow.js";
+import type {OAuthTokenWrapper} from "../database/tokens.js";
+import type {UserControllerUser} from "../database/users.js";
+import type { OAuthClientController } from "../database/oauth.js";
+import IAMController from "../database/iam.js";
 
 export interface AuthenticatedRequest extends Request {
     user?: UserControllerUser
@@ -17,4 +19,12 @@ export interface OIDCFlowRequest extends Request {
 
 export interface BearerTokenRequest extends Request {
     tokenWrapper?: OAuthTokenWrapper
+}
+
+export interface OIDCSecretRequest extends Request {
+    oauthClient?: OAuthClientController
+}
+
+export interface IAMRequest extends Request {
+    iamController?: IAMController
 }

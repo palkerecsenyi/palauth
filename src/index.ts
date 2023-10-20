@@ -10,6 +10,7 @@ import oidcRouter from "./routes/oidc.js";
 import wellKnownRouter from "./routes/well-known.js";
 import devRouter from "./routes/developer.js";
 import DevModeSettings from "./helpers/constants/devMode.js";
+import iamRouter from "./routes/iam.js";
 
 const app = express()
 app.set("view engine", "pug")
@@ -41,6 +42,7 @@ app.use("/dev", devRouter)
 app.get("/auth/signout", signOutRoute)
 app.use("/auth", authRouter)
 app.get("/favicon.ico", (_, res) => res.sendStatus(404))
+app.use("/iam", iamRouter)
 app.use("/", accountRouter)
 
 const envPort = process.env["PORT"]

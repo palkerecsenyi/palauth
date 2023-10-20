@@ -21,7 +21,8 @@ model User {
   oauthTokens OAuthToken[]
   emailVerifications EmailVerification[]
   secondFactors SecondAuthenticationFactor[]
-  resourceGrants IAMResourceGrant[]
+
+  iamRoles IAMRoleAssignment[]
 }
 
 model Invite {
@@ -74,7 +75,8 @@ model OAuthClient {
 
   userGrants UserOAuthGrant[]
   tokens OAuthToken[]
-  scopes IAMScope[]
+  roles IAMRole[]
+  permissions IAMPermission[]
 }
 
 model OAuthClientRedirectURI {
@@ -127,33 +129,36 @@ enum OAuthTokenType {
   Refresh
 }
 
-model IAMScope {
-  id String @id @default(uuid())
+model IAMPermission {
+    id String @id @default(uuid())
 
-  owner OAuthClient @relation(fields: [ownerId], references: [clientId], onDelete: Cascade)
-  ownerId String
+    owner OAuthClient @relation(fields: [ownerId], references: [clientId])
+    ownerId String
 
-  path String
-  resources IAMResource[]
+    name String
+    includedInRoles IAMRole[]
+
+    implicitRequiredBy IAMPermission[] @relation("PermissionRequirementTree")
+    requires IAMPermission[] @relation("PermissionRequirementTree")
 }
 
-model IAMResource {
-  id String @id @default(uuid())
-  scope IAMScope @relation(fields: [scopeId], references: [id], onDelete: Cascade)
-  scopeId String
-  resourceId String
+model IAMRole {
+    id String @id @default(uuid())
 
-  @@unique([scopeId, resourceId])
+    owner OAuthClient @relation(fields: [ownerId], references: [clientId])
+    ownerId String
 
-  grants IAMResourceGrant[]
+    name String
+    permissions IAMPermission[]
+    assignments IAMRoleAssignment[]
 }
 
-model IAMResourceGrant {
-  resource IAMResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-  resourceId String
+model IAMRoleAssignment {
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+    role IAMRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+    roleId String
 
-  @@id([resourceId, userId])
+    @@id([userId, roleId])
 }

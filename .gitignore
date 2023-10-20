@@ -10,3 +10,4 @@ build
 *.pem
 *.crt
 /static/js
+.DS_Store

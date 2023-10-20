@@ -25,15 +25,6 @@ export interface OIDCSecretRequest extends Request {
     oauthClient?: OAuthClientController
 }
 
-export interface IAMControllerRequest extends Request {
+export interface IAMRequest extends Request {
     iamController?: IAMController
 }
-
-export interface IAMPathRequest extends Request {
-    parsedPath?: {
-        scopePath: string
-        resourceId: string
-    }
-}
-
-export type IAMRequest = IAMControllerRequest & IAMPathRequest

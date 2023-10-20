@@ -149,10 +149,11 @@ model IAMResource {
 }
 
 model IAMResourceGrant {
-  id String @id @default(uuid())
   resource IAMResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
   resourceId String
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
+
+  @@id([resourceId, userId])
 }

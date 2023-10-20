@@ -2,6 +2,15 @@ import { TransactionType } from "../types/prisma.js";
 import { DBClient } from "./client.js";
 import { IAMScope } from "./generated-models/index.js";
 
+export interface IAMResourceIdentifier {
+    scopePath: string
+    resourceId: string
+}
+
+export type IAMResourceUserIdentifier = IAMResourceIdentifier & {
+    userId: string
+}
+
 export default class IAMController {
     private clientId: string
     private scopes: IAMScope[]
@@ -46,29 +55,24 @@ export default class IAMController {
         })
     }
 
-    async checkResource(request: {
-        userId: string,
-        scopePath: string,
-        resourceId: string,
-    }) {
-        const matchingScope = this.findScope(request.scopePath)
-        if (!matchingScope) return false
+    private findPath(scopePath: string, resourceId: string) {
+        const matchingScope = this.findScope(scopePath)
+        if (!matchingScope) return undefined
 
-        const resourceInScope = await this.findResource(matchingScope.id, request.resourceId)
-        if (!resourceInScope) {
-            return false
-        }
+        return this.findResource(matchingScope.id, resourceId)
+    }
 
-        const matchingGrant = resourceInScope.grants.find(g => {
+    async checkResource(request: IAMResourceUserIdentifier) {
+        const resource = await this.findPath(request.scopePath, request.resourceId)
+        if (!resource) return false
+
+        const matchingGrant = resource.grants.find(g => {
             return g.userId === request.userId
         })
         return matchingGrant !== undefined
     }
 
-    async registerResource(resource: {
-        scopePath: string,
-        resourceId: string,
-    }) {
+    async registerResource(resource: IAMResourceIdentifier) {
         const matchingScope = this.findScope(resource.scopePath)
         if (!matchingScope) throw new Error("Scope not found")
 
@@ -85,5 +89,51 @@ export default class IAMController {
                 resourceId: resource.resourceId,
             }
         })
+    }
+
+    async deleteResource({scopePath, resourceId}: IAMResourceIdentifier) {
+        const resource = await this.findPath(scopePath, resourceId)
+        if (!resource) throw new Error("Resource not found")
+
+        await this.tx.iAMResource.delete({
+            where: {
+                id: resource.id,
+            }
+        })
+    }
+
+    async grant(
+        {scopePath, resourceId, userId}: IAMResourceUserIdentifier,
+        action: "grant" | "delete"
+    ) {
+        const alreadyGranted = await this.checkResource({
+            scopePath, resourceId, userId
+        })
+        if (action === "grant" && alreadyGranted) {
+            return
+        } else if (action === "delete" && !alreadyGranted) {
+            throw new Error("Access not granted")
+        }
+
+        const resource = await this.findPath(scopePath, resourceId)
+        if (!resource) throw new Error("Resource not found")
+
+        if (action === "grant") {
+            await this.tx.iAMResourceGrant.create({
+                data: {
+                    resourceId: resource.id,
+                    userId,
+                }
+            })
+        } else if (action === "delete") {
+            await this.tx.iAMResourceGrant.delete({
+                where: {
+                    resourceId_userId: {
+                        resourceId: resource.id,
+                        userId,
+                    }
+                }
+            })
+        }
     }
 }

@@ -8,6 +8,7 @@ RUN yarn install
 
 
 COPY . .
+RUN yarn db:generate
 RUN yarn build
 
 COPY webauthn-frontend/package.json ./webauthn-frontend/

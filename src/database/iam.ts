@@ -36,6 +36,10 @@ export default class IAMController {
         })
     }
 
+    private findRoleByName(roleName: string) {
+        return this.roles.find(r => r.name === roleName)
+    }
+
     async checkPermission(request: {
         userId: string,
         permissionName: string,
@@ -51,5 +55,29 @@ export default class IAMController {
         if (!matchingRole) return false
         const roleAssignment = await this.getRoleAssignment(request.userId, matchingRole.id)
         return roleAssignment !== undefined
+    }
+
+    async assignRoleByName(request: {
+        userId: string,
+        roleName: string,
+    }) {
+        const role = this.findRoleByName(request.roleName)
+        if (!role) {
+            throw new Error("Role not found")
+        }
+
+        await this.tx.iAMRoleAssignment.upsert({
+            where: {
+                userId_roleId: {
+                    userId: request.userId,
+                    roleId: role.id,
+                }
+            },
+            update: {},
+            create: {
+                userId: request.userId,
+                roleId: role.id,
+            }
+        })
     }
 }

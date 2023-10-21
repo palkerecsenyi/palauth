@@ -7,6 +7,32 @@ import bodyParser from "body-parser";
 const iamRouter = express.Router()
 
 iamRouter.get(
+    "/roles",
+    (req: IAMRequest, res) => {
+        const iam = req.iamController!
+        res.json(iam.listRoles())
+    }
+)
+
+iamRouter.get(
+    "/roles/:userId",
+    async (req: IAMRequest, res) => {
+        const {userId} = req.params
+        if (!userId) {
+            res.status(400).send("User ID not provided")
+            return
+        }
+
+        const iam = req.iamController!
+        const roles = await iam.listRolesForUser(userId)
+        res.json({
+            userId,
+            roles,
+        })
+    }
+)
+
+iamRouter.get(
     "/check",
     async (req: IAMRequest, res) => {
         const {userId, permission} = req.query

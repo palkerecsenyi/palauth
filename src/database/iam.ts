@@ -40,6 +40,25 @@ export default class IAMController {
         return this.roles.find(r => r.name === roleName)
     }
 
+    listRoles() {
+        return this.roles
+    }
+
+    listRolesForUser(userId: string) {
+        return this.tx.iAMRole.findMany({
+            where: {
+                assignments: {
+                    every: {
+                        userId,
+                    }
+                }
+            },
+            include: {
+                permissions: true,
+            }
+        })
+    }
+
     async checkPermission(request: {
         userId: string,
         permissionName: string,

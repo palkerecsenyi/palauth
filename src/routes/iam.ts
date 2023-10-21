@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Response } from "express";
 import { oidcSecretMiddleware } from "../helpers/iam/oidc-middleware.js";
 import { iamMiddleware } from "../helpers/iam/iam-middleware.js";
 import { IAMRequest } from "../types/express.js";
@@ -24,29 +24,34 @@ iamRouter.get(
     }
 )
 
-iamRouter.put(
-    "/assign",
-    bodyParser.json(),
-    async (req: IAMRequest, res) => {
-        const {userId, roleName} = req.body
-        if (typeof userId !== "string" || typeof roleName !== "string") {
-            res.status(400).send("No user ID or role name provided")
-            return
-        }
+const assignmentRouteHandler = async (req: IAMRequest, res: Response) => {
+    const {userId, roleName} = req.body
+    if (typeof userId !== "string" || typeof roleName !== "string") {
+        res.status(400).send("No user ID or role name provided")
+        return
+    }
 
-        const iam = req.iamController!
-        try {
+    const iam = req.iamController!
+    try {
+        if (req.method === "PUT") {
             await iam.assignRoleByName({
                 userId, roleName
             })
-        } catch (e) {
-            res.status(400).send((e as Error).message)
-            return
+        } else if (req.method === "DELETE") {
+            await iam.removeRoleByName({
+                userId, roleName,
+            })
         }
-
-        res.sendStatus(204)
+    } catch (e) {
+        res.status(400).send((e as Error).message)
+        return
     }
-)
+
+    res.sendStatus(204)
+}
+iamRouter.route("/assignment")
+    .put(bodyParser.json(), assignmentRouteHandler)
+    .delete(bodyParser.json(), assignmentRouteHandler)
 
 const _r = express.Router()
 _r.use("/:clientId", oidcSecretMiddleware, iamMiddleware, iamRouter)

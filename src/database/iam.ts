@@ -80,4 +80,23 @@ export default class IAMController {
             }
         })
     }
+
+    async removeRoleByName(request: {
+        userId: string,
+        roleName: string,
+    }) {
+        const role = this.findRoleByName(request.roleName)
+        if (!role) {
+            throw new Error("Role not found")
+        }
+
+        await this.tx.iAMRoleAssignment.delete({
+            where: {
+                userId_roleId: {
+                    userId: request.userId, 
+                    roleId: role.id
+                }
+            }
+        })
+    }
 }

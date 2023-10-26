@@ -119,6 +119,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
                 expectedOrigin: rpOrigin,
                 expectedRPID: rpID,
                 authenticator: TwoFactorSecurityKeyController.dbToAuthenticatorData(this.securityKeyFactor),
+                requireUserVerification: true,
             })
         } catch (e) {
             console.warn(e)
@@ -153,6 +154,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
                 residentKey: "required",
                 userVerification: "preferred",
             },
+            supportedAlgorithmIDs: [-7, -257],
         })
 
         req.session![TwoFactorSecurityKeyController.keyRegistrationSessionKey] = options.challenge
@@ -172,6 +174,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
                 expectedChallenge: clientChallenge,
                 expectedOrigin: rpOrigin,
                 expectedRPID: rpID,
+                requireUserVerification: true,
             })
         } catch (e) {
             console.warn(e)

@@ -1,6 +1,7 @@
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from "@simplewebauthn/browser"
 
 const enroll = (options: any) => {
+    console.log(options)
     return async () => {
         let credential: any
         try {
@@ -40,6 +41,7 @@ const enroll = (options: any) => {
 }
 
 const authenticate = (options: any, autocomplete?: boolean, passkey = autocomplete) => {
+    console.log(options)
     return async () => {
         if (autocomplete) {
             let isSupported = false

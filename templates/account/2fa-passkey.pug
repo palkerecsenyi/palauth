@@ -4,6 +4,8 @@ block title
     | Configure Passkey
 
 block header
+    p
+        a(href="/") Back home
     h1 Passkey setup
 
 block content
@@ -12,7 +14,7 @@ block content
         p Come back here once you've done that!
         p
             a.button(href="/account/2fa/enroll?type=key") Set up
-    else
+    else if !configured
         p You're setting up your security key as a&nbsp;
             strong
                 a(href="https://passkeys.dev/", target="_blank") passkey
@@ -21,3 +23,6 @@ block content
 
         p
             a.button(href="/account/2fa/passkey/enroll") Set up
+    else
+        p Your account is set up to sign in with a passkey!
+        p If you'd like to disable this, please contact the PalAuth admin.

@@ -60,9 +60,34 @@ accountRouter.get(
     async (req: AuthenticatedRequest, res) => {
         const twoFaController = await TwoFactorController.mustFromAuthenticatedRequest(req)
 
+        const ready = twoFaController.registrationOfTypeExists("SecurityKey")
+        let configured = false
+
+        if (ready) {
+            configured = twoFaController.securityKey.isPasskey
+        }
+
         res.render("account/2fa-passkey.pug", {
-            ready: twoFaController.registrationOfTypeExists("SecurityKey"),
+            ready,
+            configured,
         })
+    }
+)
+
+accountRouter.get(
+    "/account/2fa/passkey/enroll",
+    async (req: AuthenticatedRequest, res) => {
+        const twoFaController = await TwoFactorController.mustFromAuthenticatedRequest(req)
+        if (!twoFaController.registrationOfTypeExists("SecurityKey")) {
+            req.flash("error", "No security key configured for your account")
+        } else if (twoFaController.securityKey.isPasskey) {
+            req.flash("error", "You've already configured a passkey")
+        } else {
+            await twoFaController.securityKey.markAsPasskey()
+            req.flash("success", "Passkey configured!")
+        }
+
+        res.redirect("/account/2fa/passkey")
     }
 )
 

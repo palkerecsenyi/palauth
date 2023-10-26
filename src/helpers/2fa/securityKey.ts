@@ -44,6 +44,21 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         }
     }
 
+    async markAsPasskey() {
+        await this.tx.secondAuthenticationFactor.update({
+            where: {
+                id: this.securityKeyFactor.id,
+            },
+            data: {
+                isPasskey: true,
+            }
+        })
+    }
+
+    get isPasskey() {
+        return this.securityKeyFactor.isPasskey === true
+    }
+
     async generateKeyAuthenticationOptions(req: Request) {
         const options = await generateAuthenticationOptions({
             allowCredentials: this.allowCredentials,

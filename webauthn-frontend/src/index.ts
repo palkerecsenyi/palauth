@@ -1,7 +1,6 @@
-import { browserSupportsWebAuthn, browserSupportsWebAuthnAutofill, startAuthentication, startRegistration } from "@simplewebauthn/browser"
+import { browserSupportsWebAuthn, startAuthentication, startRegistration } from "@simplewebauthn/browser"
 
 const enroll = (options: any) => {
-    console.log(options)
     return async () => {
         let credential: any
         try {
@@ -41,19 +40,26 @@ const enroll = (options: any) => {
 }
 
 const authenticate = (options: any, autocomplete?: boolean, passkey = autocomplete) => {
-    console.log(options)
     return async () => {
         if (autocomplete) {
-            if (browserSupportsWebAuthnAutofill()) {
-                console.log("Browser supports webauthn autofill")
-            } else {
-                console.log("Browser doesn't support webauthn autofill")
+            let isSupported = false
+            // The function _might_ not be defined in older browsers
+            // @ts-ignore
+            if (window.PublicKeyCredential?.isConditionalMediationAvailable) {
+                isSupported = await PublicKeyCredential.isConditionalMediationAvailable()
+            }
+
+            if (!isSupported) {
+                console.log("Browser doesn't support PKC CMA")
                 return
+            } else {
+                console.log("Browser supports PKC CMA")
             }
         }
 
         if (!browserSupportsWebAuthn()) {
-            alert("Your browser doesn't support this feature.")
+            if (autocomplete) return
+            alert("Your browser doesn't support this feature")
             return
         }
 

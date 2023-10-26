@@ -149,7 +149,7 @@ authRouter.post(
         }
 
         if (twoFaMethod === "SecurityKey") {
-            const keyCorrect = await twoFaController.securityKey.checkKeyAuthentication(req, req.body)
+            const keyCorrect = await twoFaController.securityKey.checkKeyAuthentication(req)
             if (!keyCorrect) {
                 res.sendStatus(403)
                 return

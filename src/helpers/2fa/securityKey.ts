@@ -47,19 +47,18 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
     async generateKeyAuthenticationOptions(req: Request) {
         const options = await generateAuthenticationOptions({
             allowCredentials: this.allowCredentials,
+            userVerification: "preferred",
         })
 
         req.session![TwoFactorSecurityKeyController.keyAuthenticationSessionKey] = options.challenge
         return options
     }
 
-    async checkKeyAuthentication(req: Request, clientResponse: any) {
+    async checkKeyAuthentication(req: Request) {
         const clientChallenge = req.session![TwoFactorSecurityKeyController.keyAuthenticationSessionKey]
         if (typeof clientChallenge !== "string") {
             return false
         }
-
-        clientResponse.id = Buffer.from(clientResponse.id).buffer
 
         let authnResult: VerifiedAuthenticationResponse
         try {
@@ -69,6 +68,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
                 expectedOrigin: rpOrigin,
                 expectedRPID: rpID,
                 authenticator: TwoFactorSecurityKeyController.dbToAuthenticatorData(this.securityKeyFactor),
+                requireUserVerification: true,
             })
         } catch (e) {
             console.warn(e)
@@ -99,6 +99,10 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
             userID: this.user.id,
             userName: this.user.displayName,
             attestationType: "none",
+            authenticatorSelection: {
+                residentKey: "required",
+                userVerification: "preferred",
+            }
         })
 
         req.session![TwoFactorSecurityKeyController.keyRegistrationSessionKey] = options.challenge
@@ -118,6 +122,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
                 expectedChallenge: clientChallenge,
                 expectedOrigin: rpOrigin,
                 expectedRPID: rpID,
+                requireUserVerification: true,
             })
         } catch (e) {
             console.warn(e)

@@ -1,23 +1,17 @@
-import {parseCreationOptionsFromJSON, create, get, parseRequestOptionsFromJSON} from "@github/webauthn-json/browser-ponyfill"
+import { startAuthentication, startRegistration } from "@simplewebauthn/browser"
 
 const enroll = (options: any) => {
-    const parsedOptions = parseCreationOptionsFromJSON({
-        publicKey: options,
-    })
-    console.log(parsedOptions)
-
+    console.log(options)
     return async () => {
-        const credential = await create(parsedOptions)
-
-        if (!credential) {
+        let credential: any
+        try {
+            credential = await startRegistration(options)
+        } catch (e) {
             alert("Process cancelled - please try again")
             return
         }
 
-        if (credential.type !== "public-key") {
-            alert("Something went wrong. Please try again.")
-            return
-        }
+        if (!credential) return
 
         try {
             const resp = await fetch("/account/2fa/enroll?type=key", {
@@ -47,21 +41,17 @@ const enroll = (options: any) => {
 }
 
 const authenticate = (options: any) => {
-    const parsedOptions = parseRequestOptionsFromJSON({
-        publicKey: options,
-    })
-
+    console.log(options)
     return async () => {
-        const credential = await get(parsedOptions)
-        if (!credential) {
+        let credential: any
+        try {
+            credential = await startAuthentication(options)
+        } catch (e) {
             alert("Process cancelled — please reload to try again")
             return
         }
 
-        if (credential.type !== "public-key") {
-            alert("Something went wrong — please reload to try again")
-            return
-        }
+        if (!credential) return
 
         try {
             const resp = await fetch("/auth/signin/2fa/SecurityKey", {

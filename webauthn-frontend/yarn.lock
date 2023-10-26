@@ -73,6 +73,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@simplewebauthn/browser@npm:^8.3.3":
+  version: 8.3.3
+  resolution: "@simplewebauthn/browser@npm:8.3.3"
+  dependencies:
+    "@simplewebauthn/typescript-types": ^8.3.3
+  checksum: 8b0c09249f5f8d9d84dd2e02f0e938cf6774342d9eb75159849650cc0a967ef1b65db38295d35f99f8c2d048c954ff8f5029ac342c5ea24a268ccb9b05079c86
+  languageName: node
+  linkType: hard
+
+"@simplewebauthn/typescript-types@npm:^8.3.3":
+  version: 8.3.3
+  resolution: "@simplewebauthn/typescript-types@npm:8.3.3"
+  checksum: 560df590a62b77e2aaeb236366ac4c9f6ece85526abd54e688aa47318ea5af42bb37f3335847155dd27b6786f1fa3465c5fba00715c227e29934c277e088662d
+  languageName: node
+  linkType: hard
+
 "@types/eslint-scope@npm:^3.7.3":
   version: 3.7.5
   resolution: "@types/eslint-scope@npm:3.7.5"
@@ -1158,6 +1174,7 @@ __metadata:
   resolution: "webauthn-frontend@workspace:."
   dependencies:
     "@github/webauthn-json": ^2.1.1
+    "@simplewebauthn/browser": ^8.3.3
     ts-loader: ^9.4.4
     typescript: ^5.2.2
     webpack: ^5.88.2

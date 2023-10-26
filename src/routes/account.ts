@@ -114,7 +114,7 @@ accountRouter.post(
                 return
             }
 
-            const success = await twoFaController.securityKey.saveKeyRegistration(req, req.body)
+            const success = await twoFaController.securityKey.saveKeyRegistration(req)
             if (!success) {
                 res.sendStatus(401)
                 return

@@ -70,7 +70,7 @@ authRouter.post(
 
         const uc = UserController.for(user)
         const passwordCorrect = await uc.checkPassword(password)
-        if (!passwordCorrect || uc.hasPasskey) {
+        if (!passwordCorrect) {
             req.flash("error", "Email or password incorrect")
             res.redirect("/auth/signin")
             return

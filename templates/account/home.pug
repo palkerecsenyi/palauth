@@ -14,7 +14,10 @@ block content
         a(href="/auth/signout") Sign out
 
     h3 Settings
-    a(href="/account/2fa") Configure two-factor authentication
+    p
+        a(href="/account/2fa") Configure two-factor authentication
+    p
+        a(href="/account/2fa/passkey") Configure passkey
 
     if scopesByClient.length > 0
         h3 My applications

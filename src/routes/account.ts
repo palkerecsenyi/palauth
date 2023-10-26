@@ -56,6 +56,17 @@ accountRouter.get(
 )
 
 accountRouter.get(
+    "/account/2fa/passkey",
+    async (req: AuthenticatedRequest, res) => {
+        const twoFaController = await TwoFactorController.mustFromAuthenticatedRequest(req)
+
+        res.render("account/2fa-passkey.pug", {
+            ready: twoFaController.registrationOfTypeExists("SecurityKey"),
+        })
+    }
+)
+
+accountRouter.get(
     "/account/2fa/enroll",
     async (req: AuthenticatedRequest, res) => {
         const { type } = req.query

@@ -7,6 +7,7 @@ const enroll = (options: any) => {
         try {
             credential = await startRegistration(options)
         } catch (e) {
+            alert(e)
             alert("Process cancelled - please try again")
             return
         }
@@ -70,6 +71,7 @@ const authenticate = (options: any, autocomplete?: boolean, passkey = autocomple
             credential = await startAuthentication(options, autocomplete)
         } catch (e) {
             console.error(e)
+            alert(e)
             if (!autocomplete) {
                 alert("Process cancelled — please reload to try again")
             }

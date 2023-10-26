@@ -67,6 +67,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         const options = await generateAuthenticationOptions({
             allowCredentials: allowCredentials,
             userVerification: "preferred",
+            rpID,
         })
 
         req.session![TwoFactorSecurityKeyController.keyAuthenticationSessionKey] = options.challenge

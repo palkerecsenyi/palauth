@@ -2,14 +2,18 @@ import BaseTwoFactorController from "./general.js"
 import { getProjectHostname, getProjectOIDCID } from "../constants/hostname.js"
 import { Request } from "express"
 import { VerifiedAuthenticationResponse, VerifiedRegistrationResponse, generateAuthenticationOptions, generateRegistrationOptions, verifyAuthenticationResponse, verifyRegistrationResponse } from "@simplewebauthn/server"
-import type { AuthenticatorDevice } from "@simplewebauthn/typescript-types"
+import type { AuthenticatorDevice, PublicKeyCredentialDescriptorFuture } from "@simplewebauthn/typescript-types"
 import { Pick } from "../../database/generated-models/runtime/library.js"
 import { SecondAuthenticationFactor } from "../../database/generated-models/index.js"
+import { TransactionType } from "../../types/prisma.js"
+import { DBClient } from "../../database/client.js"
+import TwoFactorController from "./2fa.js"
 
 const rpName = "PalAuth"
 const rpID = getProjectHostname()
 const rpOrigin = getProjectOIDCID()
 type DBAuthenticator = Pick<SecondAuthenticationFactor, "keyPublicKeyId" | "keyCounter" | "keyPublicKey">
+const keyStorageEncoding: BufferEncoding = "base64url"
 
 export default class TwoFactorSecurityKeyController extends BaseTwoFactorController {
     private static keyRegistrationSessionKey = "2fa_key_reg_challenge"
@@ -18,29 +22,29 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         return this.getFactor("SecurityKey")!
     }
     private get allowCredentials() {
-        const pkiBase64 = this.securityKeyFactor.keyPublicKeyId
-        if (!pkiBase64) {
+        const encodedKeyId = this.securityKeyFactor.keyPublicKeyId
+        if (!encodedKeyId) {
             return []
         }
 
         return [{
             type: "public-key" as const,
-            id: Buffer.from(pkiBase64, "base64"),
+            id: Buffer.from(encodedKeyId, keyStorageEncoding),
         }]
     }
 
     private static authenticatorDataToDB(authenticator: AuthenticatorDevice): DBAuthenticator {
         return {
             keyCounter: authenticator.counter,
-            keyPublicKeyId: Buffer.from(authenticator.credentialID).toString("base64"),
-            keyPublicKey: Buffer.from(authenticator.credentialPublicKey).toString("base64"),
+            keyPublicKeyId: Buffer.from(authenticator.credentialID).toString(keyStorageEncoding),
+            keyPublicKey: Buffer.from(authenticator.credentialPublicKey).toString(keyStorageEncoding),
         }
     }
     private static dbToAuthenticatorData(db: DBAuthenticator): AuthenticatorDevice {
         return {
             counter: db.keyCounter!,
-            credentialID: Buffer.from(db.keyPublicKeyId!, "base64"),
-            credentialPublicKey: Buffer.from(db.keyPublicKey!, "base64"),
+            credentialID: Buffer.from(db.keyPublicKeyId!, keyStorageEncoding),
+            credentialPublicKey: Buffer.from(db.keyPublicKey!, keyStorageEncoding),
         }
     }
 
@@ -59,17 +63,48 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         return this.securityKeyFactor.isPasskey === true
     }
 
-    async generateKeyAuthenticationOptions(req: Request) {
+    static async generateKeyAuthenticationOptions(req: Request, allowCredentials: PublicKeyCredentialDescriptorFuture[]) {
         const options = await generateAuthenticationOptions({
-            allowCredentials: this.allowCredentials,
+            allowCredentials: allowCredentials,
             userVerification: "preferred",
         })
 
         req.session![TwoFactorSecurityKeyController.keyAuthenticationSessionKey] = options.challenge
         return options
     }
+    async generateKeyAuthenticationOptions(req: Request) {
+        return TwoFactorSecurityKeyController.generateKeyAuthenticationOptions(req, this.allowCredentials)
+    }
 
-    async checkKeyAuthentication(req: Request) {
+    static async identifyKeyAuthentication(req: Request, tx: TransactionType = DBClient.getClient()) {
+        const id = req.body["id"]
+        if (typeof id !== "string") {
+            return false
+        }
+
+        const factor = await tx.secondAuthenticationFactor.findFirst({
+            where: {
+                type: "SecurityKey",
+                keyPublicKeyId: id,
+            },
+        })
+        if (!factor || !factor.isPasskey) {
+            return false
+        }
+
+        const controller = await TwoFactorController.fromUserId(factor.userId, tx)
+        if (!controller) {
+            return false
+        }
+
+        const keyAuthenticated = await controller.securityKey.checkAndUpdateKeyAuthentication(req)
+        if (!keyAuthenticated) {
+            return false
+        }
+
+        return controller.getUser()
+    }
+    async checkAndUpdateKeyAuthentication(req: Request) {
         const clientChallenge = req.session![TwoFactorSecurityKeyController.keyAuthenticationSessionKey]
         if (typeof clientChallenge !== "string") {
             return false
@@ -117,7 +152,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
             authenticatorSelection: {
                 residentKey: "required",
                 userVerification: "preferred",
-            }
+            },
         })
 
         req.session![TwoFactorSecurityKeyController.keyRegistrationSessionKey] = options.challenge

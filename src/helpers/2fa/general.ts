@@ -17,6 +17,10 @@ export default abstract class BaseTwoFactorController {
         return this.user.secondFactors
     }
 
+    getUser() {
+        return this.user
+    }
+
     getFactor(type: SecondAuthenticationFactorType) {
         return this.factors.find(e => e.type === type)
     }

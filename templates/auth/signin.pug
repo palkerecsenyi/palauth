@@ -3,6 +3,14 @@ include ../components/csrf
 include ../components/hcaptcha
 include ../components/submit-button
 
+block head
+    script(type="application/javascript", src="/static/js/webauthn.js")
+    script.
+        const keyOptions = !{JSON.stringify(keyOptions)}
+
+        const authenticate = window["PAL_2FA_AUTHENTICATE"]
+        document.addEventListener("DOMContentLoaded", authenticate(keyOptions, true))
+
 block title
     | Sign in
 
@@ -11,11 +19,14 @@ block header
     p One account, all of Pal
 
 block content
+    p
+        button.button#passkey Use a passkey
+
     form(method="post", action="/auth/signin")
         +csrf_input(csrf)
 
         label(for="email") Email address
-        input#email(type="email", name="email", required)
+        input#email(type="email", name="email", autocomplete="email webauthn", required)
 
         label(for="password") Password
         input#password(type="password", name="password")
@@ -27,3 +38,6 @@ block content
     p
         | Need an account?&nbsp;
         a(href="/auth/signup") Create one!
+
+    script.
+        document.getElementById("passkey").addEventListener("click", authenticate(keyOptions, false, true))

@@ -125,4 +125,8 @@ export class UserController {
     getTwoFactorController() {
         return TwoFactorController.forUser(this.user, this.transaction)
     }
+    get hasPasskey() {
+        const tfa = this.getTwoFactorController()
+        return tfa.registrationOfTypeExists("SecurityKey") && tfa.securityKey.isPasskey
+    }
 }

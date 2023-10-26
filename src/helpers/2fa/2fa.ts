@@ -8,7 +8,7 @@ import TwoFactorTOTPController from "./totp.js";
 import type { TwoFactorMethodController, TwoFactorMethodControllerInstance } from "./types.js";
 
 export default class TwoFactorController extends BaseTwoFactorController {
-    private static async fromUserId(userId: string, tx: TransactionType) {
+    static async fromUserId(userId: string, tx: TransactionType) {
         const result = await tx.user.findFirst({
             where: {
                 id: userId,

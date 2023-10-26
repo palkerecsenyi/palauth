@@ -1,4 +1,4 @@
-import { startAuthentication, startRegistration } from "@simplewebauthn/browser"
+import { browserSupportsWebAuthn, browserSupportsWebAuthnAutofill, startAuthentication, startRegistration } from "@simplewebauthn/browser"
 
 const enroll = (options: any) => {
     console.log(options)
@@ -40,21 +40,45 @@ const enroll = (options: any) => {
     }
 }
 
-const authenticate = (options: any) => {
+const authenticate = (options: any, autocomplete?: boolean, passkey = autocomplete) => {
     console.log(options)
     return async () => {
+        if (autocomplete) {
+            if (browserSupportsWebAuthnAutofill()) {
+                console.log("Browser supports webauthn autofill")
+            } else {
+                console.log("Browser doesn't support webauthn autofill")
+                return
+            }
+        }
+
+        if (!browserSupportsWebAuthn()) {
+            alert("Your browser doesn't support this feature.")
+            return
+        }
+
         let credential: any
         try {
-            credential = await startAuthentication(options)
+            credential = await startAuthentication(options, autocomplete)
         } catch (e) {
-            alert("Process cancelled — please reload to try again")
+            console.error(e)
+            if (!autocomplete) {
+                alert("Process cancelled — please reload to try again")
+            }
             return
         }
 
         if (!credential) return
 
+        let url: string
+        if (passkey) {
+            url = "/auth/signin/key"
+        } else {
+            url = "/auth/signin/2fa/SecurityKey"
+        }
+
         try {
-            const resp = await fetch("/auth/signin/2fa/SecurityKey", {
+            const resp = await fetch(url, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -70,7 +94,6 @@ const authenticate = (options: any) => {
             return
         }
 
-        document.getElementById("status")!.innerText = "Success! Redirecting..."
         window.location.replace("/auth/continue")
     }
 }

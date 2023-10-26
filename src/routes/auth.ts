@@ -13,6 +13,7 @@ import {Prisma, SecondAuthenticationFactorType} from "../database/generated-mode
 import EmailVerificationController from "../helpers/mail/email-verification.js";
 import bodyParser from "body-parser";
 import DevModeSettings from "../helpers/constants/devMode.js";
+import TwoFactorSecurityKeyController from "../helpers/2fa/securityKey.js";
 
 const authRouter = express.Router()
 
@@ -36,6 +37,7 @@ authRouter.get(
     async (req: AuthenticatedRequest, res) => {
         res.render("auth/signin.pug", {
             csrf: generateToken(req, res),
+            keyOptions: await TwoFactorSecurityKeyController.generateKeyAuthenticationOptions(req, []),
         })
     }
 )
@@ -68,7 +70,7 @@ authRouter.post(
 
         const uc = UserController.for(user)
         const passwordCorrect = await uc.checkPassword(password)
-        if (!passwordCorrect) {
+        if (!passwordCorrect || uc.hasPasskey) {
             req.flash("error", "Email or password incorrect")
             res.redirect("/auth/signin")
             return
@@ -82,6 +84,23 @@ authRouter.post(
 
         setUserId(req, user.id)
         flowManager.continueToDestination(req, res, "/auth/signin")
+    }
+)
+
+authRouter.post(
+    "/signin/key",
+    notAuthenticatedMiddleware,
+    flowManager.ensureCanContinue("/auth/signin"),
+    bodyParser.json(),
+    async (req: AuthenticatedRequest, res) => {
+        const user = await TwoFactorSecurityKeyController.identifyKeyAuthentication(req)
+        if (!user) {
+            res.sendStatus(403)
+            return
+        }
+
+        setUserId(req, user.id)
+        res.sendStatus(204)
     }
 )
 
@@ -149,7 +168,7 @@ authRouter.post(
         }
 
         if (twoFaMethod === "SecurityKey") {
-            const keyCorrect = await twoFaController.securityKey.checkKeyAuthentication(req)
+            const keyCorrect = await twoFaController.securityKey.checkAndUpdateKeyAuthentication(req)
             if (!keyCorrect) {
                 res.sendStatus(403)
                 return

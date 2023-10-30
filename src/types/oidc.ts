@@ -1,6 +1,8 @@
 export interface IDToken {
     iss: string
+    // user ID
     sub: string
+    // oauth client ID
     aud: string
     exp: number
     iat: number

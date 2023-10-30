@@ -10,6 +10,8 @@ import {DateTime} from "luxon";
 import {OAuthTokenWrapper} from "../database/tokens.js";
 import {UserController} from "../database/users.js";
 import {OIDCScopes} from "../helpers/oidc/scopes.js";
+import { valueFromQueryOrBody } from "../helpers/express.js";
+import { TokenManager } from "../database/token-manager.js";
 
 const oidcRouter = express.Router()
 
@@ -245,5 +247,65 @@ oidcRouter
     .route("/userinfo")
     .get(openIdScopeMiddleware, userInfoHandler)
     .post(openIdScopeMiddleware, userInfoHandler)
+
+const endSessionHandler = async (req: AuthenticatedRequest, res: Response) => {
+    const isSignedIn = req.user !== undefined
+
+    const idTokenHint = valueFromQueryOrBody(req, "id_token_hint")
+    const clientId = valueFromQueryOrBody(req, "client_id")
+
+    if (!idTokenHint) {
+        if (!isSignedIn) {
+            res.redirect("/auth/signin")
+            return
+        }
+
+        res.render("oauth/signout.pug", {
+            user: req.user!,
+        })
+        return
+    }
+
+    const parsedIdToken = await TokenManager.parseIdToken(idTokenHint)
+    if (!parsedIdToken) {
+        return oauthErrorPage(res, "could not parse/validate id_token_hint")
+    }
+
+    if (clientId !== undefined && clientId !== parsedIdToken.aud) {
+        return oauthErrorPage(res, "id_token_hint does not refer to client_id")
+    }
+
+    const clientController = await OAuthClientController.getByClientId(parsedIdToken.aud)
+    if (!clientController) {
+        return oauthErrorPage(res, "client ID not found")
+    }
+
+    if (isSignedIn && req.user!.id !== parsedIdToken.sub) {
+        res.render("oauth/signout.pug", {
+            user: req.user,
+            appName: clientController.getClient().name,
+        })
+        return
+    }
+
+    let logoutUri = valueFromQueryOrBody(req, "post_logout_redirect_uri")
+    if (!logoutUri || !clientController.checkPostLogoutURI(logoutUri)) {
+        return oauthErrorPage(res, "post_logout_redirect_uri not registered for client")
+    }
+
+    const state = valueFromQueryOrBody(req, "state")
+    if (state) {
+        logoutUri += "?state=" + state
+    }
+
+    res.redirect(logoutUri)
+}
+const endSessionAuthMiddleware = authMiddleware({
+    authRequirement: "none",
+})
+oidcRouter
+    .route("/logout")
+    .get(endSessionAuthMiddleware, endSessionHandler)
+    .post(endSessionAuthMiddleware, endSessionHandler)
 
 export default oidcRouter

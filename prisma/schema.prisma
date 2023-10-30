@@ -67,6 +67,7 @@ model OAuthClient {
   clientId String @id @default(uuid())
   clientSecretHash String
   redirectURIs OAuthClientRedirectURI[]
+  postLogoutURIs OAuthClientPostLogoutURI[]
 
   name String
   usageDescription String
@@ -81,6 +82,13 @@ model OAuthClient {
 }
 
 model OAuthClientRedirectURI {
+  id String @id @default(uuid())
+  client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  clientId String
+  uri String
+}
+
+model OAuthClientPostLogoutURI {
   id String @id @default(uuid())
   client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
   clientId String

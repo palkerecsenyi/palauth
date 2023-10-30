@@ -13,3 +13,5 @@ export const calculateTokenExpiry = (type: OAuthTokenType) => {
 
     throw new Error("Type was not valid")
 }
+
+export const authorizationCodeDuration = () => Duration.fromObject({minutes: 10})

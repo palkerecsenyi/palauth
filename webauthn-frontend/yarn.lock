@@ -12,15 +12,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@github/webauthn-json@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "@github/webauthn-json@npm:2.1.1"
-  bin:
-    webauthn-json: dist/bin/main.js
-  checksum: 2ae5c416d547ed5cd383bee7e1f9c5899bbe0e3928364364028d24ed0380704fe9e746b436b09af644d6737206444c16e934acc182ab04babd2ac68179becb27
-  languageName: node
-  linkType: hard
-
 "@jridgewell/gen-mapping@npm:^0.3.0":
   version: 0.3.3
   resolution: "@jridgewell/gen-mapping@npm:0.3.3"
@@ -1173,7 +1164,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "webauthn-frontend@workspace:."
   dependencies:
-    "@github/webauthn-json": ^2.1.1
     "@simplewebauthn/browser": ^8.3.3
     ts-loader: ^9.4.4
     typescript: ^5.2.2

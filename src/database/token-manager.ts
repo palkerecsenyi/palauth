@@ -123,6 +123,25 @@ export class TokenManager {
         return JWTSigner.sign(idToken)
     }
 
+    static async parseIdToken(idToken: string) {
+        const payload = await JWTSigner.parse(idToken, true)
+        if (!payload) {
+            return undefined
+        }
+
+        if ([
+            payload.iss,
+            payload.sub,
+            payload.aud,
+            payload.exp,
+            payload.iat,
+        ].some(e => e === undefined)) {
+            return undefined
+        }
+
+        return payload as IDToken
+    }
+
     async revokeAllAccess() {
         return await DBClient.interruptibleTransaction(async tx => {
             const query = [

@@ -7,7 +7,7 @@ import {Request, Response} from "express";
 import {OAuthAccessTokenResponse} from "../types/oidc.js";
 
 export type OAuthControllerClient = Prisma.OAuthClientGetPayload<{
-    include: { redirectURIs: true, admin: true, },
+    include: { redirectURIs: true, postLogoutURIs: true, admin: true, },
 }>
 
 export class OAuthClientController {
@@ -26,6 +26,7 @@ export class OAuthClientController {
                 },
                 include: {
                     redirectURIs: true,
+                    postLogoutURIs: true,
                     admin: true,
                 }
             })
@@ -94,6 +95,10 @@ export class OAuthClientController {
 
     checkRedirectURI(redirectURI: string) {
         return this.oauthClient.redirectURIs.find(e => e.uri === redirectURI) !== undefined
+    }
+
+    checkPostLogoutURI(postLogoutURI: string) {
+        return this.oauthClient.postLogoutURIs.find(e => e.uri === postLogoutURI) !== undefined
     }
 
     getTokenManager(userId: string) {

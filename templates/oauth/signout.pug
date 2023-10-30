@@ -1,0 +1,19 @@
+extends ../layouts/main
+
+block title
+    | Sign out
+
+block header
+    h1 Signing out
+    p You're signed in as&nbsp;
+        strong #{user.displayName}
+
+block content
+    -const displayedAppName = appName ?? "an app that uses PalAuth"
+    p You're signing out of #{displayedAppName}
+    p Would you also like to sign out of PalAuth itself?
+
+    p
+        a.button(href="/auth/signout") Sign out
+    p
+        a.button(href="/") Cancel

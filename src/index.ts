@@ -11,6 +11,7 @@ import wellKnownRouter from "./routes/well-known.js";
 import devRouter from "./routes/developer.js";
 import DevModeSettings from "./helpers/constants/devMode.js";
 import iamRouter from "./routes/iam.js";
+import { sessionDurationMillis } from "./helpers/constants/token-duration.js";
 
 const app = express()
 app.set("view engine", "pug")
@@ -20,7 +21,7 @@ app.use("/static", express.static("static"))
 app.use(cookieSession({
     name: "pal_sesh",
     keys: getSecretKeys(),
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: sessionDurationMillis(),
     sameSite: "lax",
     httpOnly: true,
 }))

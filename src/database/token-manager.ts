@@ -1,7 +1,7 @@
 import {OAuthClientController} from "./oauth.js";
 import {AuthorizationCodeWithOriginal} from "../helpers/oidc/authorization-code.js";
 import {DBClient} from "./client.js";
-import {randomBytes} from "crypto";
+import {createHash, randomBytes} from "crypto";
 import {OAuthToken} from "./generated-models/index.js";
 import {DateTime} from "luxon";
 import {IDToken} from "../types/oidc.js";
@@ -63,10 +63,19 @@ export class TokenManager {
     }
 
     async codeExchange(data: AuthorizationCodeWithOriginal) {
+        const hashedCode = createHash("sha256").update(data.originalCode).digest("hex")
+
         const dbClient = DBClient.getClient()
         const existingCodeUsage = await dbClient.oAuthToken.findFirst({
             where: {
-                fromCode: data.originalCode,
+                OR: [
+                    {
+                        fromCode: data.originalCode,
+                    },
+                    {
+                        fromCode: hashedCode,
+                    }
+                ]
             }
         })
         if (existingCodeUsage) {
@@ -77,7 +86,7 @@ export class TokenManager {
         const accessToken = await this.createToken({
             type: "Access",
             expires: calculateTokenExpiry("Access"),
-            fromCode: data.originalCode,
+            fromCode: hashedCode,
             scopes,
         })
         const refreshToken = await this.createToken({

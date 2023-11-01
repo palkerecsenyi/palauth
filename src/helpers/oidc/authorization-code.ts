@@ -28,7 +28,7 @@ export class AuthorizationCode {
     }
 
     static async parse(from: string) {
-        const verifiedToken = await JWTSigner.parse(from)
+        const verifiedToken = await JWTSigner.parse(from, false)
         if (!verifiedToken) return undefined
         return new AuthorizationCode(verifiedToken as AuthorizationCodeData)
     }

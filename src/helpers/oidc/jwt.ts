@@ -17,23 +17,24 @@ export class JWTSigner {
         return jwt.sign(privKey)
     }
 
-    static async parse(data: string, requireExpiration = false) {
+    static async parse(data: string, allowExpired = false) {
         try {
             const pubKey = await getJWTPublicKey()
             const verifiedToken = await jose.jwtVerify(data, pubKey, {
                 issuer: getProjectOIDCID(),
             })
 
-            const exp = verifiedToken.payload.exp
-            if (exp !== undefined) {
+            if (!allowExpired) {
+                const exp = verifiedToken.payload.exp
+                if (!exp) {
+                    return undefined
+                }
+
                 const parsedExp = DateTime.fromSeconds(exp)
                 if (parsedExp < DateTime.now()) {
                     // if it's expired, fail
                     return undefined
                 }
-            } else if (requireExpiration) {
-                // no exp provided, so we fail!
-                return undefined
             }
 
             return verifiedToken.payload

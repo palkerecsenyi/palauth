@@ -253,8 +253,13 @@ const endSessionHandler = async (req: AuthenticatedRequest, res: Response) => {
 
     const idTokenHint = valueFromQueryOrBody(req, "id_token_hint")
     const clientId = valueFromQueryOrBody(req, "client_id")
+    let logoutUri = valueFromQueryOrBody(req, "post_logout_redirect_uri")
 
     if (!idTokenHint) {
+        if (clientId || logoutUri) {
+            req.flash("warning", "Developers: id_token_hint not provided")
+        }
+
         if (!isSignedIn) {
             res.redirect("/auth/signin")
             return
@@ -280,7 +285,7 @@ const endSessionHandler = async (req: AuthenticatedRequest, res: Response) => {
         return oauthErrorPage(res, "client ID not found")
     }
 
-    if (isSignedIn && req.user!.id !== parsedIdToken.sub) {
+    if (isSignedIn && (req.user!.id !== parsedIdToken.sub) || !logoutUri) {
         res.render("oauth/signout.pug", {
             user: req.user,
             appName: clientController.getClient().name,
@@ -288,8 +293,7 @@ const endSessionHandler = async (req: AuthenticatedRequest, res: Response) => {
         return
     }
 
-    let logoutUri = valueFromQueryOrBody(req, "post_logout_redirect_uri")
-    if (!logoutUri || !clientController.checkPostLogoutURI(logoutUri)) {
+    if (!clientController.checkPostLogoutURI(logoutUri)) {
         return oauthErrorPage(res, "post_logout_redirect_uri not registered for client")
     }
 
@@ -298,6 +302,7 @@ const endSessionHandler = async (req: AuthenticatedRequest, res: Response) => {
         logoutUri += "?state=" + state
     }
 
+    setUserId(req, undefined)
     res.redirect(logoutUri)
 }
 const endSessionAuthMiddleware = authMiddleware({

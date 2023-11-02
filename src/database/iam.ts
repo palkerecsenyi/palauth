@@ -73,7 +73,7 @@ export default class IAMController {
 
         if (!matchingRole) return false
         const roleAssignment = await this.getRoleAssignment(request.userId, matchingRole.id)
-        return roleAssignment !== undefined
+        return roleAssignment !== null
     }
 
     async assignRoleByName(request: {

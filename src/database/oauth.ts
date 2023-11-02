@@ -128,7 +128,7 @@ export class OAuthClientController {
         }
 
         const baseURI = this.oauthClient.initiateURI!
-        return `${baseURI}/?iss=${getProjectOIDCID()}`
+        return `${baseURI}?iss=${getProjectOIDCID()}`
     }
 
     getTokenManager(userId: string) {

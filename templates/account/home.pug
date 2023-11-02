@@ -13,6 +13,14 @@ block content
         | Had enough Pal?&nbsp;
         a(href="/auth/signout") Sign out
 
+    h3 Launch
+    p Click on a service to launch it
+    each cc in publicClients
+        p
+            a(href=cc.generateInitiateURI())= cc.getClient().name
+
+    hr
+
     h3 Settings
     p
         a(href="/account/2fa") Configure two-factor authentication

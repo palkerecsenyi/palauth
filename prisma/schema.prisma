@@ -68,6 +68,7 @@ model OAuthClient {
   clientSecretHash String
   redirectURIs OAuthClientRedirectURI[]
   postLogoutURIs OAuthClientPostLogoutURI[]
+  initiateURI String?
 
   name String
   usageDescription String

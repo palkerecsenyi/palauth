@@ -5,6 +5,7 @@ import {TokenManager} from "./token-manager.js";
 import {TransactionType} from "../types/prisma.js";
 import {Request, Response} from "express";
 import {OAuthAccessTokenResponse} from "../types/oidc.js";
+import { getProjectOIDCID } from "../helpers/constants/hostname.js";
 
 export type OAuthControllerClient = Prisma.OAuthClientGetPayload<{
     include: { redirectURIs: true, postLogoutURIs: true, admin: true, },
@@ -35,6 +36,22 @@ export class OAuthClientController {
         } catch (e) {
             return undefined
         }
+    }
+
+    static async getAllPublicClients(dbClient: TransactionType = DBClient.getClient()) {
+        const clients = await dbClient.oAuthClient.findMany({
+            where: {
+                initiateURI: {
+                    not: null,
+                }
+            },
+            include: {
+                redirectURIs: true,
+                postLogoutURIs: true,
+                admin: true,
+            }
+        })
+        return clients.map(c => new OAuthClientController(c, dbClient))
     }
 
     getClient() {
@@ -99,6 +116,19 @@ export class OAuthClientController {
 
     checkPostLogoutURI(postLogoutURI: string) {
         return this.oauthClient.postLogoutURIs.find(e => e.uri === postLogoutURI) !== undefined
+    }
+
+    get isPublic() {
+        return this.oauthClient.initiateURI !== null
+    }
+    
+    generateInitiateURI() {
+        if (!this.isPublic) {
+            throw new Error("Cannot initiate a non-public client")
+        }
+
+        const baseURI = this.oauthClient.initiateURI!
+        return `${baseURI}/?iss=${getProjectOIDCID()}`
     }
 
     getTokenManager(userId: string) {

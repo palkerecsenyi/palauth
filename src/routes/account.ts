@@ -19,6 +19,7 @@ accountRouter.get(
         res.render("account/home.pug", {
             user: req.user,
             scopesByClient: uc.scopesByClient(),
+            publicClients: await OAuthClientController.getAllPublicClients(),
         })
     }
 )

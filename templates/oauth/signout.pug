@@ -9,8 +9,11 @@ block header
         strong #{user.displayName}
 
 block content
-    -const displayedAppName = appName ?? "an app that uses PalAuth"
-    p You're signing out of #{displayedAppName}
+    if appName
+        p You're signing out of #{appName}
+    else
+        p You've signed out of an app that uses PalAuth
+
     p Would you also like to sign out of PalAuth itself?
 
     p

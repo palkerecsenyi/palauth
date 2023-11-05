@@ -1,9 +1,8 @@
 import express from "express"
-import cookieSession from "cookie-session"
 import authRouter, {signOutRoute} from "./routes/auth.js";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser"
-import {getCaptchaURL, getSecretKeys} from "./helpers/constants/secretKeys.js";
+import {getCaptchaURL} from "./helpers/constants/secretKeys.js";
 import flash from "connect-flash"
 import accountRouter from "./routes/account.js";
 import oidcRouter from "./routes/oidc.js";
@@ -11,20 +10,15 @@ import wellKnownRouter from "./routes/well-known.js";
 import devRouter from "./routes/developer.js";
 import DevModeSettings from "./helpers/constants/devMode.js";
 import iamRouter from "./routes/iam.js";
-import { sessionDurationMillis } from "./helpers/constants/token-duration.js";
+import { initSessionManager } from "./helpers/session.js";
 
 const app = express()
 app.set("view engine", "pug")
 app.set("views", "./templates")
 app.use("/static", express.static("static"))
 
-app.use(cookieSession({
-    name: "pal_sesh",
-    keys: getSecretKeys(),
-    maxAge: sessionDurationMillis(),
-    sameSite: "lax",
-    httpOnly: true,
-}))
+await initSessionManager(app)
+
 app.use(bodyParser.urlencoded({
     extended: false,
 }))

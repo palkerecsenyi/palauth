@@ -448,6 +448,62 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redis/bloom@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@redis/bloom@npm:1.2.0"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: 8c214227287d6b278109098bca00afc601cf84f7da9c6c24f4fa7d3854b946170e5893aa86ed607ba017a4198231d570541c79931b98b6d50b262971022d1d6c
+  languageName: node
+  linkType: hard
+
+"@redis/client@npm:1.5.11":
+  version: 1.5.11
+  resolution: "@redis/client@npm:1.5.11"
+  dependencies:
+    cluster-key-slot: 1.1.2
+    generic-pool: 3.9.0
+    yallist: 4.0.0
+  checksum: 10f25a74f18b4e87299c11c014840895f387d217f1309a5208939e8bab8c95abecf2ca824f1cd0fe935b8972a18e0c4d6dd25640e742f4b30d38208515cf3a42
+  languageName: node
+  linkType: hard
+
+"@redis/graph@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@redis/graph@npm:1.1.0"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: d3df807108a42929ed65269c691fe6ab7eda55de91318f02a22b2d637c1bfef8817fccd17025904f5a0be8cf1cea5941334ec9f10719336da5d8f1c54cd4997e
+  languageName: node
+  linkType: hard
+
+"@redis/json@npm:1.0.6":
+  version: 1.0.6
+  resolution: "@redis/json@npm:1.0.6"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: 9fda29abc339c72593f34a23f8023b715c1f8f3d73f7c59889af02f25589bac2ad57073ad08d0b8da42cd8c258665a7b38d39e761e92945cc27aca651c8a93a5
+  languageName: node
+  linkType: hard
+
+"@redis/search@npm:1.1.5":
+  version: 1.1.5
+  resolution: "@redis/search@npm:1.1.5"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: f81771a712957334029f75b4a68f54b0c78abe17d78546f6da9cd5c7e8f768c69f2f9d3c25840053dbe3c1931038f924403fc3f1bb359ac3defdae85e86fd26b
+  languageName: node
+  linkType: hard
+
+"@redis/time-series@npm:1.0.5":
+  version: 1.0.5
+  resolution: "@redis/time-series@npm:1.0.5"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: 6bbdb0b793dcbd13518aa60a09a980f953554e4c745bfacc1611baa8098f360e0378e8ee6b7faf600a67f1de83f4b68bbec6f95a0740faee6164c14be3a30752
+  languageName: node
+  linkType: hard
+
 "@simplewebauthn/server@npm:^8.3.3":
   version: 8.3.3
   resolution: "@simplewebauthn/server@npm:8.3.3"
@@ -523,16 +579,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/cookie-session@npm:^2.0.45":
-  version: 2.0.45
-  resolution: "@types/cookie-session@npm:2.0.45"
-  dependencies:
-    "@types/express": "*"
-    "@types/keygrip": "*"
-  checksum: 43a086555fc2fd7100a6a22da47fa860fe97f66ed4f2bd14363fcc93009a5f8b4e28e698053dd9b720ac4d0982d39c101118d37231c07bd478436d9c2e6456b0
-  languageName: node
-  linkType: hard
-
 "@types/express-serve-static-core@npm:^4.17.33":
   version: 4.17.37
   resolution: "@types/express-serve-static-core@npm:4.17.37"
@@ -542,6 +588,15 @@ __metadata:
     "@types/range-parser": "*"
     "@types/send": "*"
   checksum: 2dab1380e45eb44e56ecc1be1c42c4b897364d2f2a08e03ca28fbcb1e6866e390217385435813711c046f9acd684424d088855dc32825d5cbecf72c60ecd037f
+  languageName: node
+  linkType: hard
+
+"@types/express-session@npm:^1.17.9":
+  version: 1.17.9
+  resolution: "@types/express-session@npm:1.17.9"
+  dependencies:
+    "@types/express": "*"
+  checksum: e66d50742a27389f3f1bb03b30eb96d74daf357db6cc5e549265e6610f2cff14539fec7e2b72c3f98ab1174eff7ed347e3fe4d3a2b9273a6d1367d78ee0add71
   languageName: node
   linkType: hard
 
@@ -570,13 +625,6 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 2debf3adb19b827a023205234ec439b7258aee6ca9273472abe360738a84f08db78c6e853172e842ec303169ec0bb2df39701ab9a13b9e7868fe284ef9136567
-  languageName: node
-  linkType: hard
-
-"@types/keygrip@npm:*":
-  version: 1.0.3
-  resolution: "@types/keygrip@npm:1.0.3"
-  checksum: adee9a3efda3db9c64466af1c7c91a6d049420ee50589500cfd36e3e38d6abefdd858da88e6da63ed186e588127af3e862c1dc64fb0ad45c91870e6c35fe3be0
   languageName: node
   linkType: hard
 
@@ -1120,6 +1168,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cluster-key-slot@npm:1.1.2":
+  version: 1.1.2
+  resolution: "cluster-key-slot@npm:1.1.2"
+  checksum: be0ad2d262502adc998597e83f9ded1b80f827f0452127c5a37b22dfca36bab8edf393f7b25bb626006fb9fb2436106939ede6d2d6ecf4229b96a47f27edd681
+  languageName: node
+  linkType: hard
+
 "color-convert@npm:^2.0.1":
   version: 2.0.1
   resolution: "color-convert@npm:2.0.1"
@@ -1165,6 +1220,15 @@ __metadata:
   version: 0.1.1
   resolution: "connect-flash@npm:0.1.1"
   checksum: 243e103ec1fdf056e33eccdb3ccad20abe50b3c6e9b8a2a6391708cb0fcc550d116cdc2208fedd04be338ac0a45f8e7af2300042d8190c4342658f738b4d4e3a
+  languageName: node
+  linkType: hard
+
+"connect-redis@npm:^7.1.0":
+  version: 7.1.0
+  resolution: "connect-redis@npm:7.1.0"
+  peerDependencies:
+    express-session: ">=1"
+  checksum: fb493fae8910a2d61e3babd579c6344c56d7d31d67669d9941465ef00eb54ef9c1a35ccfa761136d36fa38d1f82ebe48c2b10888f292d55b4aadb8ecf1fddf34
   languageName: node
   linkType: hard
 
@@ -1234,6 +1298,13 @@ __metadata:
   version: 0.4.1
   resolution: "cookie@npm:0.4.1"
   checksum: bd7c47f5d94ab70ccdfe8210cde7d725880d2fcda06d8e375afbdd82de0c8d3b73541996e9ce57d35f67f672c4ee6d60208adec06b3c5fc94cebb85196084cf8
+  languageName: node
+  linkType: hard
+
+"cookie@npm:0.4.2":
+  version: 0.4.2
+  resolution: "cookie@npm:0.4.2"
+  checksum: a00833c998bedf8e787b4c342defe5fa419abd96b32f4464f718b91022586b8f1bafbddd499288e75c037642493c83083da426c6a9080d309e3bd90fd11baa9b
   languageName: node
   linkType: hard
 
@@ -1532,6 +1603,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"express-session@npm:^1.17.3":
+  version: 1.17.3
+  resolution: "express-session@npm:1.17.3"
+  dependencies:
+    cookie: 0.4.2
+    cookie-signature: 1.0.6
+    debug: 2.6.9
+    depd: ~2.0.0
+    on-headers: ~1.0.2
+    parseurl: ~1.3.3
+    safe-buffer: 5.2.1
+    uid-safe: ~2.1.5
+  checksum: 1021a793433cbc6a1b32c803fcb2daa1e03a8f50dd907e8745ae57994370315a5cfde5b6ef7b062d9a9a0754ff268844bda211c08240b3a0e01014dcf1073ec5
+  languageName: node
+  linkType: hard
+
 "express-validator@npm:^7.0.1":
   version: 7.0.1
   resolution: "express-validator@npm:7.0.1"
@@ -1756,6 +1843,13 @@ __metadata:
     strip-ansi: ^6.0.1
     wide-align: ^1.1.5
   checksum: 788b6bfe52f1dd8e263cda800c26ac0ca2ff6de0b6eee2fe0d9e3abf15e149b651bd27bf5226be10e6e3edb5c4e5d5985a5a1a98137e7a892f75eff76467ad2d
+  languageName: node
+  linkType: hard
+
+"generic-pool@npm:3.9.0":
+  version: 3.9.0
+  resolution: "generic-pool@npm:3.9.0"
+  checksum: 3d89e9b2018d2e3bbf44fec78c76b2b7d56d6a484237aa9daf6ff6eedb14b0899dadd703b5d810219baab2eb28e5128fb18b29e91e602deb2eccac14492d8ca8
   languageName: node
   linkType: hard
 
@@ -2637,8 +2731,8 @@ __metadata:
     "@types/body-parser": ^1.19.3
     "@types/connect-flash": ^0.0.38
     "@types/cookie-parser": ^1.4.4
-    "@types/cookie-session": ^2.0.45
     "@types/express": ^4.17.17
+    "@types/express-session": ^1.17.9
     "@types/jsonwebtoken": ^9.0.3
     "@types/luxon": ^3.3.2
     "@types/node": ^18.17.18
@@ -2648,10 +2742,12 @@ __metadata:
     axios: ^1.5.1
     body-parser: ^1.20.2
     connect-flash: ^0.1.1
+    connect-redis: ^7.1.0
     cookie-parser: ^1.4.6
     cookie-session: ^2.0.0
     csrf-csrf: ^3.0.1
     express: ^4.18.2
+    express-session: ^1.17.3
     express-validator: ^7.0.1
     fido2-lib: ^3.4.1
     form-data: ^4.0.0
@@ -2662,6 +2758,7 @@ __metadata:
     prisma: latest
     pug: ^3.0.2
     qrcode: ^1.5.3
+    redis: ^4.6.10
     speakeasy: ^2.0.0
     tsx: ^3.12.10
     typescript: ^5.2.2
@@ -2967,6 +3064,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"random-bytes@npm:~1.0.0":
+  version: 1.0.0
+  resolution: "random-bytes@npm:1.0.0"
+  checksum: 09faa256394aa2ca9754aa57e92a27c452c3e97ffb266e98bebb517332e9df7168fea393159f88d884febce949ba8bec8ddb02f03342da6c6023ecc7b155e0ae
+  languageName: node
+  linkType: hard
+
 "range-parser@npm:~1.2.1":
   version: 1.2.1
   resolution: "range-parser@npm:1.2.1"
@@ -3015,6 +3119,20 @@ __metadata:
   dependencies:
     picomatch: ^2.2.1
   checksum: 1ced032e6e45670b6d7352d71d21ce7edf7b9b928494dcaba6f11fba63180d9da6cd7061ebc34175ffda6ff529f481818c962952004d273178acd70f7059b320
+  languageName: node
+  linkType: hard
+
+"redis@npm:^4.6.10":
+  version: 4.6.10
+  resolution: "redis@npm:4.6.10"
+  dependencies:
+    "@redis/bloom": 1.2.0
+    "@redis/client": 1.5.11
+    "@redis/graph": 1.1.0
+    "@redis/json": 1.0.6
+    "@redis/search": 1.1.5
+    "@redis/time-series": 1.0.5
+  checksum: eae6e10f6ec8d5c6d6dea04a1ee6f6497319113e07dbf272a2b4b3c461c34d6fda152791f443c93c538ad6477741a6b157886b60d06f5fce2abbf403e6568a2f
   languageName: node
   linkType: hard
 
@@ -3490,6 +3608,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"uid-safe@npm:~2.1.5":
+  version: 2.1.5
+  resolution: "uid-safe@npm:2.1.5"
+  dependencies:
+    random-bytes: ~1.0.0
+  checksum: 07536043da9a026f4a2bc397543d0ace7587449afa1d9d2c4fd3ce76af8a5263a678788bcc429dff499ef29d45843cd5ee9d05434450fcfc19cc661229f703d1
+  languageName: node
+  linkType: hard
+
 "undefsafe@npm:^2.0.5":
   version: 2.0.5
   resolution: "undefsafe@npm:2.0.5"
@@ -3680,7 +3807,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yallist@npm:^4.0.0":
+"yallist@npm:4.0.0, yallist@npm:^4.0.0":
   version: 4.0.0
   resolution: "yallist@npm:4.0.0"
   checksum: 343617202af32df2a15a3be36a5a8c0c8545208f3d3dfbc6bb7c3e3b7e8c6f8e7485432e4f3b88da3031a6e20afa7c711eded32ddfb122896ac5d914e75848d5

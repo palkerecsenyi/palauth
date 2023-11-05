@@ -1,8 +1,22 @@
+include ../components/csrf.pug
+include ../components/hcaptcha.pug
+include ../components/submit-button.pug
+
 p Enroll a security key
 
 button#enroll Click to enroll
 
+form(action="/account/2fa/enroll", method="post")
+    +csrf_input(csrf)
+    input#key-input(type="hidden", name="key", required)
+
+    label(for="name") Name
+    input(type="text", name="name", placeholder="Give your key a name...", required)
+
+    +hcaptcha
+    +submit_button
+
 script(type="application/javascript", src="/static/js/webauthn.js")
 script.
     const enroll = window["PAL_2FA_ENROLL"]
-    document.getElementById("enroll").addEventListener("click", enroll(!{JSON.stringify(options)}))
+    document.getElementById("enroll").addEventListener("click", enroll(!{JSON.stringify(options)}, "key-input", "enroll"))

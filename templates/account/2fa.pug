@@ -20,9 +20,9 @@ block content
                     +two_fa_label(factor.type)
 
     h3 Enroll
-    if !factorTypes.includes("SecurityKey")
-        p
-            a(href="/account/2fa/enroll?type=key") Enroll a security key
+    p
+        a(href="/account/2fa/enroll?type=key") Enroll a security key
+
     if !factorTypes.includes("TOTP")
         p
             a(href="/account/2fa/enroll?type=totp") Enroll an authenticator app

@@ -5,6 +5,7 @@ import {UserController} from "../database/users.js";
 import {OAuthClientController} from "../database/oauth.js";
 import bodyParser from "body-parser";
 import TwoFactorController from "../helpers/2fa/2fa.js";
+import { generateToken } from "../helpers/csrf.js";
 
 const accountRouter = express.Router()
 accountRouter.use(authMiddleware({
@@ -106,10 +107,10 @@ accountRouter.get(
 
         if (type === "key") {
             const options = await twoFaController.securityKey.generateKeyRegistrationOptions(req)
-
             res.render("account/2fa-enroll", {
                 type,
                 options,
+                csrf: generateToken(req, res),
             })
         } else if (type === "totp") {
             const secret = await twoFaController.totp.generateSecret(req)
@@ -124,7 +125,6 @@ accountRouter.get(
 
 accountRouter.post(
     "/account/2fa/enroll",
-    bodyParser.json(),
     async (req: AuthenticatedRequest, res) => {
         const { type } = req.query
         if (type !== "key" && type !== "totp") {
@@ -135,14 +135,9 @@ accountRouter.post(
         const twoFaController = await TwoFactorController.mustFromAuthenticatedRequest(req)
 
         if (type === "key") {
-            if (twoFaController.registrationOfTypeExists("SecurityKey")) {
-                res.sendStatus(409)
-                return
-            }
-
             const success = await twoFaController.securityKey.saveKeyRegistration(req)
             if (!success) {
-                res.sendStatus(401)
+                req.flash("error", "Failed to enroll your key. Please try again.")
                 return
             }
         } else if (type === "totp") {

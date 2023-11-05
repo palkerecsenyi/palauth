@@ -1,43 +1,36 @@
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from "@simplewebauthn/browser"
+import { Buffer } from "buffer"
 
-const enroll = (options: any) => {
+const enroll = (options: any, formElementID: string, buttonID: string) => {
     console.log(options)
+    const formElement = document.getElementById(formElementID) as HTMLInputElement
+    if (!formElement) throw new Error(`Couldn't find element ${formElementID}`)
+    const buttonElement = document.getElementById(buttonID) as HTMLButtonElement
+    if (!buttonElement) throw new Error(`Couldn't find element ${buttonID}`)
+
     return async () => {
+        buttonElement.innerText = "Loading..."
+        buttonElement.disabled = true
+
         let credential: any
         try {
             credential = await startRegistration(options)
         } catch (e) {
             console.error(e)
             alert("Process cancelled - please try again")
+            buttonElement.innerText = "Click to enroll"
+            buttonElement.disabled = false
             return
         }
 
         if (!credential) return
-
-        try {
-            const resp = await fetch("/account/2fa/enroll?type=key", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(credential),
-            })
-
-            if (resp.status === 409) {
-                alert("You have already enrolled a security key. Please delete the old one first.")
-                return
-            }
-
-            if (resp.status !== 204) {
-                throw new Error()
-            }
-        } catch (e) {
-            alert("Something went wrong. Please try a different key.")
-            return
-        }
-
-        alert("Successfully enrolled your security key!")
-        window.location.href = "/account/2fa"
+        formElement.setAttribute(
+            "value",
+            Buffer.from(
+                JSON.stringify(credential)
+            ).toString("base64")
+        )
+        buttonElement.innerText = "Success!"
     }
 }
 

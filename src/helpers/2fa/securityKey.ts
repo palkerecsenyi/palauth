@@ -16,8 +16,6 @@ type DBAuthenticator = Pick<SecondAuthenticationFactor, "keyPublicKeyId" | "keyC
 const keyStorageEncoding: BufferEncoding = "base64url"
 
 export default class TwoFactorSecurityKeyController extends BaseTwoFactorController {
-    private static keyRegistrationSessionKey = "2fa_key_reg_challenge"
-    private static keyAuthenticationSessionKey = "2fa_key_auth_challenge"
     private get securityKeyFactor() {
         return this.getFactor("SecurityKey")!
     }
@@ -70,7 +68,12 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
             rpID,
         })
 
-        req.session![TwoFactorSecurityKeyController.keyAuthenticationSessionKey] = options.challenge
+        req.session.twoFactor = {
+            securityKey: {
+                currentChallenge: options.challenge,
+                challengeType: "authentication",
+            }
+        }
         return options
     }
     async generateKeyAuthenticationOptions(req: Request) {
@@ -106,8 +109,11 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         return controller.getUser()
     }
     async checkAndUpdateKeyAuthentication(req: Request) {
-        const clientChallenge = req.session![TwoFactorSecurityKeyController.keyAuthenticationSessionKey]
-        if (typeof clientChallenge !== "string") {
+        const clientChallenge = req.session.twoFactor?.securityKey?.currentChallenge
+        if (
+            typeof clientChallenge !== "string" 
+            || req.session.twoFactor?.securityKey?.challengeType !== "authentication"
+        ) {
             return false
         }
 
@@ -157,13 +163,21 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
             supportedAlgorithmIDs: [-7, -257],
         })
 
-        req.session![TwoFactorSecurityKeyController.keyRegistrationSessionKey] = options.challenge
+        req.session.twoFactor = {
+            securityKey: {
+                currentChallenge: options.challenge,
+                challengeType: "registration",
+            }
+        }
         return options
     }
 
     async saveKeyRegistration(req: Request) {
-        const clientChallenge = req.session![TwoFactorSecurityKeyController.keyRegistrationSessionKey]
-        if (typeof clientChallenge !== "string") {
+        const clientChallenge = req.session.twoFactor?.securityKey?.currentChallenge
+        if (
+            typeof clientChallenge !== "string"
+            || req.session.twoFactor?.securityKey?.challengeType !== "registration"
+        ) {
             return false
         }
 

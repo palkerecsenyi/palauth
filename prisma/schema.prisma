@@ -1,142 +1,142 @@
 generator client {
-  provider = "prisma-client-js"
-  output = "../src/database/generated-models"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+    provider = "prisma-client-js"
+    output = "../src/database/generated-models"
+    binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("PAL_DB_STRING")
+    provider = "mysql"
+    url      = env("PAL_DB_STRING")
 }
 
 model User {
-  id String @id @default(uuid())
-  email String @unique
-  emailVerified Boolean @default(false)
-  displayName String
-  passwordHash String
+    id String @id @default(uuid())
+    email String @unique
+    emailVerified Boolean @default(false)
+    displayName String
+    passwordHash String
 
-  ownedClients OAuthClient[]
-  oauthGrants UserOAuthGrant[]
-  oauthTokens OAuthToken[]
-  emailVerifications EmailVerification[]
-  secondFactors SecondAuthenticationFactor[]
+    ownedClients OAuthClient[]
+    oauthGrants UserOAuthGrant[]
+    oauthTokens OAuthToken[]
+    emailVerifications EmailVerification[]
+    secondFactors SecondAuthenticationFactor[]
 
-  iamRoles IAMRoleAssignment[]
+    iamRoles IAMRoleAssignment[]
 }
 
 model Invite {
-  token String @id @default(uuid())
-  expires DateTime?
-  singleUse Boolean
+    token String @id @default(uuid())
+    expires DateTime?
+    singleUse Boolean
 }
 
 model EmailVerification {
-  id String @id @default(uuid())
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+    id String @id @default(uuid())
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
 
-  code String
+    code String
 
-  created DateTime @default(now())
-  expires DateTime
-  sentAt DateTime?
+    created DateTime @default(now())
+    expires DateTime
+    sentAt DateTime?
 }
 
 enum SecondAuthenticationFactorType {
-  SecurityKey
-  TOTP
+    SecurityKey
+    TOTP
 }
 
 model SecondAuthenticationFactor {
-  id String @id @default(uuid())
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+    id String @id @default(uuid())
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
 
-  type SecondAuthenticationFactorType
+    type SecondAuthenticationFactorType
 
-  keyCounter Int?
-  keyPublicKey String?
-  keyPublicKeyId String?
-  isPasskey Boolean?
-  
-  totpSecret String?
+    keyCounter Int?
+    keyPublicKey String?
+    keyPublicKeyId String?
+    isPasskey Boolean?
+
+    totpSecret String?
 }
 
 model OAuthClient {
-  clientId String @id @default(uuid())
-  clientSecretHash String
-  redirectURIs OAuthClientRedirectURI[]
-  postLogoutURIs OAuthClientPostLogoutURI[]
-  initiateURI String?
+    clientId String @id @default(uuid())
+    clientSecretHash String
+    redirectURIs OAuthClientRedirectURI[]
+    postLogoutURIs OAuthClientPostLogoutURI[]
+    initiateURI String?
 
-  name String
-  usageDescription String
+    name String
+    usageDescription String
 
-  admin User @relation(fields: [adminId], references: [id])
-  adminId String
+    admin User @relation(fields: [adminId], references: [id])
+    adminId String
 
-  userGrants UserOAuthGrant[]
-  tokens OAuthToken[]
-  roles IAMRole[]
-  permissions IAMPermission[]
+    userGrants UserOAuthGrant[]
+    tokens OAuthToken[]
+    roles IAMRole[]
+    permissions IAMPermission[]
 }
 
 model OAuthClientRedirectURI {
-  id String @id @default(uuid())
-  client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  clientId String
-  uri String
+    id String @id @default(uuid())
+    client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+    clientId String
+    uri String
 }
 
 model OAuthClientPostLogoutURI {
-  id String @id @default(uuid())
-  client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  clientId String
-  uri String
+    id String @id @default(uuid())
+    client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+    clientId String
+    uri String
 }
 
 model UserOAuthGrant {
-  id String @id @default(uuid())
+    id String @id @default(uuid())
 
-  user User @relation(fields: [userId], references: [id])
-  userId String
+    user User @relation(fields: [userId], references: [id])
+    userId String
 
-  client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  clientId String
+    client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+    clientId String
 
-  scope String
+    scope String
 }
 
 model OAuthToken {
-  id String @id @default(uuid())
-  type OAuthTokenType
-  value String
-  issued DateTime @default(now())
-  expires DateTime
+    id String @id @default(uuid())
+    type OAuthTokenType
+    value String
+    issued DateTime @default(now())
+    expires DateTime
 
-  fromCode String? @db.LongText
+    fromCode String? @db.LongText
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
 
-  client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
-  clientId String
+    client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+    clientId String
 
-  scopes OAuthTokenScope[]
+    scopes OAuthTokenScope[]
 }
 
 model OAuthTokenScope {
-  token OAuthToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
-  tokenId String
-  scope String
+    token OAuthToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+    tokenId String
+    scope String
 
-  @@id([tokenId, scope])
+    @@id([tokenId, scope])
 }
 
 enum OAuthTokenType {
-  Access
-  Refresh
+    Access
+    Refresh
 }
 
 model IAMPermission {

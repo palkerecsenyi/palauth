@@ -5,6 +5,9 @@ declare module 'express-session' {
                 currentChallenge: string
                 challengeType: "authentication" | "registration"
             }
+        },
+        signIn: {
+            verifyEmail?: string
         }
     }
 }

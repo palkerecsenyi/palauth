@@ -62,7 +62,9 @@ authRouter.post(
         }
 
         if (!user.emailVerified) {
-            req.session!["verify_email"] = user.email
+            req.session.signIn = {
+                verifyEmail: user.email,
+            }
             req.flash("error", "Please verify your email to continue signing in")
             res.redirect("/auth/verify")
             return
@@ -295,7 +297,9 @@ authRouter.post(
             return
         }
 
-        req.session!["verify_email"] = email
+        req.session.signIn = {
+            verifyEmail: email,
+        }
         res.redirect(`/auth/verify`)
     }
 )
@@ -304,7 +308,7 @@ authRouter.get(
     "/verify",
     flowManager.ensureCanContinue("/auth/signin"),
     (req, res) => {
-        const verifyEmail = req.session!["verify_email"]
+        const verifyEmail = req.session.signIn?.verifyEmail
         if (!verifyEmail) {
             req.flash("Please sign in to verify your email")
             res.redirect("/auth/signin")
@@ -322,7 +326,7 @@ authRouter.get(
     "/verify/resend",
     flowManager.ensureCanContinue("/auth/signin"),
     async (req, res) => {
-        const verifyEmail = req.session!["verify_email"]
+        const verifyEmail = req.session.signIn?.verifyEmail
         if (!verifyEmail) {
             res.redirect("/auth/verify")
             return

@@ -3,7 +3,6 @@ import {authMiddleware} from "../helpers/auth.js";
 import {AuthenticatedRequest, ValidatedRequest} from "../types/express.js";
 import {UserController} from "../database/users.js";
 import {OAuthClientController} from "../database/oauth.js";
-import bodyParser from "body-parser";
 import TwoFactorController from "../helpers/2fa/2fa.js";
 import { generateToken } from "../helpers/csrf.js";
 import { body } from "express-validator";

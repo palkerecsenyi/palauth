@@ -1,4 +1,4 @@
-import {OAuthClient, Prisma, User} from "./generated-models/index.js";
+import {$Enums, OAuthClient, Prisma, User} from "./generated-models/index.js";
 import argon2 from "argon2"
 import {DBClient} from "./client.js";
 import {TransactionType} from "../types/prisma.js";
@@ -119,7 +119,11 @@ export class UserController {
     }
 
     get twoFactorMethods() {
-        return this.user.secondFactors.map(e => e.type)
+        const tfaMethodSet = new Set<$Enums.SecondAuthenticationFactorType>()
+        for (const f of this.user.secondFactors) {
+            tfaMethodSet.add(f.type)
+        }
+        return [...tfaMethodSet.values()]
     }
 
     getTwoFactorController() {
@@ -127,6 +131,6 @@ export class UserController {
     }
     get hasPasskey() {
         const tfa = this.getTwoFactorController()
-        return tfa.registrationOfTypeExists("SecurityKey") && tfa.securityKey.isPasskey
+        return tfa.registrationOfTypeExists("SecurityKey") && tfa.securityKey.hasPasskey
     }
 }

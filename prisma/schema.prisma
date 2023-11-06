@@ -58,6 +58,7 @@ model SecondAuthenticationFactor {
     keyCounter Int?
     keyPublicKey String?
     keyPublicKeyId String?
+    keyNickname String?
     isPasskey Boolean?
 
     totpSecret String?

@@ -1,6 +1,7 @@
-mixin two_fa_label(type)
+mixin two_fa_label(factor)
+    - const type = factor.type
     if type === "SecurityKey"
-        | Security key
+        | Security key (#{factor.keyNickname})
     else if type === "TOTP"
         | Authenticator app
     else

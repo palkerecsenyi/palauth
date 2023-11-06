@@ -6,7 +6,7 @@ p Enroll a security key
 
 button#enroll Click to enroll
 
-form(action="/account/2fa/enroll", method="post")
+form(action="/account/2fa/enroll?type=key", method="post")
     +csrf_input(csrf)
     input#key-input(type="hidden", name="key", required)
 

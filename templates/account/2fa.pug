@@ -18,6 +18,9 @@ block content
             for factor in factors
                 li
                     +two_fa_label(factor)
+                    ul
+                        li
+                            a(href="/account/2fa/unenroll/" + factor.id) Delete
 
     h3 Enroll
     p

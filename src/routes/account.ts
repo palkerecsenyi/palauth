@@ -180,4 +180,25 @@ accountRouter.post(
     }
 )
 
+accountRouter.get(
+    "/account/2fa/unenroll/:factorID",
+    async (req: AuthenticatedRequest, res) => {
+        const {factorID} = req.params
+        if (!factorID) {
+            req.flash("error", "No factor ID provided")
+        } else {
+            const twoFaController = await TwoFactorController.mustFromAuthenticatedRequest(req)
+            const matchingFactor = twoFaController.factors.find(f => f.id === factorID)
+            if (!matchingFactor) {
+                req.flash("error", "Factor ID not found")
+            } else {
+                await twoFaController.deleteFactor(matchingFactor.id)
+                req.flash("success", "Deleted your authentication factor")
+            }
+        }
+
+        res.redirect("/account/2fa")
+    }
+)
+
 export default accountRouter

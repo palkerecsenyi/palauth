@@ -58,4 +58,12 @@ export default class TwoFactorController extends BaseTwoFactorController {
     public get totp() {
         return this.getController("TOTP") as TwoFactorTOTPController
     }
+
+    public async deleteFactor(id: string) {
+        await this.tx.secondAuthenticationFactor.delete({
+            where: {
+                id,
+            }
+        })
+    }
 }

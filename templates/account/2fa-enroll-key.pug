@@ -29,4 +29,4 @@ p#error(style="color: red")
 script(type="application/javascript", src="/static/js/webauthn.js")
 script.
     const enroll = window["PAL_2FA_ENROLL"]
-    document.getElementById("enroll").addEventListener("click", enroll(!{JSON.stringify(options)}, "key-input", "enroll"))
+    document.getElementById("enroll").addEventListener("click", enroll(!{JSON.stringify(options)}, "key-input", "enroll", "error"))

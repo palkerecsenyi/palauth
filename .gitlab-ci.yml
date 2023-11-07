@@ -1,12 +1,8 @@
-
 include:
   - project: 'gitlab.palk.me/templates'
     file: '/gitlab-ci/Paltiverse.gitlab-ci.yml'
 
-stages:
-  - build
-  - deploy
-
 variables:
   GCP_PROJECT: 'palk-util'
   GCP_ARTIFACT_REPO: 'palauth-build'
+  PAL_BUILD_STRATEGY: 'docker'

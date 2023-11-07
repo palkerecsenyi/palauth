@@ -2,7 +2,7 @@ mixin two_fa_label(factor)
     if typeof factor === "string"
         if factor === "SecurityKey"
             | Security key
-        else if type === "TOTP"
+        else if factor === "TOTP"
             | Authenticator app
         else
             | Unknown

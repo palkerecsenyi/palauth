@@ -122,16 +122,19 @@ accountRouter.post(
                 parsedKeyData = JSON.parse(keyDataString)
             } catch (e) {
                 req.flash("error", "No key data provided")
+                res.redirect("/account/2fa/enroll?type=key")
                 return
             }
 
             const nickname = req.body.name
             if (typeof nickname !== "string") {
                 req.flash("error", "No nickname provided")
+                res.redirect("/account/2fa/enroll?type=key")
                 return
             }
             if (nickname.length < 3 || nickname.length > 100) {
                 req.flash("error", "Nickname must be between 3 and 100 characters")
+                res.redirect("/account/2fa/enroll?type=key")
                 return
             }
 
@@ -144,6 +147,7 @@ accountRouter.post(
             )
             if (!success) {
                 req.flash("error", "Failed to enroll your key. Please try again.")
+                res.redirect("/account/2fa/enroll?type=key")
                 return
             }
 
@@ -152,13 +156,14 @@ accountRouter.post(
         } else if (type === "totp") {
             if (twoFaController.registrationOfTypeExists("TOTP")) {
                 req.flash("error", "You've already enrolled an authenticator app. Please delete it first.")
-                res.status(409).redirect("/account/2fa/enroll?type=totp")
+                res.redirect("/account/2fa/enroll?type=totp")
                 return
             }
 
             const token = req.body.token
             if (typeof token !== "string") {
-                res.status(400).send("No valid token provided")
+                req.flash("error", "No valid token provided")
+                res.redirect("/account/2fa/enroll?type=totp")
                 return
             }
             const success = await twoFaController.totp.saveRegistration(token, req)

@@ -24,6 +24,8 @@ form(action="/account/2fa/enroll?type=key", method="post")
     +hcaptcha
     +submit_button
 
+p#error(style="color: red")
+
 script(type="application/javascript", src="/static/js/webauthn.js")
 script.
     const enroll = window["PAL_2FA_ENROLL"]

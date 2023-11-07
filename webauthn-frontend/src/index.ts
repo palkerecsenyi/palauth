@@ -1,14 +1,17 @@
 import { browserSupportsWebAuthn, startAuthentication, startRegistration } from "@simplewebauthn/browser"
 import { Buffer } from "buffer"
 
-const enroll = (options: any, formElementID: string, buttonID: string) => {
+const enroll = (options: any, formElementID: string, buttonID: string, errorID: string) => {
     console.log(options)
     const formElement = document.getElementById(formElementID) as HTMLInputElement
     if (!formElement) throw new Error(`Couldn't find element ${formElementID}`)
     const buttonElement = document.getElementById(buttonID) as HTMLButtonElement
     if (!buttonElement) throw new Error(`Couldn't find element ${buttonID}`)
+    const errorElement = document.getElementById(errorID) as HTMLParagraphElement
+    if (!errorElement) throw new Error(`Couldn't find element ${errorID}`)
 
     return async () => {
+        errorElement.innerText = ""
         buttonElement.innerText = "Loading..."
         buttonElement.disabled = true
 
@@ -20,6 +23,7 @@ const enroll = (options: any, formElementID: string, buttonID: string) => {
             alert("Process cancelled - please try again")
             buttonElement.innerText = "Click to enroll"
             buttonElement.disabled = false
+            errorElement.innerText = "dev error: " + e
             return
         }
 

@@ -40,3 +40,4 @@ export const getCaptchaURL = () => process.env["PAL_CAPTCHA_URL"]
 export const getCaptchaAPIKey = () => process.env["PAL_CAPTCHA_KEY"]
 
 export const getMailgunSecret = () => process.env["PAL_MAILGUN_KEY"]
+export const getRedisSecret = () => process.env["PAL_REDIS_URL"]

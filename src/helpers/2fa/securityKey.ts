@@ -73,7 +73,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
 
     static async generateKeyAuthenticationOptions(req: Request, allowCredentials: PublicKeyCredentialDescriptorFuture[]) {
         const options = await generateAuthenticationOptions({
-            allowCredentials: allowCredentials,
+            allowCredentials,
             userVerification: "preferred",
             rpID,
         })

@@ -71,10 +71,14 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         return this.securityKeyFactors.some(e => e.isPasskey)
     }
 
-    static async generateKeyAuthenticationOptions(req: Request, allowCredentials: PublicKeyCredentialDescriptorFuture[]) {
+    static async generateKeyAuthenticationOptions(
+        req: Request,
+        allowCredentials: PublicKeyCredentialDescriptorFuture[],
+        passkey: boolean,
+    ) {
         const options = await generateAuthenticationOptions({
             allowCredentials,
-            userVerification: "preferred",
+            userVerification: passkey ? "preferred" : "discouraged",
             rpID,
         })
 
@@ -86,11 +90,18 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         }
         return options
     }
-    async generateKeyAuthenticationOptions(req: Request) {
-        return TwoFactorSecurityKeyController.generateKeyAuthenticationOptions(req, this.allowCredentials)
+    async generateKeyAuthenticationOptions(req: Request, passkey: boolean) {
+        return TwoFactorSecurityKeyController.generateKeyAuthenticationOptions(
+            req,
+            this.allowCredentials,
+            passkey,
+        )
     }
 
-    static async identifyKeyAuthentication(req: Request, tx: TransactionType = DBClient.getClient()) {
+    static async identifyKeyAuthentication(
+        req: Request,
+        tx: TransactionType = DBClient.getClient()
+    ) {
         const id = req.body["id"]
         if (typeof id !== "string") {
             return false
@@ -111,14 +122,22 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
             return false
         }
 
-        const keyAuthenticated = await controller.securityKey.checkAndUpdateKeyAuthentication(req, factor.keyPublicKeyId!)
+        const keyAuthenticated = await controller.securityKey.checkAndUpdateKeyAuthentication(
+            req,
+            true,
+            factor.keyPublicKeyId!
+        )
         if (!keyAuthenticated) {
             return false
         }
 
         return controller.getUser()
     }
-    async checkAndUpdateKeyAuthentication(req: Request, keyId?: string) {
+    async checkAndUpdateKeyAuthentication(
+        req: Request,
+        passkey: boolean,
+        keyId?: string,
+    ) {
         const clientChallenge = req.session.twoFactor?.securityKey?.currentChallenge
         if (
             typeof clientChallenge !== "string" 
@@ -140,7 +159,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
                 expectedOrigin: rpOrigin,
                 expectedRPID: rpID,
                 authenticator: TwoFactorSecurityKeyController.dbToAuthenticatorData(matchingKey),
-                requireUserVerification: true,
+                requireUserVerification: passkey,
             })
         } catch (e) {
             console.warn(e)
@@ -164,16 +183,21 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         return true
     }
 
-    async generateKeyRegistrationOptions(req: Request) {
+    async generateKeyRegistrationOptions(
+        req: Request,
+        passkey: boolean,
+    ) {
         const options = await generateRegistrationOptions({
             rpName,
             rpID,
             userID: this.user.id,
             userName: this.user.displayName,
             attestationType: "none",
-            authenticatorSelection: {
+            authenticatorSelection: passkey ? {
                 residentKey: "required",
                 userVerification: "preferred",
+            } : {
+                userVerification: "discouraged",
             },
             supportedAlgorithmIDs: [-7, -257],
         })
@@ -187,7 +211,12 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         return options
     }
 
-    async saveKeyRegistration(req: Request, keyData: any, nickname: string) {
+    async saveKeyRegistration(
+        req: Request,
+        keyData: any,
+        nickname: string,
+        passkey: boolean,
+    ) {
         const clientChallenge = req.session.twoFactor?.securityKey?.currentChallenge
         if (
             typeof clientChallenge !== "string"
@@ -203,7 +232,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
                 expectedChallenge: clientChallenge,
                 expectedOrigin: rpOrigin,
                 expectedRPID: rpID,
-                requireUserVerification: true,
+                requireUserVerification: passkey,
             })
         } catch (e) {
             console.warn(e)
@@ -231,6 +260,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
                 type: "SecurityKey",
                 ...dbAuthenticatorData,
                 keyNickname: nickname,
+                isPasskey: passkey,
             }
         })
         return true

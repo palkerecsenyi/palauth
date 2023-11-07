@@ -37,7 +37,11 @@ authRouter.get(
     async (req: AuthenticatedRequest, res) => {
         res.render("auth/signin.pug", {
             csrf: generateToken(req, res),
-            keyOptions: await TwoFactorSecurityKeyController.generateKeyAuthenticationOptions(req, []),
+            keyOptions: await TwoFactorSecurityKeyController.generateKeyAuthenticationOptions(
+                req,
+                [],
+                true,
+            ),
         })
     }
 )
@@ -142,7 +146,10 @@ authRouter.get(
         if (twoFaMethod === "SecurityKey") {
             res.render("auth/2fa-verify.pug", {
                 method: twoFaMethod,
-                keyOptions: await twoFaController.securityKey.generateKeyAuthenticationOptions(req),
+                keyOptions: await twoFaController.securityKey.generateKeyAuthenticationOptions(
+                    req,
+                    false,
+                ),
             })
         } else if (twoFaMethod === "TOTP") {
             res.render("auth/2fa-verify.pug", {
@@ -170,7 +177,10 @@ authRouter.post(
         }
 
         if (twoFaMethod === "SecurityKey") {
-            const keyCorrect = await twoFaController.securityKey.checkAndUpdateKeyAuthentication(req)
+            const keyCorrect = await twoFaController.securityKey.checkAndUpdateKeyAuthentication(
+                req,
+                false,
+            )
             if (!keyCorrect) {
                 res.sendStatus(403)
                 return

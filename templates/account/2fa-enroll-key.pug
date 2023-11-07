@@ -2,13 +2,21 @@ include ../components/csrf.pug
 include ../components/hcaptcha.pug
 include ../components/submit-button.pug
 
-p Enroll a security key
+p Enroll a security key as a&nbsp;
+    strong
+        if passkey
+            | passkey
+        else
+            | second authentication factor
+    | .
 
 button#enroll Click to enroll
 
 form(action="/account/2fa/enroll?type=key", method="post")
     +csrf_input(csrf)
     input#key-input(type="hidden", name="key", required)
+    if passkey
+        input(type="hidden", name="passkey", value="yes")
 
     label(for="name") Name
     input(type="text", name="name", placeholder="Give your key a name...", required)

@@ -1,0 +1,22 @@
+extends ../layouts/main
+
+block title
+    | Enroll 2FA
+
+block header
+    p
+        a(href="/account/2fa") Back to 2FA settings
+    h1 Passkey
+
+block content
+    p You're enrolling a&nbsp;
+        strong security key
+        | .
+
+    p Would you like to set this up as a passkey?
+
+    ul
+        li
+            a(href="/account/2fa/enroll?type=key&passkey=yes") Yes, allow signing in with just this security key
+        li
+            a(href="/account/2fa/enroll?type=key") No, just use my security key as a second factor

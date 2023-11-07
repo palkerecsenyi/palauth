@@ -9,7 +9,11 @@ mixin two_fa_label(factor)
     else
         - const type = factor.type
         if type === "SecurityKey"
-            | Security key (#{factor.keyNickname})
+            | Security key (#{factor.keyNickname}
+            if factor.isPasskey
+                | &nbsp;&bull;&nbsp;
+                strong passkey
+            | )
         else if type === "TOTP"
             | Authenticator app
         else

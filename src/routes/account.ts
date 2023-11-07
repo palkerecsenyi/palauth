@@ -1,12 +1,11 @@
 import express from "express";
 import {authMiddleware} from "../helpers/auth.js";
-import {AuthenticatedRequest, ValidatedRequest} from "../types/express.js";
+import {AuthenticatedRequest} from "../types/express.js";
 import {UserController} from "../database/users.js";
 import {OAuthClientController} from "../database/oauth.js";
 import TwoFactorController from "../helpers/2fa/2fa.js";
-import { generateToken } from "../helpers/csrf.js";
-import { body } from "express-validator";
-import { ensureValidators } from "../helpers/validators.js";
+import { doubleCsrfProtection, generateToken } from "../helpers/csrf.js";
+import { verifyCaptcha } from "../helpers/captcha.js";
 
 const accountRouter = express.Router()
 accountRouter.use(authMiddleware({
@@ -59,39 +58,9 @@ accountRouter.get(
 )
 
 accountRouter.get(
-    "/account/2fa/passkey",
-    async (req: AuthenticatedRequest, res) => {
-        const twoFaController = await TwoFactorController.mustFromAuthenticatedRequest(req)
-
-        const ready = twoFaController.registrationOfTypeExists("SecurityKey")
-        let configured = false
-
-        if (ready) {
-            configured = twoFaController.securityKey.hasPasskey
-        }
-
-        res.render("account/2fa-passkey.pug", {
-            ready,
-            configured,
-        })
-    }
-)
-
-accountRouter.get(
-    "/account/2fa/passkey/enroll",
-    async (req: AuthenticatedRequest, res) => {
-        const twoFaController = await TwoFactorController.mustFromAuthenticatedRequest(req)
-        if (!twoFaController.registrationOfTypeExists("SecurityKey")) {
-            req.flash("error", "No security key configured for your account")
-        } else if (twoFaController.securityKey.hasPasskey) {
-            req.flash("error", "You've already configured a passkey")
-        } else {
-            // TODO: configure this lol
-            await twoFaController.securityKey.markAsPasskey("")
-            req.flash("success", "Passkey configured!")
-        }
-
-        res.redirect("/account/2fa/passkey")
+    "/account/2fa/passkey-question",
+    async (_: AuthenticatedRequest, res) => {
+        res.render("account/2fa-passkey-question.pug")
     }
 )
 
@@ -108,10 +77,16 @@ accountRouter.get(
         const twoFaController = await TwoFactorController.mustFromAuthenticatedRequest(req)
 
         if (type === "key") {
-            const options = await twoFaController.securityKey.generateKeyRegistrationOptions(req)
+            const passkey = req.query.passkey === "yes"
+
+            const options = await twoFaController.securityKey.generateKeyRegistrationOptions(
+                req,
+                passkey,
+            )
             res.render("account/2fa-enroll", {
                 type,
                 options,
+                passkey,
                 csrf: generateToken(req, res),
             })
         } else if (type === "totp") {
@@ -120,6 +95,7 @@ accountRouter.get(
                 type,
                 qrDataUrl: secret.qrCodeUrl,
                 rawSecret: secret.rawSecret,
+                csrf: generateToken(req, res),
             })
         }
     }
@@ -127,6 +103,8 @@ accountRouter.get(
 
 accountRouter.post(
     "/account/2fa/enroll",
+    verifyCaptcha("/account/2fa"),
+    doubleCsrfProtection,
     async (req: AuthenticatedRequest, res) => {
         const { type } = req.query
         if (type !== "key" && type !== "totp") {
@@ -157,7 +135,13 @@ accountRouter.post(
                 return
             }
 
-            const success = await twoFaController.securityKey.saveKeyRegistration(req, parsedKeyData, nickname)
+            const passkey = req.body.passkey === "yes"
+            const success = await twoFaController.securityKey.saveKeyRegistration(
+                req,
+                parsedKeyData,
+                nickname,
+                passkey,
+            )
             if (!success) {
                 req.flash("error", "Failed to enroll your key. Please try again.")
                 return

@@ -127,9 +127,7 @@ accountRouter.get(
 
 accountRouter.post(
     "/account/2fa/enroll",
-    body("name").isString().isLength({min: 3, max: 50}),
-    ensureValidators("/account/2fa/enroll?type=key"),
-    async (req: AuthenticatedRequest & ValidatedRequest, res) => {
+    async (req: AuthenticatedRequest, res) => {
         const { type } = req.query
         if (type !== "key" && type !== "totp") {
             res.sendStatus(400)
@@ -149,9 +147,13 @@ accountRouter.post(
                 return
             }
 
-            const nickname = req.validatedData!.name
+            const nickname = req.body.name
             if (typeof nickname !== "string") {
                 req.flash("error", "No nickname provided")
+                return
+            }
+            if (nickname.length < 3 || nickname.length > 100) {
+                req.flash("error", "Nickname must be between 3 and 100 characters")
                 return
             }
 

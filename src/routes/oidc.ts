@@ -42,12 +42,12 @@ oidcRouter.get(
             return oauthErrorPage(res, e)
         }
 
-        const oauthClient = await OAuthClientController.getByClientId(flow.client_id as string)
+        const oauthClient = await flow.oauthClientController()
         if (!oauthClient) {
             return oauthErrorPage(res, "client_id invalid or not found")
         }
 
-        if (!oauthClient.checkRedirectURI(flow.redirect_uri)) {
+        if (!oauthClient.checkRedirectURI(flow.flowData.redirect_uri)) {
             return oauthErrorPage(res, "redirect_uri is not acceptable for the client")
         }
 
@@ -58,8 +58,8 @@ oidcRouter.get(
         flow.save(req)
 
         const u = req.user
-        if (!u || flow.prompt === "login") {
-            if (flow.prompt === "none") {
+        if (!u || flow.flowData.prompt === "login") {
+            if (flow.flowData.prompt === "none") {
                 return oauthErrorPage(res, "prompt='none' but there is no authenticated user")
             }
 
@@ -91,7 +91,7 @@ oidcRouter.get(
             return
         }
 
-        const clientController = await OAuthClientController.getByClientId(flow.client_id)
+        const clientController = await flow.oauthClientController()
         if (!clientController) {
             return oauthErrorPage(res, "client_id invalid or not found")
         }

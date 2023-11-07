@@ -4,8 +4,10 @@ import {OAuthAuthorizationError, OIDCPromptType, OIDCResponseType} from "../../t
 import {DBClient} from "../../database/client.js";
 import {URLSearchParams} from "url";
 import {AuthorizationCode} from "./authorization-code.js";
+import { TransactionType } from "../../types/prisma.js";
+import { OAuthClientController } from "../../database/oauth.js";
 
-export class OIDCFlow {
+export interface OIDCFlowData {
     client_id: string
     response_type: OIDCResponseType
     redirect_uri: string
@@ -13,23 +15,13 @@ export class OIDCFlow {
     nonce?: string
     prompt?: OIDCPromptType
     state?: string
+}
 
-    private constructor(
-        client_id: string,
-        response_type: OIDCResponseType,
-        redirect_uri: string,
-        scope: string,
-        nonce?: string,
-        prompt?: OIDCPromptType,
-        state?: string,
-    ) {
-        this.client_id = client_id
-        this.response_type = response_type
-        this.redirect_uri = redirect_uri
-        this.scope = scope
-        this.nonce = nonce
-        this.prompt = prompt
-        this.state = state
+export class OIDCFlow {
+    flowData: OIDCFlowData
+
+    private constructor(data: OIDCFlowData) {
+        this.flowData = data
     }
 
     private static validateAndConstruct(
@@ -69,15 +61,15 @@ export class OIDCFlow {
             throw new Error("state is not a valid string")
         }
 
-        return new OIDCFlow(
+        return new OIDCFlow({
             client_id,
-            response_type as OIDCResponseType,
+            response_type: response_type as OIDCResponseType,
             redirect_uri,
             scope,
             nonce,
             prompt,
             state,
-        )
+        })
     }
 
     static fromRequest(req: Request) {
@@ -97,7 +89,7 @@ export class OIDCFlow {
 
     static middleware() {
         return (req: OIDCFlowRequest, res: Response, next: NextFunction) => {
-            const obj = req.session!["oidc_flow"]
+            const obj = req.session.oidcFlow
             if (!obj) {
                 res.status(400).send("missing oidc_flow in session")
                 return
@@ -106,7 +98,7 @@ export class OIDCFlow {
             try {
                 req.oidcFlow = OIDCFlow.fromJSON(obj)
             } catch (e) {
-                delete req.session!["oidc_flow"]
+                delete req.session["oidcFlow"]
                 console.error(e)
                 res.sendStatus(500)
                 return
@@ -117,17 +109,17 @@ export class OIDCFlow {
     }
 
     save(req: Request) {
-        req.session!["oidc_flow"] = this.toJSON()
+        req.session.oidcFlow = this.toJSON()
     }
 
     end(req: Request) {
-        if (req.session!["oidc_flow"]) {
-            delete req.session!["oidc_flow"]
+        if (req.session.oidcFlow) {
+            delete req.session["oidcFlow"]
         }
     }
 
     get scopes() {
-        return this.scope.split(" ")
+        return this.flowData.scope.split(" ")
     }
 
     get isOpenID() {
@@ -144,7 +136,7 @@ export class OIDCFlow {
         const grantedScopes = await dbClient.userOAuthGrant.findMany({
             where: {
                 userId,
-                clientId: this.client_id,
+                clientId: this.flowData.client_id,
             }
         })
 
@@ -161,7 +153,7 @@ export class OIDCFlow {
                 return {
                     scope: s,
                     userId,
-                    clientId: this.client_id,
+                    clientId: this.flowData.client_id,
                 }
             })
         })
@@ -171,35 +163,32 @@ export class OIDCFlow {
         const q = new URLSearchParams()
         q.append("error", code)
         q.append("description", description)
-        return this.redirect_uri + "?" + q.toString()
+        return this.flowData.redirect_uri + "?" + q.toString()
     }
 
     async successExitURL(userId: string) {
         const authCode = new AuthorizationCode({
             userId,
-            clientId: this.client_id,
-            scope: this.scope,
-            redirectURI: this.redirect_uri,
-            nonce: this.nonce,
+            clientId: this.flowData.client_id,
+            scope: this.flowData.scope,
+            redirectURI: this.flowData.redirect_uri,
+            nonce: this.flowData.nonce,
         })
         const q = new URLSearchParams()
         q.append("code", await authCode.sign())
-        if (this.state) {
-            q.append("state", this.state)
+        const state = this.flowData.state
+        if (state) {
+            q.append("state", state)
         }
-        return this.redirect_uri + "?" + q.toString()
+        return this.flowData.redirect_uri + "?" + q.toString()
     }
 
     toJSON() {
-        return {
-            client_id: this.client_id,
-            response_type: this.response_type,
-            redirect_uri: this.redirect_uri,
-            scope: this.scope,
-            nonce: this.nonce,
-            prompt: this.prompt,
-            state: this.state,
-        }
+        return this.flowData
+    }
+
+    oauthClientController(tx: TransactionType = DBClient.getClient()) {
+        return OAuthClientController.getByClientId(this.flowData.client_id, tx)
     }
 
     static fromJSON(json: Record<string, any>) {

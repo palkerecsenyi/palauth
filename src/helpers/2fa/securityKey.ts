@@ -111,14 +111,14 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
             return false
         }
 
-        const keyAuthenticated = await controller.securityKey.checkAndUpdateKeyAuthentication(req)
+        const keyAuthenticated = await controller.securityKey.checkAndUpdateKeyAuthentication(req, factor.keyPublicKeyId!)
         if (!keyAuthenticated) {
             return false
         }
 
         return controller.getUser()
     }
-    async checkAndUpdateKeyAuthentication(req: Request) {
+    async checkAndUpdateKeyAuthentication(req: Request, keyId?: string) {
         const clientChallenge = req.session.twoFactor?.securityKey?.currentChallenge
         if (
             typeof clientChallenge !== "string" 
@@ -127,7 +127,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
             return false
         }
 
-        const matchingKey = this.securityKeyFactors.find(f => f.keyPublicKeyId === req.body["id"])
+        const matchingKey = this.securityKeyFactors.find(f => f.keyPublicKeyId === keyId || req.body["id"])
         if (!matchingKey) {
             return false
         }

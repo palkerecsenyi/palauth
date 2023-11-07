@@ -2,23 +2,27 @@ import type {NextFunction, Request, Response} from "express";
 import {AuthenticatedRequest} from "../types/express.js";
 import {UserController} from "../database/users.js";
 import {FlowManager} from "./flow.js";
+import { SessionData } from "express-session";
 
-const sessionGetterSetters = (key: string) => {
+const sessionGetterSetters = (key: keyof SessionData["signIn"]) => {
     return {
         getter(req: Request) {
             if (req.session === undefined || req.session === null) {
                 return undefined
             }
-            return req.session[key] as string | undefined
+            return req.session.signIn?.[key]
         },
         setter(req: Request, value: string | undefined) {
             if (!req.session) return
             if (!value) {
-                delete req.session[key]
+                delete req.session.signIn?.[key]
                 return
             }
 
-            req.session[key] = value
+            req.session.signIn = {
+                ...req.session.signIn,
+                [key]: value,
+            }
         },
     }
 }
@@ -29,7 +33,7 @@ export const setUserId = (req: Request, value: string | undefined) => {
     _setUserId(req, value)
     setProvisionalUserId(req, undefined)
 }
-export const {getter: getProvisionalUserId, setter: setProvisionalUserId} = sessionGetterSetters("prov_userID")
+export const {getter: getProvisionalUserId, setter: setProvisionalUserId} = sessionGetterSetters("provisionalUserID")
 
 type AuthMiddlewareConfig = {
     authRequirement: "none" | "require-not-authenticated" | "require-authenticated" | "require-provisional-authenticated"

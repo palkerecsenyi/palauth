@@ -4,8 +4,6 @@ import speakeasy from "speakeasy"
 import QRCode from "qrcode"
 
 export default class TwoFactorTOTPController extends BaseTwoFactorController {
-    private static secretSessionKey = "2fa_totp_secret"
-
     async generateSecret(req: Request) {
         const secret = speakeasy.generateSecret()
 
@@ -15,7 +13,11 @@ export default class TwoFactorTOTPController extends BaseTwoFactorController {
             label: this.user.displayName,
         })
 
-        req.session![TwoFactorTOTPController.secretSessionKey] = secret.ascii
+        req.session.twoFactor = {
+            totp: {
+                secret: secret.ascii,
+            }
+        }
         return {
             qrCodeUrl: await QRCode.toDataURL(url),
             rawSecret: secret.ascii,
@@ -31,7 +33,7 @@ export default class TwoFactorTOTPController extends BaseTwoFactorController {
     }
 
     async saveRegistration(token: string, req: Request) {
-        const sessionSecret = req.session![TwoFactorTOTPController.secretSessionKey]
+        const sessionSecret = req.session.twoFactor?.totp?.secret
         if (typeof sessionSecret !== "string") {
             return false
         }

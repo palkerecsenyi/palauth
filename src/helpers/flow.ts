@@ -7,10 +7,6 @@ export class FlowManager {
         this.flowName = flowName
     }
 
-    private get sessionKey() {
-        return `flow-dest-${this.flowName}`
-    }
-
     static parseDestination(req: Request) {
         const destination = req.query["destination"]
         if (typeof destination !== "string") {
@@ -35,7 +31,10 @@ export class FlowManager {
         if (existingDestination && !req.query.hasOwnProperty("destination")) return existingDestination
 
         const destination = FlowManager.parseDestination(req)
-        req.session![this.sessionKey] = destination
+        req.session.flow = {
+            ...req.session.flow,
+            [this.flowName]: destination,
+        }
         return destination
     }
 
@@ -57,7 +56,7 @@ export class FlowManager {
     }
 
     private extractDestinationFromSession(req: Request) {
-        const destination = req.session![this.sessionKey]
+        const destination = req.session.flow?.[this.flowName]
         if (typeof destination !== "string") {
             return undefined
         }
@@ -84,7 +83,7 @@ export class FlowManager {
             return
         }
 
-        delete req.session![this.sessionKey]
+        delete req.session.flow?.[this.flowName]
         res.redirect(destination)
     }
 }

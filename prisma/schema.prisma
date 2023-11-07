@@ -19,7 +19,7 @@ model User {
     ownedClients OAuthClient[]
     oauthGrants UserOAuthGrant[]
     oauthTokens OAuthToken[]
-    emailVerifications EmailVerification[]
+    verificationMessages VerificationMessage[]
     secondFactors SecondAuthenticationFactor[]
 
     iamRoles IAMRoleAssignment[]
@@ -31,16 +31,23 @@ model Invite {
     singleUse Boolean
 }
 
-model EmailVerification {
+enum VerificationMessagePurpose {
+    VerifyEmail
+    PasswordReset
+}
+
+model VerificationMessage {
     id String @id @default(uuid())
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId String
 
     code String
+    purpose VerificationMessagePurpose
 
     created DateTime @default(now())
     expires DateTime
     sentAt DateTime?
+    @@map("EmailVerification")
 }
 
 enum SecondAuthenticationFactorType {

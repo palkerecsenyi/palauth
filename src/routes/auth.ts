@@ -1,4 +1,4 @@
-import express, {Response} from "express";
+import express, {NextFunction, Response, Request} from "express";
 import {authMiddleware, setProvisionalUserId, setUserId} from "../helpers/auth.js";
 import {AuthenticatedRequest, ValidatedRequest} from "../types/express.js";
 import {doubleCsrfProtection, generateToken} from "../helpers/csrf.js";
@@ -10,10 +10,10 @@ import {body} from "express-validator"
 import {ensureValidators} from "../helpers/validators.js";
 import {InviteController} from "../database/invites.js";
 import {Prisma, SecondAuthenticationFactorType} from "../database/generated-models/index.js";
-import EmailVerificationController from "../helpers/mail/email-verification.js";
 import bodyParser from "body-parser";
 import DevModeSettings from "../helpers/constants/devMode.js";
 import TwoFactorSecurityKeyController from "../helpers/2fa/securityKey.js";
+import VerificationMessageController from "../helpers/mail/verification.js";
 
 const authRouter = express.Router()
 
@@ -29,6 +29,17 @@ const provisionalAuthenticatedMiddleware = authMiddleware({
 })
 
 const flowManager = new FlowManager("authentication")
+
+const passwordValidatorMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    if (DevModeSettings.isInsecurePasswordsAllowed()) {
+        return body("password").notEmpty()(req, res, next)
+    }
+
+    body("password").isStrongPassword({
+        minLength: 11,
+        minNumbers: 1,
+    }).withMessage("Must be at least 12 characters with 1 number, 1 uppercase, 1 lowercase, and 1 symbol.")(req, res, next)
+}
 
 authRouter.get(
     "/signin",
@@ -230,18 +241,9 @@ authRouter.post(
     "/signup",
     doubleCsrfProtection,
     flowManager.ensureCanContinue("/auth/signup"),
+    passwordValidatorMiddleware,
     body("displayName").notEmpty().trim().isLength({ min: 2, max: 20 }),
     body("email").isEmail(),
-    (req, res, next) => {
-        if (DevModeSettings.isInsecurePasswordsAllowed()) {
-            return body("password").notEmpty()(req, res, next)
-        }
-
-        body("password").isStrongPassword({
-            minLength: 11,
-            minNumbers: 1,
-        }).withMessage("Must be at least 12 characters with 1 number, 1 uppercase, 1 lowercase, and 1 symbol.")(req, res, next)
-    },
     body("passwordConfirm").notEmpty(),
     body("token").notEmpty(),
     ensureValidators("/auth/signup"),
@@ -289,7 +291,7 @@ authRouter.post(
             }
 
             if (!DevModeSettings.skipEmailVerification()) {
-                const emailVerification = await EmailVerificationController.create(userId, tx)
+                const emailVerification = await VerificationMessageController.create(userId, "VerifyEmail", tx)
                 await emailVerification.send()
             }
 
@@ -342,7 +344,7 @@ authRouter.get(
             return
         }
 
-        const verificationController = await EmailVerificationController.fromEmailAddress(verifyEmail)
+        const verificationController = await VerificationMessageController.fromEmailAddress(verifyEmail, "VerifyEmail")
         if (!verificationController) {
             req.flash("error", "Can't find which email to resend to")
             res.redirect("/auth/verify")
@@ -365,14 +367,20 @@ authRouter.post(
     verifyCaptcha("/auth/verify"),
     async (req, res) => {
         const success = await DBClient.interruptibleTransaction(async tx => {
-            const verificationController = await EmailVerificationController.fromRequest(req, tx)
+            const verificationController = await VerificationMessageController.fromRequest(
+                req,
+                "VerifyEmail",
+                tx,
+            )
             if (!verificationController) {
                 req.flash("error", "That code was not found")
                 tx.rollback()
                 return false
             }
 
-            await verificationController.markVerified()
+            await verificationController.delete()
+            const user = await UserController.getById(verificationController.userId, tx)
+            await UserController.for(user!).markEmailVerified()
             return true
         })
 
@@ -382,6 +390,121 @@ authRouter.post(
         }
 
         req.flash("success", "Your email was verified! Please sign in to continue.")
+        res.redirect("/auth/signin")
+    }
+)
+
+authRouter.get(
+    "/recover",
+    flowManager.ensureCanContinue("/auth/signin"),
+    (_, res) => {
+        res.render("auth/recover.pug")
+    }
+)
+
+authRouter.get(
+    "/recover/:method",
+    flowManager.ensureCanContinue("/auth/signin"),
+    (req, res) => {
+        const method = req.params.method
+        if (method === "password") {
+            res.render("auth/recover-password.pug", {
+                csrf: generateToken(req, res),
+            })
+        } else {
+            res.render("auth/recover-fail.pug")
+        }
+    }
+)
+
+authRouter.post(
+    "/recover/password",
+    doubleCsrfProtection,
+    flowManager.ensureCanContinue("/auth/signin"),
+    body("email").isEmail().notEmpty(),
+    ensureValidators("/auth/recover/password"),
+    verifyCaptcha("/auth/recover/password"),
+    async (req: ValidatedRequest, res) => {
+        const {email} = req.validatedData!
+        
+        res.redirect("/auth/recover/password/code?email=" + email)
+
+        await DBClient.interruptibleTransaction(async tx => {
+            const user = await UserController.getByEmail(email, tx)
+            if (!user) return
+
+            const verification = await VerificationMessageController.create(
+                user.id,
+                "PasswordReset",
+                tx,
+            )
+            await verification.send()
+        })
+    }
+)
+
+authRouter.get(
+    "/recover/password/code",
+    flowManager.ensureCanContinue("/auth/signin"),
+    async (req, res) => {
+        const email = req.query.email
+        if (typeof email !== "string") {
+            res.status(400).send("No email provided")
+            return
+        }
+
+        res.render("auth/recover-password-code.pug", {
+            csrf: generateToken(req, res),
+            email: req.query.email,
+        })
+    }
+)
+
+authRouter.post(
+    "/recover/password/code",
+    doubleCsrfProtection,
+    flowManager.ensureCanContinue("/auth/signin"),
+    body("email").isEmail().notEmpty(),
+    body("code").isLength({ min: 6, max: 6 }),
+    passwordValidatorMiddleware,
+    body("passwordConfirm").notEmpty(),
+    ensureValidators("/auth/recover/password"),
+    verifyCaptcha("/auth/recover/password"),
+    async (req: ValidatedRequest, res) => {
+        const {password, passwordConfirm, email} = req.validatedData!
+        if (password !== passwordConfirm) {
+            req.flash("error", "Your passwords don't match")
+            res.redirect("/auth/recover/password/code?email=" + email)
+            return
+        }
+
+        await DBClient.interruptibleTransaction(async tx => {
+            const vmc = await VerificationMessageController.fromRequest(
+                req,
+                "PasswordReset",
+                tx,
+            )
+            if (!vmc) {
+                req.flash("error", "Code expired or not recognised")
+                res.redirect("/auth/recover/password")
+                tx.rollback()
+                return
+            }
+
+            await vmc.delete()
+            const user = await UserController.getById(vmc.userId, tx)
+            if (!user) {
+                req.flash("error", "Something went wrong")
+                res.redirect("/auth/signin")
+                tx.rollback()
+                return
+            }
+
+            const uc = UserController.for(user, tx)
+            await uc.updatePassword(password)
+        })
+
+        req.flash("success", "Updated password successfully! You can sign in now :)")
         res.redirect("/auth/signin")
     }
 )

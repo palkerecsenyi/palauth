@@ -1,0 +1,17 @@
+extends ../layouts/main
+
+block title
+    | Recover your account
+
+block header
+    h1 Recover your account
+
+block content
+    p What's the problem?
+    ul
+        li
+            a(href="/auth/recover/password") I forgot my password
+        li
+            a(href="/auth/recover/email") I forgot my email
+        li
+            a(href="/auth/recover/2fa") I've lost my second authentication factor

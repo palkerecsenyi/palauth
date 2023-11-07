@@ -39,5 +39,9 @@ block content
         | Need an account?&nbsp;
         a(href="/auth/signup") Create one!
 
+    p
+        | Forgot your password?&nbsp;
+        a(href="/auth/recover") Recover your account
+
     script.
         document.getElementById("passkey").addEventListener("click", authenticate(keyOptions, false, true))

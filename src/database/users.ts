@@ -22,8 +22,7 @@ export class UserController {
         autoVerifyEmail = false,
         tx: TransactionType = DBClient.getClient(),
     ) {
-        const passwordHash = await argon2.hash(password)
-
+        const passwordHash = await UserController.hashPassword(password)
         const user = await tx.user.create({
             data: {
                 displayName, email, passwordHash,
@@ -78,8 +77,35 @@ export class UserController {
         })
     }
 
+    private static async hashPassword(password: string) {
+        return await argon2.hash(password)
+    }
+
     checkPassword(password: string) {
         return argon2.verify(this.user.passwordHash, password)
+    }
+
+    async markEmailVerified() {
+        await this.transaction.user.update({
+            where: {
+                id: this.user.id,
+            },
+            data: {
+                emailVerified: true,
+            }
+        })
+    }
+
+    async updatePassword(newPassword: string) {
+        const passwordHash = await UserController.hashPassword(newPassword)
+        await this.transaction.user.update({
+            where: {
+                id: this.user.id,
+            },
+            data: {
+                passwordHash,
+            },
+        })
     }
 
     toUserInfo(includeEmail: boolean): OIDCUserInfoResponse {

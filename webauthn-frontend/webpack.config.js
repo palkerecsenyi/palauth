@@ -3,7 +3,6 @@ import {fileURLToPath} from "url";
 
 export default {
     entry: "./src/index.ts",
-    mode: "development",
     module: {
         rules: [
             {

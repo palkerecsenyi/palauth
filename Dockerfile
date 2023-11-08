@@ -14,7 +14,7 @@ RUN yarn build
 COPY webauthn-frontend/package.json ./webauthn-frontend/
 WORKDIR /usr/src/app/webauthn-frontend
 RUN yarn install
-RUN yarn build
+RUN yarn build-prod
 
 WORKDIR /usr/src/app
 CMD ["yarn", "prod"]

@@ -63,17 +63,24 @@ export default class IAMController {
         userId: string,
         permissionName: string,
     }) {
-        const matchingRole = this.roles.find(role => {
-            const matchingPermission = role.permissions.find(perm => {
-                return perm.name === request.permissionName
-            })
-
-            return matchingPermission !== undefined
+        const role = await this.tx.iAMRole.findFirst({
+            where: {
+                permissions: {
+                    some: {
+                        name: request.permissionName,
+                        ownerId: this.clientId,
+                    }
+                },
+                assignments: {
+                    some: {
+                        userId: request.userId,
+                    }
+                },
+                ownerId: this.clientId,
+            }
         })
 
-        if (!matchingRole) return false
-        const roleAssignment = await this.getRoleAssignment(request.userId, matchingRole.id)
-        return roleAssignment !== null
+        return role !== null
     }
 
     async assignRoleByName(request: {

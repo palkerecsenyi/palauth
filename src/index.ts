@@ -11,6 +11,7 @@ import devRouter from "./routes/developer.js";
 import DevModeSettings from "./helpers/constants/devMode.js";
 import iamRouter from "./routes/iam.js";
 import { initSessionManager } from "./helpers/session.js";
+import clientApiRouter from "./routes/clientsApi.js";
 
 const app = express()
 app.set("view engine", "pug")
@@ -38,6 +39,7 @@ app.get("/auth/signout", signOutRoute)
 app.use("/auth", authRouter)
 app.get("/favicon.ico", (_, res) => res.sendStatus(404))
 app.use("/iam", iamRouter)
+app.use("/clients-api", clientApiRouter)
 app.use("/", accountRouter)
 
 const envPort = process.env["PORT"]

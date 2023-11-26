@@ -6,6 +6,7 @@ import {URLSearchParams} from "url";
 import {AuthorizationCode} from "./authorization-code.js";
 import { TransactionType } from "../../types/prisma.js";
 import { OAuthClientController } from "../../database/oauth.js";
+import { OIDCScopes } from "./scopes.js";
 
 export interface OIDCFlowData {
     client_id: string
@@ -49,6 +50,10 @@ export class OIDCFlow {
         }
         if (typeof scope !== "string") {
             throw new Error("scope is not provided")
+        }
+
+        if (scope.split(" ").some(s => !OIDCScopes.supportedScopes.includes(s))) {
+            throw new Error("scope not recognised")
         }
 
         if (nonce !== undefined && typeof nonce !== "string") {

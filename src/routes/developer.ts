@@ -6,6 +6,7 @@ import {doubleCsrfProtection, generateToken} from "../helpers/csrf.js";
 import {body} from "express-validator";
 import {ensureValidators} from "../helpers/validators.js";
 import {verifyCaptcha} from "../helpers/captcha.js";
+import IAMController from "../database/iam.js";
 
 const devRouter = express.Router()
 devRouter.use(authMiddleware({
@@ -184,6 +185,52 @@ devRouter.get(
         await oauthClient.deleteRedirectURI(redirectURIId)
         req.flash("success", "Successfully deleted redirect")
         next()
+    }
+)
+
+devRouter.get(
+    "/:clientId/iam",
+    resolveClientMiddleware,
+    async (req: OAuthClientRequest, res) => {
+        const iam = await IAMController.forOAuthClient(req.oauthClient!.getClient().clientId)
+        res.render("dev/iam/home", {
+            client: req.oauthClient!.getClient(),
+            roles: iam.listRoles(),
+            permissions: await iam.listPermissions(),
+            users: await iam.listAllUsersWithRoles(),
+        })
+    }
+)
+
+devRouter.get(
+    "/:clientId/iam/permissions/add",
+    resolveClientMiddleware,
+    async (req: OAuthClientRequest, res) => {
+        res.render("dev/iam/add-permission", {
+            client: req.oauthClient!.getClient(),
+            csrf: generateToken(req, res),
+        })
+    }
+)
+
+devRouter.post(
+    "/:clientId/iam/permissions/create",
+    body("name").isLength({
+        min: 1,
+        max: 30
+    }).withMessage("Name must be between 1 and 30 characters"),
+    ensureValidators(req => `/dev/${req.params.clientId}/iam/permissions/add`),
+    resolveClientMiddleware,
+    verifyCaptcha(req => `/dev/${req.params.clientId}/iam/permissions/add`),
+    resolveClientMiddleware,
+    async (req: OAuthClientRequest & ValidatedRequest, res) => {
+        const { name } = req.validatedData!
+
+        const clientId = req.oauthClient!.getClient().clientId
+        const iam = await IAMController.forOAuthClient(clientId)
+        await iam.createPermission(name)
+
+        res.redirect(`/dev/${clientId}/iam`)
     }
 )
 

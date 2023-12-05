@@ -28,11 +28,11 @@ export default class IAMController {
         return new IAMController(clientId, scopes, tx)
     }
 
-    private async getRoleAssignment(userId: string, roleId: string) {
-        return this.tx.iAMRoleAssignment.findFirst({
+    listPermissions() {
+        return this.tx.iAMPermission.findMany({
             where: {
-                userId, roleId,
-            }
+                ownerId: this.clientId,
+            },
         })
     }
 
@@ -59,6 +59,27 @@ export default class IAMController {
         })
     }
 
+    listAllUsersWithRoles() {
+        return this.tx.user.findMany({
+            where: {
+                iamRoles: {
+                    some: {
+                        role: {
+                            ownerId: this.clientId,
+                        }
+                    }
+                }
+            },
+            include: {
+                iamRoles: {
+                    include: {
+                        role: true,
+                    }
+                },
+            }
+        })
+    }
+
     async checkPermission(request: {
         userId: string,
         permissionName: string,
@@ -81,6 +102,17 @@ export default class IAMController {
         })
 
         return role !== null
+    }
+
+    async createPermission(name: string) {
+        const permission = await this.tx.iAMPermission.create({
+            data: {
+                name,
+                ownerId: this.clientId,
+            }
+        })
+
+        return permission.id
     }
 
     async assignRoleByName(request: {

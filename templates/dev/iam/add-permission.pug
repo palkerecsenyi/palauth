@@ -1,0 +1,23 @@
+extends ../../layouts/main
+include ../../components/csrf
+include ../../components/submit-button
+include ../../components/hcaptcha
+
+block title
+    | Add permission
+
+block header
+    p
+        a(href="/dev/" + client.clientId + "/iam") IAM
+    h1 Add permission to #{client.name}
+
+block content
+    p Permissions are identifed by unique names. Your program will need to use this name in API calls, so make sure it's logical and well-structured!
+
+    form(action="/dev/" + client.clientId + "/iam/permissions/create", method="post")
+        +csrf_input(csrf)
+        label(for="name") Permission name
+        input#name(name="name", type="text", required)
+
+        +hcaptcha
+        +submit_button

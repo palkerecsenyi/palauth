@@ -1,0 +1,71 @@
+extends ../../layouts/main
+
+block title
+    | IAM for #{client.name}
+
+block header
+    p
+        a(href="/dev/" + client.clientId) Client settings
+    h1 IAM for #{client.name}
+    p Configure Identity and Access Management
+
+block content
+    h3 Permissions
+    p A permission is a specific granular piece of access to a resource. For example, a permission could represent read-only access to your list of users.
+
+    p
+        a.button(href="/dev/" + client.clientId + "/iam/permissions/add") Create permission
+
+    ul
+        each permission in permissions
+            li
+                p
+                    code=permission.name
+                    br
+                    a(href="/dev/" + client.clientId + "/iam/permissions/" + permission.id + "/delete") Delete
+
+    h3 Roles
+    p A role is a group of permissions. You can assign a role to a user — you cannot directly assign a permission to a user.
+    p A permission will be granted if (and only if) the user has a role assigned to them that contains that permission.
+
+    p
+        a.button(href="/dev/" + client.clientId + "/iam/roles/add") Create role
+
+    ul
+        each role in roles
+            li
+                p
+                    code=role.name
+                    br
+                    a(href="/dev/" + client.clientId + "/iam/roles/" + role.id + "/delete") Delete
+                    br
+                    a(href="/dev/" + client.clientId + "/iam/roles/" + role.id + "/rename") Rename
+                    br
+                    a(href="/dev/" + client.clientId + "/iam/roles/" + role.id + "/assign") Assign permission
+
+                p Permissions:
+                ul
+                    each permission in role.permissions
+                        li
+                            p
+                                code=permission.name
+                                br
+                                a(href="/dev/" + client.clientId + "/iam/roles/" + role.id + "/permission/" + permission.id + "/unassign") Unassign
+
+    h3 Users
+    p You can assign any role in your app to any PalAuth user.
+
+    ul
+        each user in users
+            li
+                p
+                    code=user.id
+                    br
+                    strong= user.displayName
+                    ul
+                        each assignment in user.iamRoles
+                            li
+                                p
+                                    code=assignment.role.name
+                                    br
+                                    a(href="/dev/" + client.clientId + "/iam/users/" + user.id + "/roles/" + assignment.roleId + "/unassign") Unassign

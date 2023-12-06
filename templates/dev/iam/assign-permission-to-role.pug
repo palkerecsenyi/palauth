@@ -14,7 +14,7 @@ block header
 block content
     form(action="/dev/" + client.clientId + "/iam/roles/" + role.id + "/assign", method="post")
         +csrf_input(csrf)
-        label(for="permission") Role name
+        label(for="permission") Permission
         select#permission(name="permissionId", required)
             each permission in permissions
                 option(value=permission.id)= permission.name

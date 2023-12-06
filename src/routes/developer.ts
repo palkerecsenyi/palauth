@@ -308,4 +308,30 @@ devRouter.get(
     },
 )
 
+devRouter.get(
+    "/:clientId/iam/users/assign",
+    resolveClientMiddleware,
+    resolveIAMMiddleware,
+    async (req: IAMRequest & OAuthClientRequest, res) => {
+        const iam = req.iamController!
+        res.render("dev/iam/assign-role-to-user", {
+            csrf: generateToken(req, res),
+            client: req.oauthClient!.getClient(),
+            roles: iam.listRoles(),
+        })
+    }
+)
+
+devRouter.post(
+    "/:clientId/iam/users/assign",
+    body("userId").isString(),
+    body("roleId").isString(),
+    resolveClientMiddleware,
+    resolveIAMMiddleware,
+    async (req: IAMRequest & OAuthClientRequest & ValidatedRequest, res) => {
+        const { userId, roleId } = req.validatedData!
+        await req.iam
+    }
+)
+
 export default devRouter

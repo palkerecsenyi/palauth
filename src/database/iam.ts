@@ -168,23 +168,28 @@ export default class IAMController {
     async assignRoleByName(request: {
         userId: string,
         roleName: string,
+        roleId?: string,
     }) {
-        const role = this.findRoleByName(request.roleName)
-        if (!role) {
-            throw new Error("Role not found")
+        let { roleId } = request
+        if (!roleId) {
+            const role = this.findRoleByName(request.roleName)
+            if (!role) {
+                throw new Error("Role not found")
+            }
+            roleId = role.id
         }
 
         await this.tx.iAMRoleAssignment.upsert({
             where: {
                 userId_roleId: {
                     userId: request.userId,
-                    roleId: role.id,
+                    roleId: roleId,
                 }
             },
             update: {},
             create: {
                 userId: request.userId,
-                roleId: role.id,
+                roleId: roleId,
             }
         })
     }

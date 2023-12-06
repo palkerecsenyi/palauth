@@ -13,6 +13,9 @@ block content
         | Had enough Pal?&nbsp;
         a(href="/auth/signout") Sign out
 
+    p Your user ID is:&nbsp;
+        code= user.id
+
     h3 Launch
     p Click on a service to launch it
     each cc in publicClients

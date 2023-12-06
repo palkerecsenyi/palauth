@@ -1,0 +1,28 @@
+extends ../../layouts/main
+include ../../components/csrf
+include ../../components/submit-button
+include ../../components/hcaptcha
+
+block title
+    | Assign role to user
+
+block header
+    p
+        a(href="/dev/" + client.clientId + "/iam") IAM
+    h1 Assign role to user
+
+block content
+    p Ask the user you want to add for their user ID.
+
+    form(action="/dev/" + client.clientId + "/iam/users/assign", method="post")
+        +csrf_input(csrf)
+        label(for="role") Role name
+        select#role(name="roleId", required)
+            each role in roles
+                option(value=role.id)= role.name
+
+        label(for="userId") User ID
+        input#userId(name="userId", type="text", required)
+
+        +hcaptcha
+        +submit_button

@@ -158,6 +158,8 @@ model IAMPermission {
 
     implicitRequiredBy IAMPermission[] @relation("PermissionRequirementTree")
     requires IAMPermission[] @relation("PermissionRequirementTree")
+
+    @@unique([ownerId, name])
 }
 
 model IAMRole {
@@ -169,6 +171,8 @@ model IAMRole {
     name String
     permissions IAMPermission[]
     assignments IAMRoleAssignment[]
+
+    @@unique([ownerId, name])
 }
 
 model IAMRoleAssignment {

@@ -1,0 +1,24 @@
+extends ../../layouts/main
+include ../../components/csrf
+include ../../components/submit-button
+include ../../components/hcaptcha
+
+block title
+    | Add role
+
+block header
+    p
+        a(href="/dev/" + client.clientId + "/iam") IAM
+    h1 Add role to #{client.name}
+
+block content
+    p Roles need unique names.
+    p You will be able to add permissions to the role after you create it.
+
+    form(action="/dev/" + client.clientId + "/iam/roles/create", method="post")
+        +csrf_input(csrf)
+        label(for="name") Role name
+        input#name(name="name", type="text", required)
+
+        +hcaptcha
+        +submit_button

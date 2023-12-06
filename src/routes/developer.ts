@@ -1,6 +1,6 @@
 import express, {NextFunction, Response} from "express";
 import {authMiddleware} from "../helpers/auth.js";
-import {AuthenticatedRequest, ValidatedRequest} from "../types/express.js";
+import {AuthenticatedRequest, IAMRequest, ValidatedRequest} from "../types/express.js";
 import {OAuthClientController} from "../database/oauth.js";
 import {doubleCsrfProtection, generateToken} from "../helpers/csrf.js";
 import {body} from "express-validator";
@@ -17,6 +17,7 @@ devRouter.use(doubleCsrfProtection)
 
 interface OAuthClientRequest extends AuthenticatedRequest {
     oauthClient?: OAuthClientController
+    clientId?: string
 }
 
 const resolveClientMiddleware = async (req: OAuthClientRequest, res: Response, next: NextFunction) => {
@@ -37,7 +38,15 @@ const resolveClientMiddleware = async (req: OAuthClientRequest, res: Response, n
         return
     }
 
+    req.clientId = clientId
     req.oauthClient = client
+    next()
+}
+
+const resolveIAMMiddleware = async (req: OAuthClientRequest & IAMRequest, _: Response, next: NextFunction) => {
+    const clientId = req.oauthClient!.getClient().clientId
+    const iam = await IAMController.forOAuthClient(clientId)
+    req.iamController = iam
     next()
 }
 
@@ -106,13 +115,13 @@ devRouter.get(
 
 devRouter.post(
     "/:clientId/update",
-    body("usageDescription").trim().isLength({
+    body("usageDescription").isString().trim().isLength({
         min: 10,
         max: 500,
     }),
     ensureValidators(req => `/dev/${req.params.clientId}/edit`),
-    resolveClientMiddleware,
     verifyCaptcha(req => `/dev/${req.params.clientId}/edit`),
+    resolveClientMiddleware,
     async (req: OAuthClientRequest & ValidatedRequest, res) => {
         const { usageDescription } = req.validatedData!
         await req.oauthClient!.update({
@@ -146,12 +155,12 @@ devRouter.get(
 
 devRouter.post(
     "/:clientId/redirectURIs/create",
-    body("uri").isURL({
+    body("uri").isString().trim().isURL({
         require_tld: false,
     }),
     ensureValidators(req => `/dev/${req.params.clientId}/redirectURIs/add`),
-    resolveClientMiddleware,
     verifyCaptcha(req => `/dev/${req.params.clientId}/redirectURIs/add`),
+    resolveClientMiddleware,
     async (req: ValidatedRequest & OAuthClientRequest, res: Response) => {
         const { uri } = req.validatedData!
 
@@ -215,23 +224,88 @@ devRouter.get(
 
 devRouter.post(
     "/:clientId/iam/permissions/create",
-    body("name").isLength({
+    body("name").isString().trim().isLength({
         min: 1,
         max: 30
     }).withMessage("Name must be between 1 and 30 characters"),
     ensureValidators(req => `/dev/${req.params.clientId}/iam/permissions/add`),
-    resolveClientMiddleware,
     verifyCaptcha(req => `/dev/${req.params.clientId}/iam/permissions/add`),
     resolveClientMiddleware,
-    async (req: OAuthClientRequest & ValidatedRequest, res) => {
+    resolveIAMMiddleware,
+    async (req: OAuthClientRequest & IAMRequest & ValidatedRequest, res) => {
         const { name } = req.validatedData!
-
-        const clientId = req.oauthClient!.getClient().clientId
-        const iam = await IAMController.forOAuthClient(clientId)
-        await iam.createPermission(name)
-
-        res.redirect(`/dev/${clientId}/iam`)
+        await req.iamController!.createPermission(name)
+        res.redirect(`/dev/${req.clientId}/iam`)
     }
+)
+
+devRouter.get(
+    "/:clientId/iam/roles/add",
+    resolveClientMiddleware,
+    resolveIAMMiddleware,
+    async (req: OAuthClientRequest, res) => {
+        res.render("dev/iam/add-role", {
+            client: req.oauthClient!.getClient(),
+            csrf: generateToken(req, res),
+        })
+    }
+)
+
+devRouter.post(
+    "/:clientId/iam/roles/create",
+    body("name").isString().trim().isLength({
+        min: 3,
+        max: 30
+    }).withMessage("Name must be between 3 and 30 characters"),
+    ensureValidators(req => `/dev/${req.params.clientId}/iam/roles/add`),
+    verifyCaptcha(req => `/dev/${req.params.clientId}/iam/roles/add`),
+    resolveClientMiddleware,
+    resolveIAMMiddleware,
+    async (req: IAMRequest & OAuthClientRequest & ValidatedRequest, res) => {
+        const { name } = req.validatedData!
+        await req.iamController!.createRole(name)
+        res.redirect(`/dev/${req.clientId}/iam`)
+    }
+)
+
+devRouter.get(
+    "/:clientId/iam/roles/:roleId/assign",
+    resolveClientMiddleware,
+    resolveIAMMiddleware,
+    async (req: OAuthClientRequest & IAMRequest, res) => {
+        const iam = req.iamController!
+        res.render("dev/iam/assign-permission-to-role", {
+            client: req.oauthClient!.getClient(),
+            csrf: generateToken(req, res),
+            permissions: await iam.listPermissions(),
+            role: iam.getRoleById(req.params.roleId),
+        })
+    }
+)
+
+devRouter.post(
+    "/:clientId/iam/roles/:roleId/assign",
+    body("permissionId").isString(),
+    ensureValidators(req => `/dev/${req.params.clientId}/iam/roles/${req.params.roleId}/assign`),
+    verifyCaptcha(req => `/dev/${req.params.clientId}/iam/roles/${req.params.roleId}/assign`),
+    resolveClientMiddleware,
+    resolveIAMMiddleware,
+    async (req: IAMRequest & OAuthClientRequest & ValidatedRequest, res) => {
+        const { permissionId } = req.validatedData!
+        await req.iamController!.assignPermissionToRole(permissionId, req.params.roleId)
+        res.redirect(`/dev/${req.clientId}/iam`)
+    }
+)
+
+devRouter.get(
+    "/:clientId/iam/roles/:roleId/permission/:permissionId/unassign",
+    resolveClientMiddleware,
+    resolveIAMMiddleware,
+    async (req: IAMRequest & OAuthClientRequest, res) => {
+        const { roleId, permissionId } = req.params
+        await req.iamController!.unassignPermissionFromRole(permissionId, roleId)
+        res.redirect(`/dev/${req.clientId}/iam`)
+    },
 )
 
 export default devRouter

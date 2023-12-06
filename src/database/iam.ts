@@ -44,6 +44,10 @@ export default class IAMController {
         return this.roles
     }
 
+    getRoleById(id: string) {
+        return this.roles.find(r => r.id === id)
+    }
+
     listRolesForUser(userId: string) {
         return this.tx.iAMRole.findMany({
             where: {
@@ -74,6 +78,11 @@ export default class IAMController {
                 iamRoles: {
                     include: {
                         role: true,
+                    },
+                    where: {
+                        role: {
+                            ownerId: this.clientId,
+                        }
                     }
                 },
             }
@@ -109,10 +118,51 @@ export default class IAMController {
             data: {
                 name,
                 ownerId: this.clientId,
-            }
+            },
         })
-
         return permission.id
+    }
+
+    async createRole(name: string) {
+        const role = await this.tx.iAMRole.create({
+            data: {
+                name,
+                ownerId: this.clientId,
+            },
+        })
+        return role.id
+    }
+
+    async assignPermissionToRole(permissionId: string, roleId: string) {
+        await this.tx.iAMRole.update({
+            where: {
+                id: roleId,
+                ownerId: this.clientId,
+            },
+            data: {
+                permissions: {
+                    connect: {
+                        id: permissionId,
+                    },
+                },
+            },
+        })
+    }
+
+    async unassignPermissionFromRole(permissionId: string, roleId: string) {
+        await this.tx.iAMRole.update({
+            where: {
+                id: roleId,
+                ownerId: this.clientId,
+            },
+            data: {
+                permissions: {
+                    disconnect: {
+                        id: permissionId,
+                    },
+                },
+            },
+        })
     }
 
     async assignRoleByName(request: {

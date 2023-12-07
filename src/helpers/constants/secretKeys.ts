@@ -39,5 +39,6 @@ export const getJWKAlg = () => "RS256"
 export const getCaptchaURL = () => process.env["PAL_CAPTCHA_URL"]
 export const getCaptchaAPIKey = () => process.env["PAL_CAPTCHA_KEY"]
 
+export const getMailgunHost = () => process.env["PAL_MAILGUN_HOST"]
 export const getMailgunSecret = () => process.env["PAL_MAILGUN_KEY"]
 export const getRedisSecret = () => process.env["PAL_REDIS_URL"]

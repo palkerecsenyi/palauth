@@ -30,6 +30,7 @@ Here are some features:
 - `PAL_PUBLIC_JWK`: A base64-encoded RS256 [JWK](https://www.rfc-editor.org/rfc/rfc7517) public key. You can generate these at [mkjwk](https://mkjwk.org/) (for example)
 - `PAL_PRIVATE_JWK`: The corresponding base64-encoded JWK private key
 - `PAL_MAILGUN_KEY`: An API key for Mailgun, used for sending account emails
+- `PAL_MAILGUN_HOST`: The host to send Mailgun emails from
 - `PAL_REDIS_URL`: A Redis connection string including credentials, used for session storage
 
 - `NODE_ENV`: `production` or `development`

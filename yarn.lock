@@ -284,6 +284,50 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@paltiverse/palauth@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@paltiverse/palauth@workspace:."
+  dependencies:
+    "@prisma/client": latest
+    "@simplewebauthn/server": ^8.3.5
+    "@simplewebauthn/typescript-types": ^8.3.4
+    "@tsconfig/node18": ^18.2.2
+    "@types/body-parser": ^1.19.5
+    "@types/connect-flash": ^0.0.40
+    "@types/cookie-parser": ^1.4.6
+    "@types/express": ^4.17.21
+    "@types/express-session": ^1.17.10
+    "@types/jsonwebtoken": ^9.0.5
+    "@types/luxon": ^3.3.7
+    "@types/node": ^20.10.3
+    "@types/qrcode": ^1.5.5
+    "@types/speakeasy": ^2.0.10
+    argon2: ^0.31.2
+    axios: ^1.6.2
+    body-parser: ^1.20.2
+    connect-flash: ^0.1.1
+    connect-redis: ^7.1.0
+    cookie-parser: ^1.4.6
+    csrf-csrf: ^3.0.2
+    express: ^4.18.2
+    express-session: ^1.17.3
+    express-validator: ^7.0.1
+    fido2-lib: ^3.4.3
+    form-data: ^4.0.0
+    jose: ^5.1.3
+    luxon: ^3.4.4
+    mailgun.js: ^9.3.0
+    nodemon: ^3.0.2
+    prisma: latest
+    pug: ^3.0.2
+    qrcode: ^1.5.3
+    redis: ^4.6.11
+    speakeasy: ^2.0.0
+    tsx: ^4.6.2
+    typescript: ^5.3.2
+  languageName: unknown
+  linkType: soft
+
 "@peculiar/asn1-android@npm:^2.3.6":
   version: 2.3.10
   resolution: "@peculiar/asn1-android@npm:2.3.10"
@@ -2673,50 +2717,6 @@ __metadata:
   checksum: f8a8e9a7693659383f06aec604ad5ead237c7a261c18048a6e1b5b85a5f8a067e469aa24f5bc009b991ea3b058a87f5065ef4176793a200d4917349881216cae
   languageName: node
   linkType: hard
-
-"palauth@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "palauth@workspace:."
-  dependencies:
-    "@prisma/client": latest
-    "@simplewebauthn/server": ^8.3.5
-    "@simplewebauthn/typescript-types": ^8.3.4
-    "@tsconfig/node18": ^18.2.2
-    "@types/body-parser": ^1.19.5
-    "@types/connect-flash": ^0.0.40
-    "@types/cookie-parser": ^1.4.6
-    "@types/express": ^4.17.21
-    "@types/express-session": ^1.17.10
-    "@types/jsonwebtoken": ^9.0.5
-    "@types/luxon": ^3.3.7
-    "@types/node": ^20.10.3
-    "@types/qrcode": ^1.5.5
-    "@types/speakeasy": ^2.0.10
-    argon2: ^0.31.2
-    axios: ^1.6.2
-    body-parser: ^1.20.2
-    connect-flash: ^0.1.1
-    connect-redis: ^7.1.0
-    cookie-parser: ^1.4.6
-    csrf-csrf: ^3.0.2
-    express: ^4.18.2
-    express-session: ^1.17.3
-    express-validator: ^7.0.1
-    fido2-lib: ^3.4.3
-    form-data: ^4.0.0
-    jose: ^5.1.3
-    luxon: ^3.4.4
-    mailgun.js: ^9.3.0
-    nodemon: ^3.0.2
-    prisma: latest
-    pug: ^3.0.2
-    qrcode: ^1.5.3
-    redis: ^4.6.11
-    speakeasy: ^2.0.0
-    tsx: ^4.6.2
-    typescript: ^5.3.2
-  languageName: unknown
-  linkType: soft
 
 "parseurl@npm:~1.3.3":
   version: 1.3.3

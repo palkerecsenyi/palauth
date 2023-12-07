@@ -3,6 +3,6 @@ include:
     file: '/gitlab-ci/Paltiverse.gitlab-ci.yml'
 
 variables:
-  GCP_PROJECT: 'palk-util'
-  GCP_ARTIFACT_REPO: 'palauth-build'
-  PAL_BUILD_STRATEGY: 'docker'
+  PAL_BUILD_STRATEGY: 'docker dockerhub'
+  DOCKER_HUB_NAMESPACE: 'palkerecs'
+  DOCKER_HUB_VERSION: 'latest'

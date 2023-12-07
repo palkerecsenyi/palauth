@@ -2,7 +2,7 @@
   "name": "@paltiverse/palauth",
   "version": "1.0.0",
   "main": "build/index.js",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "type": "module",
   "private": true,
   "devDependencies": {

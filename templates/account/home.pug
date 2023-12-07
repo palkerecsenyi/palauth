@@ -16,17 +16,20 @@ block content
     p Your user ID is:&nbsp;
         code= user.id
 
-    h3 Launch
-    p Click on a service to launch it
-    each cc in publicClients
-        p
-            a(href=cc.generateInitiateURI())= cc.getClient().name
-
-    hr
+    if publicClients.length > 0
+        h3 Launch
+        p Click on a service to launch it
+        each cc in publicClients
+            p
+                a(href=cc.generateInitiateURI())= cc.getClient().name
 
     h3 Settings
     p
         a(href="/account/2fa") Configure two-factor authentication
+
+    h3 Developers
+    p
+        a(href="/dev") Manage OAuth/OIDC apps
 
     if scopesByClient.length > 0
         h3 My applications

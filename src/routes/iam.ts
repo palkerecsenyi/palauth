@@ -64,7 +64,7 @@ const assignmentRouteHandler = async (req: IAMRequest, res: Response) => {
                 userId, roleName
             })
         } else if (req.method === "DELETE") {
-            await iam.removeRoleByName({
+            await iam.removeRole({
                 userId, roleName,
             })
         }

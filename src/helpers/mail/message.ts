@@ -1,6 +1,6 @@
 import Mailgun from "mailgun.js";
 import * as FormData from "form-data";
-import {getMailgunSecret} from "../constants/secretKeys.js";
+import {getMailgunHost, getMailgunSecret} from "../constants/secretKeys.js";
 
 // @ts-ignore
 const mailgun = new Mailgun(FormData.default)
@@ -22,8 +22,8 @@ export abstract class EmailMessage {
     }
 
     send() {
-        return mg.messages.create("auth.palk.me", {
-            from: "PalAuth <noreply@auth.palk.me>",
+        return mg.messages.create(getMailgunHost(), {
+            from: `PalAuth <noreply@${getMailgunHost()}>`,
             to: this.to,
             subject: this.subject,
             text: this.body,

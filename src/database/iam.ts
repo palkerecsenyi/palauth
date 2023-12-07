@@ -165,20 +165,32 @@ export default class IAMController {
         })
     }
 
-    async assignRoleByName(request: {
-        userId: string,
-        roleName: string,
+    private resolveRoleByNameOrId(d: {
+        roleName?: string,
         roleId?: string,
     }) {
-        let { roleId } = request
+        const { roleName } = d
+        let { roleId } = d
         if (!roleId) {
-            const role = this.findRoleByName(request.roleName)
+            if (!roleName) {
+                throw new Error("No roleId or roleName provided")
+            }
+
+            const role = this.findRoleByName(roleName)
             if (!role) {
                 throw new Error("Role not found")
             }
             roleId = role.id
         }
+        return roleId
+    }
 
+    async assignRole(request: {
+        userId: string,
+        roleName?: string,
+        roleId?: string,
+    }) {
+        const roleId = this.resolveRoleByNameOrId(request)
         await this.tx.iAMRoleAssignment.upsert({
             where: {
                 userId_roleId: {
@@ -194,20 +206,17 @@ export default class IAMController {
         })
     }
 
-    async removeRoleByName(request: {
+    async removeRole(request: {
         userId: string,
-        roleName: string,
+        roleName?: string,
+        roleId?: string,
     }) {
-        const role = this.findRoleByName(request.roleName)
-        if (!role) {
-            throw new Error("Role not found")
-        }
-
+        const roleId = this.resolveRoleByNameOrId(request)
         await this.tx.iAMRoleAssignment.delete({
             where: {
                 userId_roleId: {
                     userId: request.userId, 
-                    roleId: role.id
+                    roleId: roleId,
                 }
             }
         })

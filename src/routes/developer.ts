@@ -7,6 +7,7 @@ import {body} from "express-validator";
 import {ensureValidators} from "../helpers/validators.js";
 import {verifyCaptcha} from "../helpers/captcha.js";
 import IAMController from "../database/iam.js";
+import { DBClient } from "../database/client.js";
 
 const devRouter = express.Router()
 devRouter.use(authMiddleware({
@@ -235,6 +236,7 @@ devRouter.post(
     async (req: OAuthClientRequest & IAMRequest & ValidatedRequest, res) => {
         const { name } = req.validatedData!
         await req.iamController!.createPermission(name)
+        req.flash("success", `Permission ${name} created`)
         res.redirect(`/dev/${req.clientId}/iam`)
     }
 )
@@ -264,6 +266,7 @@ devRouter.post(
     async (req: IAMRequest & OAuthClientRequest & ValidatedRequest, res) => {
         const { name } = req.validatedData!
         await req.iamController!.createRole(name)
+        req.flash("success", `Role ${name} created`)
         res.redirect(`/dev/${req.clientId}/iam`)
     }
 )
@@ -293,6 +296,7 @@ devRouter.post(
     async (req: IAMRequest & OAuthClientRequest & ValidatedRequest, res) => {
         const { permissionId } = req.validatedData!
         await req.iamController!.assignPermissionToRole(permissionId, req.params.roleId)
+        req.flash("success", "Assigned permission to role")
         res.redirect(`/dev/${req.clientId}/iam`)
     }
 )
@@ -304,6 +308,7 @@ devRouter.get(
     async (req: IAMRequest & OAuthClientRequest, res) => {
         const { roleId, permissionId } = req.params
         await req.iamController!.unassignPermissionFromRole(permissionId, roleId)
+        req.flash("success", "Unassigned permission from role")
         res.redirect(`/dev/${req.clientId}/iam`)
     },
 )
@@ -326,11 +331,43 @@ devRouter.post(
     "/:clientId/iam/users/assign",
     body("userId").isString(),
     body("roleId").isString(),
+    ensureValidators(req => `/dev/${req.params.clientId}/iam/users/assign`),
+    verifyCaptcha(req => `/dev/${req.params.clientId}/iam/users/assign`),
     resolveClientMiddleware,
     resolveIAMMiddleware,
     async (req: IAMRequest & OAuthClientRequest & ValidatedRequest, res) => {
         const { userId, roleId } = req.validatedData!
-        await req.iam
+        try {
+            await req.iamController!.assignRole({
+                userId,
+                roleId,
+            })
+        } catch (e) {
+            req.flash("error", DBClient.generateErrorMessage(e))
+            res.redirect(`/dev/${req.clientId}/iam/users/assign`)
+            return
+        }
+        req.flash("success", "Assigned role to user")
+        res.redirect(`/dev/${req.clientId}/iam`)
+    }
+)
+
+devRouter.get(
+    "/:clientId/iam/users/:userId/roles/:roleId/unassign",
+    resolveClientMiddleware,
+    resolveIAMMiddleware,
+    async (req: IAMRequest & OAuthClientRequest, res) => {
+        const { userId, roleId } = req.params
+        try {
+            await req.iamController!.removeRole({
+                userId,
+                roleId,
+            })
+            req.flash("success", "Unassigned role from user")
+        } catch (e) {
+            req.flash("error", DBClient.generateErrorMessage(e))
+        }
+        res.redirect(`/dev/${req.clientId}/iam`)
     }
 )
 

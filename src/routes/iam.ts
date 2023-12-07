@@ -60,7 +60,7 @@ const assignmentRouteHandler = async (req: IAMRequest, res: Response) => {
     const iam = req.iamController!
     try {
         if (req.method === "PUT") {
-            await iam.assignRoleByName({
+            await iam.assignRole({
                 userId, roleName
             })
         } else if (req.method === "DELETE") {

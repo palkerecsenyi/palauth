@@ -1,5 +1,6 @@
 import {PrismaClient} from "./generated-models/index.js";
 import {TransactionType} from "../types/prisma.js";
+import { PrismaClientKnownRequestError } from "./generated-models/runtime/library.js";
 
 class TransactionInterruptError extends Error {
     constructor() {
@@ -45,5 +46,17 @@ export class DBClient {
             }
             throw e
         }
+    }
+
+    static generateErrorMessage(error: any): string {
+        if (error instanceof PrismaClientKnownRequestError) {
+            switch (error.code) {
+                case "P2003":
+                    return `${error.meta!["field_name"]} not found`
+            }
+        }
+
+        console.warn(error)
+        return "Something went wrong"
     }
 }

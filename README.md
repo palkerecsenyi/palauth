@@ -41,3 +41,6 @@ You can use these variables in development to make your life easier:
 - `PAL_DEV_CAPTCHA_DISABLE`: `true` or `false` — disables captchas
 - `PAL_DEV_ALLOW_INSECURE_PASSWORD`: `true` or `false` — disabled password security requirements
 - `PAL_DEV_SKIP_EMAIL_VERIFICATION`: `true` or `false` — skips email verification for new accounts
+
+# License
+GNU GPL 3.0. See `LICENSE.md`.

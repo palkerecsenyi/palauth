@@ -110,14 +110,14 @@ authRouter.post(
     flowManager.ensureCanContinue("/auth/signin"),
     bodyParser.json(),
     async (req: AuthenticatedRequest, res) => {
-        const user = await TwoFactorSecurityKeyController.identifyKeyAuthentication(req)
-        if (!user) {
+        try {
+            const user = await TwoFactorSecurityKeyController.identifyKeyAuthentication(req)
+            setUserId(req, user.id)
+            res.sendStatus(204)
+        } catch (e) {
+            console.warn("Passkey: ", e)
             res.sendStatus(403)
-            return
         }
-
-        setUserId(req, user.id)
-        res.sendStatus(204)
     }
 )
 
@@ -188,11 +188,13 @@ authRouter.post(
         }
 
         if (twoFaMethod === "SecurityKey") {
-            const keyCorrect = await twoFaController.securityKey.checkAndUpdateKeyAuthentication(
-                req,
-                false,
-            )
-            if (!keyCorrect) {
+            try {
+                await twoFaController.securityKey.checkAndUpdateKeyAuthentication(
+                    req,
+                    false,
+                )
+            } catch (e) {
+                console.warn("2FA SecurityKey: ", e)
                 res.sendStatus(403)
                 return
             }

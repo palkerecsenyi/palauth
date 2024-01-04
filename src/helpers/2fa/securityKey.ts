@@ -104,7 +104,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
     ) {
         const id = req.body["id"]
         if (typeof id !== "string") {
-            return false
+            throw new Error("did not find key ID in request")
         }
 
         const factor = await tx.secondAuthenticationFactor.findFirst({
@@ -113,23 +113,23 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
                 keyPublicKeyId: id,
             },
         })
-        if (!factor || !factor.isPasskey) {
-            return false
+        if (!factor) {
+            throw new Error("Passkey not found")
+        }
+        if (!factor.isPasskey) {
+            throw new Error("2FA key found, but not set as passkey")
         }
 
         const controller = await TwoFactorController.fromUserId(factor.userId, tx)
         if (!controller) {
-            return false
+            throw new Error("Did not find user corresponding to 2FA key")
         }
 
-        const keyAuthenticated = await controller.securityKey.checkAndUpdateKeyAuthentication(
+        await controller.securityKey.checkAndUpdateKeyAuthentication(
             req,
             true,
             factor.keyPublicKeyId!
         )
-        if (!keyAuthenticated) {
-            return false
-        }
 
         return controller.getUser()
     }
@@ -143,32 +143,27 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
             typeof clientChallenge !== "string" 
             || req.session.twoFactor?.securityKey?.challengeType !== "authentication"
         ) {
-            return false
+            throw new Error("challengeType not authentication, or currentChallenge not found")
         }
 
         const matchingKey = this.securityKeyFactors.find(f => f.keyPublicKeyId === keyId || req.body["id"])
         if (!matchingKey) {
-            return false
+            throw new Error("Did not match any saved 2FA keys")
         }
 
         let authnResult: VerifiedAuthenticationResponse
-        try {
-            authnResult = await verifyAuthenticationResponse({
-                response: req.body,
-                expectedChallenge: clientChallenge,
-                expectedOrigin: rpOrigin,
-                expectedRPID: rpID,
-                authenticator: TwoFactorSecurityKeyController.dbToAuthenticatorData(matchingKey),
-                requireUserVerification: passkey,
-            })
-        } catch (e) {
-            console.warn(e)
-            return false
-        }
+        authnResult = await verifyAuthenticationResponse({
+            response: req.body,
+            expectedChallenge: clientChallenge,
+            expectedOrigin: rpOrigin,
+            expectedRPID: rpID,
+            authenticator: TwoFactorSecurityKeyController.dbToAuthenticatorData(matchingKey),
+            requireUserVerification: passkey,
+        })
 
         const {verified, authenticationInfo} = authnResult
         if (!verified || !authenticationInfo) {
-            return false
+            throw new Error("Authentication not verified")
         }
 
         await this.tx.secondAuthenticationFactor.update({
@@ -179,8 +174,6 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
                 keyCounter: authenticationInfo.newCounter,
             },
         })
-
-        return true
     }
 
     async generateKeyRegistrationOptions(

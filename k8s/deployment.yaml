@@ -25,6 +25,8 @@ spec:
       labels:
         app: palauth
     spec:
+      imagePullSecrets:
+        - name: paltiverse-docker
       containers:
         - name: palauth
           image: gitlab.palk.me:5050/paltiverse/palk-redirect:$CI_COMMIT_SHA

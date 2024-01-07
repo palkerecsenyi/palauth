@@ -11,3 +11,4 @@ build
 *.crt
 /static/js
 .DS_Store
+*.dev.yaml

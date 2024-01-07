@@ -26,7 +26,7 @@ Here are some features:
 - `PAL_OIDC_ID`: The Provider ID of the OIDC subsystem. Usually similar to the hostname but must be a full URL. E.g. `https://example.com`
 - `PAL_CAPTCHA_URL`: URL of a [Friendly Captcha](https://friendlycaptcha.com/) server. You can either self-host or use the cloud-based version.
 - `PAL_CAPTCHA_KEY`: API key of the Friendly Captcha server.
-- `PAL_SECRETS`: A JSON string array of secrets used for session and CSRF token signing. The first key in the array will be used to sign new sessions, and other keys will be used to verify existing sessions. E.g. `["secret1", "secret2"]`
+- `PAL_SECRET`: A secret used for session and CSRF signing.
 - `PAL_PUBLIC_JWK`: A base64-encoded RS256 [JWK](https://www.rfc-editor.org/rfc/rfc7517) public key. You can generate these at [mkjwk](https://mkjwk.org/) (for example)
 - `PAL_PRIVATE_JWK`: The corresponding base64-encoded JWK private key
 - `PAL_MAILGUN_KEY`: An API key for Mailgun, used for sending account emails

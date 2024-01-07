@@ -25,7 +25,11 @@ spec:
       containers:
         - name: palauth
           image: gitlab.palk.me:5050/paltiverse-public/palk-redirect:$CI_COMMIT_SHA
+          ports:
+            - containerPort: 8080
           env:
+            - name: PORT
+              value: "8080"
             - name: PAL_HOSTNAME
               value: auth.palk.me
             - name: PAL_OIDC_ID
@@ -37,7 +41,44 @@ spec:
                 secretKeyRef:
                   name: friendly-captcha-api-key
                   key: api-key
-            - name: PAL_SECRETS
+            - name: PAL_SECRET
               valueFrom:
-                
-
+                secretKeyRef:
+                  name: palauth-session-secret
+                  key: value
+            - name: PAL_PUBLIC_JWK
+              valueFrom:
+                secretKeyRef:
+                  name: palauth-jwk
+                  key: public
+            - name: PAL_PRIVATE_JWK
+              valueFrom:
+                secretKeyRef:
+                  name: palauth-jwk
+                  key: private
+            - name: PAL_MAILGUN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mailgun-api-key
+                  key: api-key
+            - name: PAL_MAILGUN_HOST
+              value: https://auth.palk.me
+            - name: PAL_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: palauth-redis-url
+                  key: redis-url
+            - name: NODE_ENV
+              value: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: palauth-svc
+spec:
+  type: NodePort
+  ports:
+    - targetPort: 8080
+      port: 8081
+  selector:
+    app: palauth

@@ -29,7 +29,7 @@ spec:
         - name: paltiverse-docker
       containers:
         - name: palauth
-          image: gitlab.palk.me:5050/paltiverse/palk-redirect:$CI_COMMIT_SHA
+          image: gitlab.palk.me:5050/paltiverse/palauth:$CI_COMMIT_SHA
           ports:
             - containerPort: 8080
           env:

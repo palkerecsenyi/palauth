@@ -14,6 +14,7 @@ metadata:
   labels:
     app: palauth
 spec:
+  replicas: 3
   selector:
     matchLabels:
       app: palauth
@@ -24,7 +25,7 @@ spec:
     spec:
       containers:
         - name: palauth
-          image: gitlab.palk.me:5050/paltiverse-public/palk-redirect:$CI_COMMIT_SHA
+          image: gitlab.palk.me:5050/paltiverse/palk-redirect:$CI_COMMIT_SHA
           ports:
             - containerPort: 8080
           env:

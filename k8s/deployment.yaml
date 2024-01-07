@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: palauth-session-secret
+  annotations:
+    secret-generator.v1.mittwald.de/autogenerate: value
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: palauth
+  labels:
+    app: palauth
+spec:
+  selector:
+    matchLabels:
+      app: palauth
+  template:
+    metadata:
+      labels:
+        app: palauth
+    spec:
+      containers:
+        - name: palauth
+          image: gitlab.palk.me:5050/paltiverse-public/palk-redirect:$CI_COMMIT_SHA
+          env:
+            - name: PAL_HOSTNAME
+              value: auth.palk.me
+            - name: PAL_OIDC_ID
+              value: https://auth.palk.me
+            - name: PAL_CAPTCHA_URL
+              value: https://captcha.palk.me
+            - name: PAL_CAPTCHA_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: friendly-captcha-api-key
+                  key: api-key
+            - name: PAL_SECRETS
+              valueFrom:
+                
+

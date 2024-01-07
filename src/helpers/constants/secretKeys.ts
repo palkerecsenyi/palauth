@@ -1,19 +1,19 @@
 import * as jose from "jose";
 
 export const getSecretKeys = () => {
-    const secrets = process.env["PAL_SECRETS"]
+    const secrets = process.env["PAL_SECRET"]
     if (!secrets) {
-        throw new Error("PAL_SECRETS not defined")
+        throw new Error("PAL_SECRET not defined")
     }
 
     const parsedSecrets = JSON.parse(secrets)
-    if (!(parsedSecrets instanceof Array)) {
-        throw new Error("PAL_SECRETS was not an array")
+    if (parsedSecrets instanceof Array) {
+        throw new Error("PAL_SECRET was an array")
     }
     if (parsedSecrets.length === 0) {
-        throw new Error("PAL_SECRETS was empty")
+        throw new Error("PAL_SECRET was empty")
     }
-    return parsedSecrets as string[]
+    return parsedSecrets as string
 }
 
 const getJSONEnv = (env: string) => {

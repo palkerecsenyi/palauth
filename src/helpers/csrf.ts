@@ -12,7 +12,7 @@ const {
         return req.body["csrf"]
     },
     getSecret() {
-        return getSecretKeys()[0]
+        return getSecretKeys()
     },
     cookieName: "pal_csrf",
     cookieOptions: {

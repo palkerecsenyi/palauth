@@ -16,7 +16,6 @@ metadata:
   labels:
     app: palauth
 spec:
-  replicas: 3
   selector:
     matchLabels:
       app: palauth
@@ -32,6 +31,11 @@ spec:
           image: gitlab.palk.me:5050/paltiverse/palauth:$CI_COMMIT_SHA
           ports:
             - containerPort: 8080
+          resources:
+            limits:
+              cpu: 500m
+            requests:
+              cpu: 200m
           env:
             - name: PORT
               value: "8080"
@@ -93,3 +97,24 @@ spec:
       port: 8081
   selector:
     app: palauth
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: palauth-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: palauth
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50

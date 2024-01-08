@@ -1,7 +1,7 @@
 import { Express } from "express";
 import expressSession from "express-session";
 import { sessionDurationMillis } from "./constants/token-duration.js";
-import { getRedisSecret, getSecretKeys } from "./constants/secretKeys.js";
+import { getRedisSecret, getSecretKey } from "./constants/secretKeys.js";
 import RedisStore from "connect-redis"
 import { createClient } from "redis";
 
@@ -18,7 +18,7 @@ export const initSessionManager = async (app: Express) => {
             httpOnly: true,
         },
         name: "palauth_sesh_id",
-        secret: getSecretKeys(),
+        secret: getSecretKey(),
         saveUninitialized: true,
         resave: false,
         store: new RedisStore({

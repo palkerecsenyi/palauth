@@ -1,7 +1,7 @@
 // @ts-ignore
 import {doubleCsrf} from "csrf-csrf";
 import {Request} from "express";
-import {getSecretKeys} from "./constants/secretKeys.js";
+import {getSecretKey} from "./constants/secretKeys.js";
 import DevModeSettings from "./constants/devMode.js";
 
 const {
@@ -12,7 +12,7 @@ const {
         return req.body["csrf"]
     },
     getSecret() {
-        return getSecretKeys()
+        return getSecretKey()
     },
     cookieName: "pal_csrf",
     cookieOptions: {

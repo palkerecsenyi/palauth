@@ -146,7 +146,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
             throw new Error("challengeType not authentication, or currentChallenge not found")
         }
 
-        const matchingKey = this.securityKeyFactors.find(f => f.keyPublicKeyId === keyId || req.body["id"])
+        const matchingKey = this.securityKeyFactors.find(f => f.keyPublicKeyId === keyId || f.keyPublicKeyId === req.body["id"])
         if (!matchingKey) {
             throw new Error("Did not match any saved 2FA keys")
         }

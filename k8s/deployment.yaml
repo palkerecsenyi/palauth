@@ -73,6 +73,11 @@ spec:
                 secretKeyRef:
                   name: palauth-redis-url
                   key: redis-url
+            - name: PAL_DB_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: palauth-db-url
+                  key: url
             - name: NODE_ENV
               value: production
 ---

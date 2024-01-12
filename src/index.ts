@@ -30,6 +30,7 @@ import DevModeSettings from "./helpers/constants/devMode.js";
 import iamRouter from "./routes/iam.js";
 import { initSessionManager } from "./helpers/session.js";
 import clientApiRouter from "./routes/clientsApi.js";
+import groupsRouter from "./routes/groups.js";
 
 const app = express()
 app.set("view engine", "pug")
@@ -53,6 +54,7 @@ app.use((req, res, next) => {
 app.use("/.well-known", wellKnownRouter)
 app.use("/oidc", oidcRouter)
 app.use("/dev", devRouter)
+app.use("/groups", groupsRouter)
 app.get("/auth/signout", signOutRoute)
 app.use("/auth", authRouter)
 app.get("/favicon.ico", (_, res) => res.sendStatus(404))

@@ -9,6 +9,7 @@ import {getProjectOIDCID} from "../helpers/constants/hostname.js";
 import {JWTSigner} from "../helpers/oidc/jwt.js";
 import {OAuthTokenWrapper} from "./tokens.js";
 import {calculateTokenExpiry} from "../helpers/constants/token-duration.js";
+import GroupsController from "./groups.js";
 
 export class TokenManager {
     userId: string
@@ -110,13 +111,20 @@ export class TokenManager {
         })
     }
 
-    generateIdToken(expires: DateTime, nonce?: string) {
+    async generateIdToken(expires: DateTime, nonce?: string) {
+        const clientId = this.clientController.getClient().clientId
+        const groups = await GroupsController.listGroupsForToken(
+            clientId,
+            this.userId,
+        )
+
         const idToken: IDToken = {
             iss: getProjectOIDCID(),
             sub: this.userId,
-            aud: this.clientController.getClient().clientId,
+            aud: clientId,
             exp: expires.toUnixInteger(),
             iat: DateTime.now().toUnixInteger(),
+            "https://auth.palk.me/groups": groups.map(g => g.systemName),
             nonce,
         }
 
@@ -136,6 +144,12 @@ export class TokenManager {
             payload.exp,
             payload.iat,
         ].some(e => e === undefined)) {
+            return undefined
+        }
+
+        if (payload["https://auth.palk.me/groups"] === undefined) {
+            payload["https://auth.palk.me/groups"] = []
+        } else if (!(payload["https://auth.palk.me/groups"] instanceof Array)) {
             return undefined
         }
 

@@ -51,8 +51,12 @@ export class DBClient {
     static generateErrorMessage(error: any): string {
         if (error instanceof PrismaClientKnownRequestError) {
             switch (error.code) {
+                case "P2002":
+                    return `${error.meta!["field_name"]} already exists`
                 case "P2003":
                     return `${error.meta!["field_name"]} not found`
+                case "P2025":
+                    return `Couldn't find resource to assign`
             }
         }
 

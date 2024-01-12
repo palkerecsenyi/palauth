@@ -2,6 +2,7 @@ import {DateTime, Duration} from "luxon";
 import {getJWKAlg, getJWTPrivateKey, getJWTPublicKey} from "../constants/secretKeys.js";
 import * as jose from "jose"
 import {getProjectOIDCID} from "../constants/hostname.js";
+import type { IDTokenCustomClaims } from "../../types/oidc.js";
 
 export class JWTSigner {
     static async sign(data: any, duration?: Duration) {
@@ -20,7 +21,7 @@ export class JWTSigner {
     static async parse(data: string, allowExpired = false) {
         try {
             const pubKey = await getJWTPublicKey()
-            const verifiedToken = await jose.jwtVerify(data, pubKey, {
+            const verifiedToken = await jose.jwtVerify<jose.JWTPayload & IDTokenCustomClaims>(data, pubKey, {
                 issuer: getProjectOIDCID(),
             })
 

@@ -1,0 +1,38 @@
+extends ../layouts/main
+include ../components/csrf
+include ../components/submit-button
+include ../components/hcaptcha
+
+block title
+    | Add group
+
+block header
+    p
+        a(href="/groups") All groups
+    h1 Add group
+
+block content
+    p The&nbsp;
+        code systemName
+        | &nbsp;of your group will be used in response to OAuth flows, while the display name and description are just for this dashboard and won't be shown in requests.
+
+    p The&nbsp;
+        code systemName
+        | &nbsp;must be&nbsp;
+        strong instance-wide
+        | &nbsp;unique and can only contain letters, numbers, and hyphens.
+
+    form(action="/groups/create", method="post")
+        +csrf_input(csrf)
+        label(for="systemName")
+            code systemName
+        input#systemName(name="systemName", type="text", required)
+
+        label(for="displayName") Display name
+        input#displayName(name="displayName", type="text", required)
+
+        label(for="description") Description
+        textarea#description(name="description")
+
+        +hcaptcha
+        +submit_button

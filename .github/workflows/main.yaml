@@ -1,0 +1,24 @@
+name: PalAuth Build
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/login-action@v1
+        with:
+          registry: gitea.palk.me
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: int128/kaniko-action@v1
+        with:
+          push: true
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags:
+            - gitea.palk.me/paltiverse/PalAuth:${{ github.sha }}
+          cache: true
+          cache-repository: ghcr.io/${{ github.repository }}/cache

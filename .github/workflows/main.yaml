@@ -9,11 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: docker/login-action@v1
-        with:
-          registry: gitea.palk.me
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      # - uses: docker/login-action@v1
+        # with:
+          # registry: gitea.palk.me
+          # username: ${{ github.actor }}
+          # password: ${{ secrets.GITHUB_TOKEN }}
       - uses: int128/kaniko-action@v1
         with:
           push: true

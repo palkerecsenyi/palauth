@@ -17,6 +17,7 @@ jobs:
       - name: Kaniko build
         uses: aevea/action-kaniko@master
         with:
+          registry: gitea.palk.me
           image: gitea.palk.me/paltiverse/PalAuth:${{ github.sha }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}

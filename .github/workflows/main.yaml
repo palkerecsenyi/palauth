@@ -18,7 +18,6 @@ jobs:
         with:
           push: true
           labels: ${{ steps.metadata.outputs.labels }}
-          tags:
-            - gitea.palk.me/paltiverse/PalAuth:${{ github.sha }}
+          tags: gitea.palk.me/paltiverse/PalAuth:${{ github.sha }}
           cache: true
           cache-repository: ghcr.io/${{ github.repository }}/cache

@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - run: apk add tailscale kubectl bash curl envsubst
+      - run: apk add tailscale kubectl bash curl envsubst nodejs npm
         name: Install dependencies
 
       - name: Create kube directory

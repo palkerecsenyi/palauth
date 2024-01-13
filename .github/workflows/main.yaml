@@ -9,18 +9,26 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:3.19
     steps:
+      - uses: actions/checkout@v3
+
       - run: apk add tailscale kubectl bash curl
         name: Install dependencies
 
-      - name: Tailscale
-        uses: tailscale/github-action@v2
-        with:
-          oauth-client-id: ${{ secrets.TAILSCALE_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TAILSCALE_CLIENT_SECRET }}
-          tags: tag:gitea-runners
-
+      - name: Create kube directory
+        run: mkdir /opt/kube
       - name: Bootstrap kubeconfig
-        run: ping paltiverse1
+        run: echo $PALTIVERSE_K8S > /opt/kube/config
+        env:
+          PALTIVERSE_K8S: ${{ secrets.PALTIVERSE_K8S }}
+      - name: Add tailscale proxy to kubeconfig
+        run: kubectl config set clusters.default.proxy-url http://localhost:1055
+        env:
+          KUBECONFIG: /opt/kube/config
+
+      - name: Run kubectl
+        run: tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055 & tailscale up --authkey=${{ secrets.TAILSCALE_CLIENT_SECRET }} --tags=tag:gitea-runners & kubectl apply -f k8s/deployment.yaml
+        env:
+          KUBECONFIG: /opt/kube/config
   build:
     runs-on: ubuntu-latest
     container: docker.io/palkerecs/kaniko:alpine

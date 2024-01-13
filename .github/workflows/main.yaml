@@ -9,8 +9,18 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:3.19
     steps:
-      - run: apk add curl
-      - run: curl -k https://kubernetes.default.svc.cluster.local:6443
+      - run: apk add tailscale kubectl
+        name: Install dependencies
+
+      - name: Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TAILSCALE_CLIENT_SECRET }}
+          tags: tag:gitea-runners
+
+      - name: Bootstrap kubeconfig
+        run: ping paltiverse1
   build:
     runs-on: ubuntu-latest
     container: docker.io/palkerecs/kaniko:alpine

@@ -10,4 +10,6 @@ jobs:
     container: docker.io/palkerecs/kaniko:alpine
     steps:
       - uses: actions/checkout@v3
-      - run: /kaniko/executor --context "${{ github.workspace }}" --dockerfile "${{ github.workspace }}/Dockerfile" --no-push
+      - run: apk add skopeo
+      - run: skopeo login --compat-auth-file /kaniko/.docker/config.json -u ${{ github.actor }} -p ${{ github.token }} gitea.palk.me
+      - run: /kaniko/executor --context "${{ github.workspace }}" --dockerfile "${{ github.workspace }}/Dockerfile" --destination "gitea.palk.me/paltiverse/palauth:${{ github.sha }}"

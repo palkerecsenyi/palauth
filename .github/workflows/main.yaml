@@ -7,18 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: 
-      image: gcr.io/kaniko-project/executor:debug
-      options: '--entrypoint=""'
-    defaults:
-      run:
-        shell: ""
-        working-directory: "/"
+    container: docker.io/palkerecs/kaniko:alpine
     steps:
       - uses: actions/checkout@v3
-        with:
-          entrypoint: ""
-
       - run: /kaniko/executor --context "${{ github.workspace }}" --dockerfile "${{ github.workspace }}/Dockerfile" --no-push
-        with:
-          entrypoint: ""

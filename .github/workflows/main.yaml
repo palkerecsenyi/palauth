@@ -1,4 +1,3 @@
-name: PalAuth Build
 on:
   push:
     branches:
@@ -6,38 +5,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container: docker.io/palkerecs/kaniko:alpine
-    steps:
-      - uses: actions/checkout@v3
-      - run: apk add skopeo
-      - run: skopeo login --compat-auth-file /kaniko/.docker/config.json -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} gitea.palk.me
-      - run: /kaniko/executor --context "${{ github.workspace }}" --dockerfile "${{ github.workspace }}/Dockerfile" --destination "gitea.palk.me/paltiverse/palauth:${{ github.sha }}" --cache=true
+    uses: paltiverse/paltiverse-actions/.github/workflows/docker-build.yml@main
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   deploy:
-    runs-on: ubuntu-latest
-    container: alpine:3
-    steps:
-      - run: apk add tailscale kubectl bash curl envsubst nodejs npm git
-        name: Install dependencies
-
-      - uses: actions/checkout@v3
-
-      - name: Create kube directory
-        run: mkdir /opt/kube
-      - name: Bootstrap kubeconfig
-        run: echo "$PALTIVERSE_K8S" | base64 -d > /opt/kube/config
-        env:
-          PALTIVERSE_K8S: ${{ secrets.PALTIVERSE_K8S }}
-      - name: Add tailscale proxy to kubeconfig
-        run: kubectl config set clusters.default.proxy-url http://localhost:1055
-        env:
-          KUBECONFIG: /opt/kube/config
-
-      - name: Configure tailscale
-        run: tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055 & tailscale up --authkey="${{ secrets.TAILSCALE_TOKEN }}" --advertise-tags=tag:gitea-runners
-
-      - name: Run kubectl
-        run: envsubst < k8s/deployment.yaml | kubectl apply -f -
-        env:
-          KUBECONFIG: /opt/kube/config
-          CI_COMMIT_SHA: ${{ github.sha }}
+    uses: paltiverse/paltiverse-actions/.github/workflows/palcloud-deploy.yml@main
+    secrets:
+      PALTIVERSE_K8S: ${{ secrets.PALTIVERSE_K8S }}
+      TAILSCALE_TOKEN: ${{ secrets.TAILSCALE_TOKEN }}
+    with:
+      deployment-file: k8s/deployment.yaml

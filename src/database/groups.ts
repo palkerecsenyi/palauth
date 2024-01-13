@@ -98,4 +98,20 @@ export default class GroupsController {
             },
         })
     }
+
+    public async assignGroupToApp(clientId: string, groupId: string) {
+        return this.tx.group.update({
+            where: {
+                id: groupId ?? "",
+                managedById: this.managerUserId,
+            },
+            data: {
+                onlyApplyTo: {
+                    connect: {
+                        clientId,
+                    },
+                },
+            },
+        })
+    }
 }

@@ -52,12 +52,13 @@ groupsRouter.post(
     async (req: GroupsManagementRequest & ValidatedRequest, res) => {
         const data = req.validatedData!
         try {
-            const newId = await req.groupsController!.createGroup({
+            await req.groupsController!.createGroup({
                 systemName: data.systemName,
                 displayName: data.displayName,
                 description: data.description,
             })
-            res.redirect("/groups/" + newId)
+            req.flash("success", "Created your group!")
+            res.redirect("/groups")
         } catch (e) {
             req.flash("error", DBClient.generateErrorMessage(e))
             res.redirect("/groups/add")
@@ -88,6 +89,7 @@ groupsRouter.post(
                 userId,
                 req.params.groupId,
             )
+            req.flash("success", "Assigned user to group!")
         } catch (e) {
             req.flash("error", DBClient.generateErrorMessage(e))
             res.redirect(`/groups/${req.params.groupId}/assign`)
@@ -107,16 +109,34 @@ groupsRouter.get(
 )
 
 groupsRouter.get(
-    "/:groupsId/apps/assign",
+    "/:groupId/apps/assign",
     async (req: GroupsManagementRequest, res) => {
         res.render("groups/apps-assign.pug", {
+            csrf: generateToken(req, res),
             group: await req.groupsController!.getGroupForRequest(req),
         })
     }
 )
 
 groupsRouter.post(
-    "/:groupId"
+    "/:groupId/apps/assign",
+    body("clientId").isUUID(),
+    ensureValidators((r) => `/groups/${r.params.groupId}/apps/assign`),
+    verifyCaptcha((r) => `/groups/${r.params.groupId}/apps/assign`),
+    async (req: GroupsManagementRequest & ValidatedRequest, res) => {
+        const clientId = req.validatedData!.clientId
+        try {
+            await req.groupsController!.assignGroupToApp(
+                clientId,
+                req.params.groupId,
+            )
+            req.flash("success", "Granted app access to group!")
+        } catch (e) {
+            req.flash("error", DBClient.generateErrorMessage(e))
+            res.redirect(`/groups/${req.params.groupId}/apps/assign`)
+        }
+        res.redirect("/groups")
+    }
 )
 
 export default groupsRouter

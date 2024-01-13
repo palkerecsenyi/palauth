@@ -20,7 +20,7 @@ block content
         code https://auth.palk.me/groups
         | &nbsp;claim in its ID Tokens.
 
-    form(action="/groups/" + group.id + "/assign", method="post")
+    form(action="/groups/" + group.id + "/apps/assign", method="post")
         +csrf_input(csrf)
 
         label(for="clientId") OIDC Client ID

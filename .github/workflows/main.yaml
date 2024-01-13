@@ -5,6 +5,12 @@ on:
       - main
 
 jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    container: alpine:3.19
+    steps:
+      - run: apk add curl
+      - run: curl -k https://kubernetes.default.svc.cluster.local:6443
   build:
     runs-on: ubuntu-latest
     container: docker.io/palkerecs/kaniko:alpine

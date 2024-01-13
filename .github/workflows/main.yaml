@@ -17,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:3.19
     steps:
-      - uses: actions/checkout@v3
-
       - run: apk add tailscale kubectl bash curl envsubst nodejs npm
         name: Install dependencies
+
+      - uses: actions/checkout@v3
 
       - name: Create kube directory
         run: mkdir /opt/kube

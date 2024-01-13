@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:3.19
     steps:
-      - run: apk add tailscale kubectl bash curl envsubst nodejs npm
+      - run: apk add tailscale kubectl bash curl envsubst nodejs npm git
         name: Install dependencies
 
       - uses: actions/checkout@v3

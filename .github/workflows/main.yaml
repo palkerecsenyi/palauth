@@ -15,7 +15,7 @@ jobs:
       - run: /kaniko/executor --context "${{ github.workspace }}" --dockerfile "${{ github.workspace }}/Dockerfile" --destination "gitea.palk.me/paltiverse/palauth:${{ github.sha }}" --cache=true
   deploy:
     runs-on: ubuntu-latest
-    container: alpine:3.19
+    container: alpine:3
     steps:
       - run: apk add tailscale kubectl bash curl envsubst nodejs npm git
         name: Install dependencies
@@ -33,8 +33,11 @@ jobs:
         env:
           KUBECONFIG: /opt/kube/config
 
+      - name: Configure tailscale
+        run: tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055 & tailscale up --authkey="${{ secrets.TAILSCALE_CLIENT_SECRET }}" --advertise-tags=tag:gitea-runners 
+
       - name: Run kubectl
-        run: tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055 & tailscale up --authkey="${{ secrets.TAILSCALE_CLIENT_SECRET }}" --advertise-tags=tag:gitea-runners & envsubst < k8s/deployment.yaml | kubectl apply -f -
+        run: envsubst < k8s/deployment.yaml | kubectl apply -f -
         env:
           KUBECONFIG: /opt/kube/config
           CI_COMMIT_SHA: ${{ github.sha }}

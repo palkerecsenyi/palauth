@@ -1,0 +1,30 @@
+extends ../layouts/main
+include ../components/csrf
+include ../components/submit-button
+include ../components/hcaptcha
+
+block title
+    | Assign app for #{group.displayName}
+
+block header
+    p
+        a(href="/groups/" + group.id + "/apps") All apps
+    h1 Assign app
+    p Allow an OIDC app to be sent membership data for&nbsp;
+        strong= group.displayName
+
+block content
+    p This app will have whether a user is in the&nbsp;
+        code=group.systemName
+        | &nbsp;group included in the&nbsp;
+        code https://auth.palk.me/groups
+        | &nbsp;claim in its ID Tokens.
+
+    form(action="/groups/" + group.id + "/apps/assign", method="post")
+        +csrf_input(csrf)
+
+        label(for="clientId") OIDC Client ID
+        input#clientId(name="clientId", type="text", required)
+
+        +hcaptcha
+        +submit_button

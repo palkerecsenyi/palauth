@@ -1,0 +1,24 @@
+extends ../layouts/main
+include ../components/csrf
+include ../components/submit-button
+include ../components/hcaptcha
+
+block title
+    | Assign group member
+
+block header
+    p
+        a(href="/groups") All groups
+    h1 Assign group member
+    p Assigning to&nbsp;
+        strong=group.displayName
+
+block content
+    form(action="/groups/" + group.id + "/assign", method="post")
+        +csrf_input(csrf)
+
+        label(for="userId") User ID
+        input#userId(name="userId", type="text", required)
+
+        +hcaptcha
+        +submit_button

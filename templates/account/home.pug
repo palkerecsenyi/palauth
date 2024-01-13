@@ -29,7 +29,11 @@ block content
 
     h3 Developers
     p
-        a(href="/dev") Manage OAuth/OIDC apps
+        a(href="/dev") Manage OIDC apps
+
+    if user.canManageGroups
+        p
+            a(href="/groups") Manage groups
 
     if scopesByClient.length > 0
         h3 My applications

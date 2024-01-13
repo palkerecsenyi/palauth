@@ -1,0 +1,35 @@
+extends ../layouts/main
+
+block title
+    | Manage Groups
+
+block header
+    p
+        a(href="/") Home
+    h1 Groups
+    p Administrate instance-wide groups for this PalAuth instance
+
+block content
+    p
+        a.button(href="/groups/add") Create a group
+
+    if groups.length === 0
+        p You don't have any groups yet.
+        p You can create instance-wide user groups to help with OpenID integrations using a custom claim.
+        p Where applicable, a user's groups will be included in the ID Token response to an OAuth Client using the&nbsp;
+            code https://auth.palk.me/groups
+            | &nbsp;claim (regardless of the domain this PalAuth instance is hosted on).
+    else
+        h3 Your groups
+        ul
+            each group in groups
+                li= group.systemName
+                    ul
+                        li
+                            a(href="/groups/" + group.id + "/assign") Assign member
+                        li
+                            a(href="/groups/" + group.id + "/members") View members
+                        li
+                            a(href="/groups/" + group.id + "/apps") Connected OIDC apps
+                        li
+                            a(href="/groups/" + group.id + "/delete") Delete

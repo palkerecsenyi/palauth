@@ -9,6 +9,20 @@ datasource db {
     url      = env("PAL_DB_STRING")
 }
 
+model Group {
+    id String @id @default(uuid())
+    systemName String @unique
+    displayName String
+    description String
+
+    members User[] @relation("GroupMembership")
+    managedBy User @relation(fields: [managedById], references: [id], onDelete: Cascade)
+    managedById String
+
+    // Only the OAuth Clients in this list are told about users' membership of this group
+    onlyApplyTo OAuthClient[]
+}
+
 model User {
     id String @id @default(uuid())
     email String @unique
@@ -23,6 +37,11 @@ model User {
     secondFactors SecondAuthenticationFactor[]
 
     iamRoles IAMRoleAssignment[]
+
+    groups Group[] @relation("GroupMembership")
+    groupsManaged Group[]
+
+    canManageGroups Boolean @default(false)
 }
 
 model Invite {
@@ -88,6 +107,7 @@ model OAuthClient {
     tokens OAuthToken[]
     roles IAMRole[]
     permissions IAMPermission[]
+    availableGroups Group[]
 }
 
 model OAuthClientRedirectURI {

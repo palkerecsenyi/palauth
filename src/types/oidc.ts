@@ -6,10 +6,13 @@ export interface IDToken {
     aud: string
     exp: number
     iat: number
+    "https://auth.palk.me/groups": string[]
     auth_time?: number
     nonce?: string
     revoke_id?: string
 }
+
+export type IDTokenCustomClaims = Pick<IDToken, "https://auth.palk.me/groups">
 
 export type OIDCResponseType = "code"
 export type OIDCPromptType = "login" | "none"

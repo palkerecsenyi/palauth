@@ -18,10 +18,10 @@ export class JWTSigner {
         return jwt.sign(privKey)
     }
 
-    static async parse(data: string, allowExpired = false) {
+    static async parse<ExpectedType extends jose.JWTPayload = jose.JWTPayload & IDTokenCustomClaims>(data: string, allowExpired = false) {
         try {
             const pubKey = await getJWTPublicKey()
-            const verifiedToken = await jose.jwtVerify<jose.JWTPayload & IDTokenCustomClaims>(data, pubKey, {
+            const verifiedToken = await jose.jwtVerify<ExpectedType>(data, pubKey, {
                 issuer: getProjectOIDCID(),
             })
 

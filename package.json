@@ -53,6 +53,7 @@
     "start": "tsx src/index.ts",
     "build": "tsc && cp -r src/database/generated-models build/database",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev"
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy"
   }
 }

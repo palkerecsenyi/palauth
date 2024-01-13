@@ -34,7 +34,7 @@ jobs:
           KUBECONFIG: /opt/kube/config
 
       - name: Configure tailscale
-        run: tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055 & tailscale up --authkey="${{ secrets.TAILSCALE_TOKEN }}" --advertise-tags=tag:gitea-runners 
+        run: tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055 & tailscale up --authkey="${{ secrets.TAILSCALE_TOKEN }}" --advertise-tags=tag:gitea-runners
 
       - name: Run kubectl
         run: envsubst < k8s/deployment.yaml | kubectl apply -f -

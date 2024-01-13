@@ -7,7 +7,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: gcr.io/kaniko-project/executor:debug
+    container: 
+      image: gcr.io/kaniko-project/executor:debug
+      options: '--entrypoint=""'
     defaults:
       run:
         shell: ""

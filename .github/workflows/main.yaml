@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:3.19
     steps:
-      - run: apk add tailscale kubectl bash
+      - run: apk add tailscale kubectl bash curl
         name: Install dependencies
 
       - name: Tailscale

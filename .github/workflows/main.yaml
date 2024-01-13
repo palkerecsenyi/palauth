@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - run: apk add tailscale kubectl bash curl
+      - run: apk add tailscale kubectl bash curl envsubst
         name: Install dependencies
 
       - name: Create kube directory
@@ -34,6 +34,7 @@ jobs:
           KUBECONFIG: /opt/kube/config
 
       - name: Run kubectl
-        run: tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055 & tailscale up --authkey=${{ secrets.TAILSCALE_CLIENT_SECRET }} --tags=tag:gitea-runners & kubectl apply -f k8s/deployment.yaml
+        run: tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055 & tailscale up --authkey=${{ secrets.TAILSCALE_CLIENT_SECRET }} --tags=tag:gitea-runners & envsubst < k8s/deployment.yaml | kubectl apply -f -
         env:
           KUBECONFIG: /opt/kube/config
+          CI_COMMIT_SHA: ${{ github.sha }}

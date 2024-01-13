@@ -25,7 +25,7 @@ jobs:
       - name: Create kube directory
         run: mkdir /opt/kube
       - name: Bootstrap kubeconfig
-        run: echo $PALTIVERSE_K8S > /opt/kube/config
+        run: echo "$PALTIVERSE_K8S" | base64 -d > /opt/kube/config
         env:
           PALTIVERSE_K8S: ${{ secrets.PALTIVERSE_K8S }}
       - name: Add tailscale proxy to kubeconfig

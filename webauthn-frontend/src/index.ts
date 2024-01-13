@@ -23,7 +23,7 @@ const enroll = (options: any, formElementID: string, buttonID: string, errorID: 
             alert("Process cancelled - please try again")
             buttonElement.innerText = "Click to enroll"
             buttonElement.disabled = false
-            errorElement.innerText = "dev error: " + e
+            errorElement.innerText = e + ''
             return
         }
 

@@ -67,6 +67,30 @@ groupsRouter.post(
 )
 
 groupsRouter.get(
+    "/:groupId/delete",
+    async (req: GroupsManagementRequest, res) => {
+        const groupId = req.params.groupId
+        try {
+            await req.groupsController!.deleteGroup(groupId)
+            req.flash("success", "Your group was deleted!")
+        } catch (e) {
+            req.flash("error", DBClient.generateErrorMessage(e))
+        }
+        res.redirect("/groups")
+    }
+)
+
+groupsRouter.get(
+    "/:groupId/members",
+    getGroupMiddleware,
+    async (req: GroupRequest, res) => {
+        res.render("groups/members-list.pug", {
+            group: req.group!
+        })
+    }
+)
+
+groupsRouter.get(
     "/:groupId/assign",
     getGroupMiddleware,
     async (req: GroupRequest, res) => {
@@ -95,7 +119,23 @@ groupsRouter.post(
             res.redirect(`/groups/${req.params.groupId}/assign`)
             return
         }
-        res.redirect("/groups")
+        res.redirect(`/groups/${req.params.groupId}/members`)
+    }
+)
+
+groupsRouter.get(
+    "/:groupId/members/:userId/delete",
+    async (req: GroupsManagementRequest, res) => {
+        try {
+            await req.groupsController!.unassignFromGroup(
+                req.params.userId,
+                req.params.groupId
+            )
+            req.flash("success", "Unassigned user from group!")
+        } catch (e) {
+            req.flash("error", DBClient.generateErrorMessage(e))
+        }
+        res.redirect(`/groups/${req.params.groupId}/members`)
     }
 )
 
@@ -135,7 +175,23 @@ groupsRouter.post(
             req.flash("error", DBClient.generateErrorMessage(e))
             res.redirect(`/groups/${req.params.groupId}/apps/assign`)
         }
-        res.redirect("/groups")
+        res.redirect(`/groups/${req.params.groupId}/apps`)
+    }
+)
+
+groupsRouter.get(
+    "/:groupId/apps/:clientId/revoke",
+    async (req: GroupsManagementRequest, res) => {
+        try {
+            await req.groupsController!.unassignGroupFromApp(
+                req.params.clientId,
+                req.params.groupId,
+            )
+            req.flash("success", "Unassigned app from group!")
+        } catch (e) {
+            req.flash("error", DBClient.generateErrorMessage(e))
+        }
+        res.redirect(`/groups/${req.params.groupId}/apps`)
     }
 )
 

@@ -1,7 +1,7 @@
 import { TransactionType } from "../types/prisma.js";
 import { DBClient } from "./client.js";
 import { Group } from "./generated-models/index.js";
-import { Pick, PrismaClientKnownRequestError } from "./generated-models/runtime/library.js";
+import { Pick } from "./generated-models/runtime/library.js";
 import type { Request } from "express";
 
 export default class GroupsController {
@@ -45,6 +45,10 @@ export default class GroupsController {
         return this.tx.group.findMany({
             where: {
                 managedById: this.managerUserId,
+            },
+            include: {
+                onlyApplyTo: true,
+                members: true,
             }
         })
     }
@@ -73,6 +77,7 @@ export default class GroupsController {
             },
             include: {
                 onlyApplyTo: true,
+                members: true,
             }
         })
     }
@@ -81,6 +86,15 @@ export default class GroupsController {
         const groupId = req.params.groupId
         if (typeof groupId !== "string") return null
         return this.getGroup(groupId)
+    }
+
+    public async deleteGroup(groupId: string) {
+        await this.tx.group.delete({
+            where: {
+                id: groupId ?? "",
+                managedById: this.managerUserId,
+            }
+        })
     }
 
     public async assignToGroup(userId: string, groupId: string) {
@@ -99,6 +113,22 @@ export default class GroupsController {
         })
     }
 
+    public async unassignFromGroup(userId: string, groupId: string) {
+        return this.tx.group.update({
+            where: {
+                id: groupId ?? "",
+                managedById: this.managerUserId,
+            },
+            data: {
+                members: {
+                    disconnect: {
+                        id: userId,
+                    },
+                },
+            },
+        })
+    }
+
     public async assignGroupToApp(clientId: string, groupId: string) {
         return this.tx.group.update({
             where: {
@@ -108,6 +138,22 @@ export default class GroupsController {
             data: {
                 onlyApplyTo: {
                     connect: {
+                        clientId,
+                    },
+                },
+            },
+        })
+    }
+
+    public async unassignGroupFromApp(clientId: string, groupId: string) {
+        return this.tx.group.update({
+            where: {
+                id: groupId ?? "",
+                managedById: this.managerUserId,
+            },
+            data: {
+                onlyApplyTo: {
+                    disconnect: {
                         clientId,
                     },
                 },

@@ -1,0 +1,24 @@
+extends ../layouts/main
+
+block title
+    | View members for #{group.displayName}
+
+block header
+    p
+        a(href="/groups") All groups
+    h1 View members
+    p Viewing members of group&nbsp;
+        strong= group.displayName
+
+block content
+    if group.members.length === 0
+        p This group has no members.
+
+    ul
+        each member of group.members
+            li= member.displayName
+            ul
+                li User ID:&nbsp;
+                    code=member.id
+                li
+                    a(href="/groups/" + group.id + "/members/" + member.id + "/delete") Delete

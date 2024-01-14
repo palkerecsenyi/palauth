@@ -14,13 +14,18 @@ block content
     p
         a.button(href="/groups/" + group.id + "/apps/assign") Add app
 
-    h3 Existing apps
-    p These apps are sent membership information for&nbsp;
-        strong= group.displayName
-        | .
-    ul
-        each client of group.onlyApplyTo
-            li= client.name
-            ul
-                li Client ID:&nbsp;
-                    code=client.clientId
+    if group.onlyApplyTo.length === 0
+        p You don't have any connected apps yet.
+    else
+        h3 Existing apps
+        p These apps are sent membership information for&nbsp;
+            strong= group.displayName
+            | .
+        ul
+            each client of group.onlyApplyTo
+                li= client.name
+                ul
+                    li Client ID:&nbsp;
+                        code=client.clientId
+                    li
+                        a(href="/groups/" + group.id + "/apps/" + client.clientId + "/revoke") Revoke

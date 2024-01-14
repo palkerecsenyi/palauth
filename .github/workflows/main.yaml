@@ -9,10 +9,20 @@ jobs:
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-  deploy:
+  deploy-palcloud:
     uses: paltiverse/paltiverse-actions/.github/workflows/palcloud-deploy.yml@main
     secrets:
       PALTIVERSE_K8S: ${{ secrets.PALTIVERSE_K8S }}
       TAILSCALE_TOKEN: ${{ secrets.TAILSCALE_TOKEN }}
     with:
       deployment-file: k8s/deployment.yaml
+  deploy-docker-hub:
+    uses: paltiverse/paltiverse-actions/.github/workflows/docker-deploy.yml@main
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+    with:
+      docker-hub-repo: palkerecs/palauth
+      docker-hub-version: latest

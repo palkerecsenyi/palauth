@@ -293,8 +293,15 @@ authRouter.post(
             }
 
             if (!DevModeSettings.skipEmailVerification()) {
-                const emailVerification = await VerificationMessageController.create(userId, "VerifyEmail", tx)
-                await emailVerification.send()
+                try {
+                    const emailVerification = await VerificationMessageController.create(userId, "VerifyEmail", tx)
+                    await emailVerification.send()
+                } catch (e) {
+                    console.error("Sending new user verification email:", e)
+                    req.flash("error", "We failed to send your verification email for some reason. Your account has not been created; please try again.")
+                    tx.rollback()
+                    return
+                }
             }
 
             return userId

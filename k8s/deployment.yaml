@@ -71,7 +71,7 @@ spec:
                   name: mailgun-api-key
                   key: api-key
             - name: PAL_MAILGUN_HOST
-              value: https://auth.palk.me
+              value: auth.palk.me
             - name: PAL_REDIS_URL
               valueFrom:
                 secretKeyRef:

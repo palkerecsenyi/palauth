@@ -2,6 +2,7 @@ FROM node:20-alpine
 
 WORKDIR /usr/src/app
 
+RUN apk add python3
 RUN npm install -g node-gyp
 COPY package.json yarn.lock ./
 RUN yarn install

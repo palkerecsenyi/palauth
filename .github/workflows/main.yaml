@@ -7,8 +7,8 @@ jobs:
   build:
     uses: paltiverse/paltiverse-actions/.github/workflows/docker-build.yml@main
     secrets:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_USERNAME: ${{ secrets.PACKAGE_USER }}
+      DOCKER_PASSWORD: ${{ secrets.PACKAGE_SECRET }}
   deploy-palcloud:
     uses: paltiverse/paltiverse-actions/.github/workflows/palcloud-deploy.yml@main
     needs: [build]
@@ -21,8 +21,8 @@ jobs:
     uses: paltiverse/paltiverse-actions/.github/workflows/docker-deploy.yml@main
     needs: [build]
     secrets:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_USERNAME: ${{ secrets.PACKAGE_USER }}
+      DOCKER_PASSWORD: ${{ secrets.PACKAGE_SECRET }}
       DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
     with:

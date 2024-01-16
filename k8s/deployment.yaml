@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: palauth-session-secret
-  namespace: default
+  namespace: palauth
   annotations:
     secret-generator.v1.mittwald.de/autogenerate: value
 
@@ -12,7 +12,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: palauth
-  namespace: default
+  namespace: palauth
   labels:
     app: palauth
 spec:
@@ -89,7 +89,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: palauth-svc
-  namespace: default
+  namespace: palauth
 spec:
   type: NodePort
   ports:
@@ -103,7 +103,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: palauth-hpa
-  namespace: default
+  namespace: palauth
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

@@ -1,8 +1,0 @@
-include:
-  - project: 'gitlab.palk.me/templates'
-    file: '/gitlab-ci/Paltiverse.gitlab-ci.yml'
-
-variables:
-  PAL_BUILD_STRATEGY: 'docker dockerhub'
-  DOCKER_HUB_NAMESPACE: 'palkerecs'
-  DOCKER_HUB_VERSION: 'latest'

@@ -9,14 +9,14 @@ jobs:
     container: alpine:3.19
     steps:
       - run: apk add nodejs npm git
-      - run: npm install -g yarn
+      - run: npm install -g corepack
+      - run: corepack enable
       - uses: actions/checkout@v3
       - run: yarn set version stable
       - run: |
           yarn config set enableGlobalCache false
           yarn config set nodeLinker node-modules
       - run: yarn install
-      - run: yarn workspace @paltivers/palauth-backend db:deploy
       - uses: https://gitea.palk.me/paltiverse/paltiverse-actions-kubectl@0.0.1
         with:
           tailscale-token: ${{ secrets.TAILSCALE_TOKEN }}

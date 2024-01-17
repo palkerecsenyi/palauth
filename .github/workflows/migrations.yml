@@ -9,7 +9,7 @@ jobs:
     container: alpine:3.19
     steps:
       - run: apk add nodejs npm git
-      - run: npm install -g corepack
+      - run: npm install -g corepack node-gyp
       - run: corepack enable
       - uses: actions/checkout@v3
       - run: yarn set version stable
@@ -17,7 +17,7 @@ jobs:
           yarn config set enableGlobalCache false
           yarn config set nodeLinker node-modules
       - run: yarn install
-      - uses: https://gitea.palk.me/paltiverse/paltiverse-actions-kubectl@0.0.1
+      - uses: https://gitea.palk.me/paltiverse/paltiverse-actions-kubectl@0.0.2
         with:
           tailscale-token: ${{ secrets.TAILSCALE_TOKEN }}
           k8s-config: ${{ secrets.PALTIVERSE_K8S }}

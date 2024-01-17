@@ -1,5 +1,6 @@
-.yarn
-node_modules
+.yarn/*
+.pnp.cjs
+.pnp.loader.mjs
 .idea
 *.pem
 *.crt

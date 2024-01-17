@@ -16,6 +16,6 @@ export default {
     },
     output: {
         filename: "webauthn.js",
-        path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../", "static/js"),
+        path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../backend", "static/js"),
     }
 }

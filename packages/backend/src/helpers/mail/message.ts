@@ -1,4 +1,4 @@
-import Mailgun from "mailgun.js";
+import Mailgun from "mailgunjs";
 import * as FormData from "form-data";
 import {getMailgunHost, getMailgunSecret} from "../constants/secretKeys.js";
 

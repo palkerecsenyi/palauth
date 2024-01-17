@@ -1,6 +1,7 @@
 {
-  "name": "webauthn-frontend",
-  "packageManager": "yarn@3.6.3",
+  "name": "@paltiverse/palauth-webauthn-frontend",
+  "version": "1.0.0",
+  "private": true,
   "type": "module",
   "dependencies": {
     "@simplewebauthn/browser": "^8.3.4",

@@ -12,19 +12,47 @@ Here are some features:
 - Sessions stored in Redis
 - Uses MySQL with Prisma schemas for an easy development experience
 
-# Installation and setup
+# Installation
 
+## Prerequisites
+
+- You need a MySQL database. You can set the database name and credentials to be whatever you'd like, as you will need to supply a full database URL to PalAuth.
+    - Make sure to run migrations for this database by running `yarn db:migrate:prod` with the `PAL_DB_STRING` environment variable specified. Currently, these have to be run manually; PalAuth will not run them for you, even if there are new migrations required.
+- You need a Redis instance.
+- You need a self-hosted [friendly-lite-server](https://github.com/FriendlyCaptcha/friendly-lite-server).
+
+## From source
+
+### Node JS
+1. Clone this repository
+2. Go into the `webauthn-frontend` directory
+2. Run `yarn install` to install dependencies
+3. Run `yarn build`
+4. Repeat 2 & 3 inside the project root directory
+5. Configure (see below)
+6. Run `yarn prod`
+
+### Docker
 1. Clone this repository
 2. Build the Docker image using the Dockerfile
 3. Configure the environment variables
 4. Run!
 
-## Environment variables and keys
+## From Docker Hub
+PalAuth is available as `docker.io/palkerecs/palauth`. For now, this only has one tag `latest`, with images available for `linux/amd64` and `linux/arm64/v8`.
+
+## On Kubernetes
+As a containerised app, you can easily deploy PalAuth on Kubernetes. The configuration used at auth.palk.me is available in `k8s/deployment.yaml`.
+
+# Configuration
+Currently, PalAuth can be configured through a number of environment variables prefixed with `PAL_`.
+
+These are all the available options:
 
 - `PAL_DB_STRING`: The SQL connection string. See [Prisma docs](https://www.prisma.io/docs/concepts/database-connectors/mysql#connection-url)
 - `PAL_HOSTNAME`: The hostname PalAuth will be running on (e.g. `example.com`)
 - `PAL_OIDC_ID`: The Provider ID of the OIDC subsystem. Usually similar to the hostname but must be a full URL. E.g. `https://example.com`
-- `PAL_CAPTCHA_URL`: URL of a [Friendly Captcha](https://friendlycaptcha.com/) server. You can either self-host or use the cloud-based version.
+- `PAL_CAPTCHA_URL`: URL of a [Friendly Captcha](https://friendlycaptcha.com/) server. Currently only the self-hosted [friendly-lite-server](https://github.com/FriendlyCaptcha/friendly-lite-server) is supported.
 - `PAL_CAPTCHA_KEY`: API key of the Friendly Captcha server.
 - `PAL_SECRET`: A secret used for session and CSRF signing.
 - `PAL_PUBLIC_JWK`: A base64-encoded RS256 [JWK](https://www.rfc-editor.org/rfc/rfc7517) public key. You can generate these at [mkjwk](https://mkjwk.org/) (for example)
@@ -35,7 +63,7 @@ Here are some features:
 
 - `NODE_ENV`: `production` or `development`
 
-### Development variables
+## Development variables
 You can use these variables in development to make your life easier:
 
 - `PAL_DEV_CAPTCHA_DISABLE`: `true` or `false` — disables captchas

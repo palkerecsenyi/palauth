@@ -17,7 +17,7 @@ jobs:
           yarn config set enableGlobalCache false
           yarn config set nodeLinker node-modules
       - run: yarn install
-      - uses: https://gitea.palk.me/paltiverse/paltiverse-actions-kubectl@0.0.2
+      - uses: https://gitea.palk.me/paltiverse/paltiverse-actions-kubectl@0.0.3
         with:
           tailscale-token: ${{ secrets.TAILSCALE_TOKEN }}
           k8s-config: ${{ secrets.PALTIVERSE_K8S }}

@@ -1,4 +1,5 @@
 import { browserSupportsWebAuthn, startAuthentication } from "@simplewebauthn/browser"
+import wretch from "wretch"
 
 export const authenticate = (
     options: any,
@@ -49,17 +50,11 @@ export const authenticate = (
         }
 
         try {
-            const resp = await fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(credential),
-            })
-
-            if (resp.status !== 204) {
-                throw new Error()
-            }
+            await wretch()
+                .json(credential)
+                .url(url)
+                .post()
+                .res()
         } catch (e) {
             alert("Something went wrong. Please try a different key.")
             return

@@ -35,7 +35,7 @@ export const authenticate = (
         } catch (e) {
             console.error(e)
             if (!autocomplete) {
-                alert("Process cancelled — please reload to try again")
+                alert("Process cancelled — please try again")
             }
             return
         }

@@ -10,11 +10,11 @@ p Enroll a security key as a&nbsp;
             | second authentication factor
     | .
 
-button#enroll Click to enroll
-
 form(action="/account/2fa/enroll?type=key", method="post")
     +csrf_input(csrf)
-    input#key-input(type="hidden", name="key", required)
+
+    div#passkey-preact
+
     if passkey
         input(type="hidden", name="passkey", value="yes")
 
@@ -29,4 +29,4 @@ p#error(style="color: red")
 script(type="application/javascript", src="/static/js/webauthn.js")
 script.
     const enroll = window["PAL_2FA_ENROLL"]
-    document.getElementById("enroll").addEventListener("click", enroll(!{JSON.stringify(options)}, "key-input", "enroll", "error"))
+    document.addEventListener("DOMContentLoaded", enroll(!{JSON.stringify(options)}, "passkey-preact"))

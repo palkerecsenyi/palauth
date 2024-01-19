@@ -16,6 +16,7 @@
     "@types/node": "^20.10.3",
     "@types/qrcode": "^1.5.5",
     "@types/speakeasy": "^2.0.10",
+    "@yarnpkg/pnpify": "^4.0.1",
     "nodemon": "^3.0.2",
     "prisma": "latest",
     "tsx": "^4.6.2",
@@ -49,8 +50,8 @@
     "prod": "node build/index.js",
     "start": "tsx src/index.ts",
     "build": "tsc && cp -r src/database/generated-models build/database",
-    "db:generate": "prisma generate",
-    "db:migrate:dev": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy"
+    "db:generate": "yarn pnpify prisma generate",
+    "db:migrate:dev": "yarn pnpify prisma migrate dev",
+    "db:deploy": "yarn pnpify prisma migrate deploy"
   }
 }

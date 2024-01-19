@@ -12,7 +12,12 @@ export default {
         ],
     },
     resolve: {
-        extensions: [".ts", ".js"],
+        extensions: [".ts", ".tsx"],
+        alias: {
+            "react": "preact/compat",
+            "react-dom": "preact/compat",
+            "react/jsx-runtime": "preact/jsx-runtime"
+        }
     },
     output: {
         filename: "webauthn.js",

@@ -14,7 +14,6 @@ export interface IDToken {
 
 export type IDTokenCustomClaims = Pick<IDToken, "https://auth.palk.me/groups">
 
-export type OIDCResponseType = "code"
 export type OIDCPromptType = "login" | "none"
 export type OAuthAuthorizationError = "invalid_request"
     | "unauthorized_client"
@@ -67,3 +66,26 @@ export interface OIDCUserInfoResponse {
     phone_number_verified?: boolean
     updated_at?: number
 }
+
+export class OIDCScopes {
+    static OpenID = "openid"
+    static Profile = "profile"
+    static Email = "email"
+
+    static supportedScopes = [
+        this.OpenID,
+        this.Profile,
+        this.Email,
+    ]
+}
+
+export class OIDCResponseTypes {
+    static Code = "code"
+    static IDToken = "id_token"
+
+    static supportedResponseTypes = [
+        this.Code,
+        this.IDToken,
+    ]
+}
+export type OIDCResponseType = "code" | "id_token"

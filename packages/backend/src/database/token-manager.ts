@@ -1,26 +1,29 @@
-import {OAuthClientController} from "./oauth.js";
-import {AuthorizationCodeWithOriginal} from "../helpers/oidc/authorization-code.js";
-import {DBClient} from "./client.js";
-import {createHash, randomBytes} from "crypto";
-import {OAuthToken} from "./generated-models/index.js";
-import {DateTime} from "luxon";
-import {IDToken} from "../types/oidc.js";
-import {getProjectOIDCID} from "../helpers/constants/hostname.js";
-import {JWTSigner} from "../helpers/oidc/jwt.js";
-import {OAuthTokenWrapper} from "./tokens.js";
-import {calculateTokenExpiry} from "../helpers/constants/token-duration.js";
+import { OAuthClientController } from "./oauth.js";
+import { AuthorizationCodeWithOriginal } from "../helpers/oidc/authorization-code.js";
+import { DBClient } from "./client.js";
+import { createHash, randomBytes } from "crypto";
+import { OAuthToken } from "./generated-models/index.js";
+import { DateTime } from "luxon";
+import { IDToken } from "../types/oidc.js";
+import { getProjectOIDCID } from "../helpers/constants/hostname.js";
+import { JWTSigner } from "../helpers/oidc/jwt.js";
+import { OAuthTokenWrapper } from "./tokens.js";
+import { calculateTokenExpiry } from "../helpers/constants/token-duration.js";
 import GroupsController from "./groups.js";
+import { TransactionType } from "../types/prisma.js";
 
 export class TokenManager {
     userId: string
     clientController: OAuthClientController
-    private constructor(userId: string, clientController: OAuthClientController) {
+    tx: TransactionType
+    private constructor(userId: string, clientController: OAuthClientController, tx: TransactionType) {
         this.userId = userId
         this.clientController = clientController
+        this.tx = tx
     }
 
-    static fromOAuthClientController(clientController: OAuthClientController, userId: string) {
-        return new TokenManager(userId, clientController)
+    static fromOAuthClientController(clientController: OAuthClientController, userId: string, tx: TransactionType = DBClient.getClient()) {
+        return new TokenManager(userId, clientController, tx)
     }
 
     static generateCode() {
@@ -39,9 +42,8 @@ export class TokenManager {
             scopes: string[]
         }
     ) {
-        const dbClient = DBClient.getClient()
         const code = TokenManager.generateCode()
-        const tokenObject = await dbClient.oAuthToken.create({
+        const tokenObject = await this.tx.oAuthToken.create({
             data: {
                 type,
                 value: code,
@@ -66,8 +68,7 @@ export class TokenManager {
     async codeExchange(data: AuthorizationCodeWithOriginal) {
         const hashedCode = createHash("sha256").update(data.originalCode).digest("hex")
 
-        const dbClient = DBClient.getClient()
-        const existingCodeUsage = await dbClient.oAuthToken.findFirst({
+        const existingCodeUsage = await this.tx.oAuthToken.findFirst({
             where: {
                 OR: [
                     {
@@ -157,31 +158,29 @@ export class TokenManager {
     }
 
     async revokeAllAccess() {
-        return await DBClient.interruptibleTransaction(async tx => {
-            const query = [
-                {
-                    userId: {
-                        equals: this.userId,
-                    },
+        const query = [
+            {
+                userId: {
+                    equals: this.userId,
                 },
-                {
-                    clientId: {
-                        equals: this.clientController.getClient().clientId,
-                    },
+            },
+            {
+                clientId: {
+                    equals: this.clientController.getClient().clientId,
                 },
-            ]
+            },
+        ]
 
-            await tx.userOAuthGrant.deleteMany({
-                where: {
-                    AND: query,
-                }
-            })
+        await this.tx.userOAuthGrant.deleteMany({
+            where: {
+                AND: query,
+            }
+        })
 
-            await tx.oAuthToken.deleteMany({
-                where: {
-                    AND: query,
-                }
-            })
+        await this.tx.oAuthToken.deleteMany({
+            where: {
+                AND: query,
+            }
         })
     }
 }

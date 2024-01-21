@@ -1,7 +1,7 @@
-import {DateTime, Duration} from "luxon";
-import {getJWKAlg, getJWTPrivateKey, getJWTPublicKey} from "../constants/secretKeys.js";
+import { DateTime, Duration } from "luxon";
+import { getJWKAlg, getJWTPrivateKey, getJWTPublicKey } from "../constants/secretKeys.js";
 import * as jose from "jose"
-import {getProjectOIDCID} from "../constants/hostname.js";
+import { getProjectOIDCID } from "../constants/hostname.js";
 import type { IDTokenCustomClaims } from "../../types/oidc.js";
 
 export class JWTSigner {

@@ -1,17 +1,17 @@
-import express, {Response} from "express";
-import {OAuthClientController} from "../database/oauth.js";
-import {OIDCFlow} from "../helpers/oidc/oidc-flow.js";
-import {authMiddleware, setUserId} from "../helpers/auth.js";
-import {AuthenticatedRequest, BearerTokenRequest, OIDCFlowRequest} from "../types/express.js";
-import {OAuthAccessTokenResponse} from "../types/oidc.js";
-import {AuthorizationCode} from "../helpers/oidc/authorization-code.js";
-import {OAuthToken} from "../database/generated-models/index.js";
-import {DateTime} from "luxon";
-import {OAuthTokenWrapper} from "../database/tokens.js";
-import {UserController} from "../database/users.js";
-import {OIDCScopes} from "../helpers/oidc/scopes.js";
+import express, { Response } from "express";
+import { OAuthClientController } from "../database/oauth.js";
+import { OIDCFlow } from "../helpers/oidc/oidc-flow.js";
+import { authMiddleware, setUserId } from "../helpers/auth.js";
+import { AuthenticatedRequest, BearerTokenRequest, OIDCFlowRequest } from "../types/express.js";
+import { OAuthAccessTokenResponse, OIDCScopes } from "../types/oidc.js";
+import { AuthorizationCode } from "../helpers/oidc/authorization-code.js";
+import { OAuthToken } from "../database/generated-models/index.js";
+import { DateTime } from "luxon";
+import { OAuthTokenWrapper } from "../database/tokens.js";
+import { UserController } from "../database/users.js";
 import { valueFromQueryOrBody } from "../helpers/express.js";
 import { TokenManager } from "../database/token-manager.js";
+import { DBClient } from "../database/client.js";
 
 const oidcRouter = express.Router()
 
@@ -84,7 +84,7 @@ oidcRouter.get(
     async (req: AuthenticatedRequest & OIDCFlowRequest, res) => {
         const flow = req.oidcFlow!
 
-        const {nonGrantedScopes, grantedScopes} = await flow.checkScopeGrantStatus(req.user!.id)
+        const { nonGrantedScopes, grantedScopes } = await flow.checkScopeGrantStatus(req.user!.id)
         if (nonGrantedScopes.length === 0) {
             flow.end(req)
             res.redirect(await flow.successExitURL(req.user!.id))
@@ -121,7 +121,7 @@ oidcRouter.get(
             return
         }
 
-        const {nonGrantedScopes} = await flow.checkScopeGrantStatus(req.user!.id)
+        const { nonGrantedScopes } = await flow.checkScopeGrantStatus(req.user!.id)
         await flow.grantScopes(nonGrantedScopes, req.user!.id)
 
         flow.end(req)
@@ -131,7 +131,7 @@ oidcRouter.get(
 
 oidcRouter.post(
     "/token",
-    async (req, res)  => {
+    async (req, res) => {
         const { grant_type } = req.body
 
         if (grant_type === "refresh_token") {
@@ -200,35 +200,37 @@ oidcRouter.post(
 
             if (!(await oauthClient.checkClientSecretFromHeaders(req, res))) return
 
-            const tm = oauthClient.getTokenManager(parsedCode.data.userId)
-            let accessToken: string
-            let refreshToken: string
-            let accessTokenObject: OAuthToken
-            try {
-                const response = await tm.codeExchange({
-                    ...parsedCode.data,
-                    originalCode: code,
-                })
-                accessToken = response.accessToken.code
-                accessTokenObject = response.accessToken.tokenObject
-                refreshToken = response.refreshToken.code
-            } catch (e) {
-                console.error(e)
-                res.json({
-                    error: "invalid_grant",
-                } as OAuthAccessTokenResponse)
-                return
-            }
+            await DBClient.interruptibleTransaction(async tx => {
+                const tm = oauthClient.getTokenManager(parsedCode.data.userId)
+                let accessToken: string
+                let refreshToken: string
+                let accessTokenObject: OAuthToken
+                try {
+                    const response = await tm.codeExchange({
+                        ...parsedCode.data,
+                        originalCode: code,
+                    })
+                    accessToken = response.accessToken.code
+                    accessTokenObject = response.accessToken.tokenObject
+                    refreshToken = response.refreshToken.code
+                } catch (e) {
+                    console.error(e)
+                    res.json({
+                        error: "invalid_grant",
+                    } as OAuthAccessTokenResponse)
+                    return tx.rollback()
+                }
 
-            const tokenExpiry = DateTime.fromJSDate(accessTokenObject.expires)
-            const idToken = await tm.generateIdToken(tokenExpiry, parsedCode.data.nonce)
-            res.json({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-                expires_in: Math.round(tokenExpiry.diffNow().as("seconds")),
-                token_type: "Bearer",
-                id_token: idToken,
-            } as OAuthAccessTokenResponse)
+                const tokenExpiry = DateTime.fromJSDate(accessTokenObject.expires)
+                const idToken = await tm.generateIdToken(tokenExpiry, parsedCode.data.nonce)
+                res.json({
+                    access_token: accessToken,
+                    refresh_token: refreshToken,
+                    expires_in: Math.round(tokenExpiry.diffNow().as("seconds")),
+                    token_type: "Bearer",
+                    id_token: idToken,
+                } as OAuthAccessTokenResponse)
+            })
         } else {
             res.json({
                 error: "unsupported_grant_type",

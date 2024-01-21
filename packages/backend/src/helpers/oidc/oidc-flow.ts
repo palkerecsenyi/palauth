@@ -1,12 +1,13 @@
-import {NextFunction, Request, Response} from "express";
-import {OIDCFlowRequest} from "../../types/express.js";
-import {OAuthAuthorizationError, OIDCPromptType, OIDCResponseType} from "../../types/oidc.js";
-import {DBClient} from "../../database/client.js";
-import {URLSearchParams} from "url";
-import {AuthorizationCode} from "./authorization-code.js";
+import { NextFunction, Request, Response } from "express";
+import { OIDCFlowRequest } from "../../types/express.js";
+import { OAuthAuthorizationError, OIDCPromptType, OIDCResponseType, OIDCResponseTypes, OIDCScopes } from "../../types/oidc.js";
+import { DBClient } from "../../database/client.js";
+import { URLSearchParams } from "url";
+import { AuthorizationCode } from "./authorization-code.js";
 import { TransactionType } from "../../types/prisma.js";
 import { OAuthClientController } from "../../database/oauth.js";
-import { OIDCScopes } from "./scopes.js";
+import { TokenManager } from "../../database/token-manager.js";
+import { calculateTokenExpiry } from "../constants/token-duration.js";
 
 export interface OIDCFlowData {
     client_id: string
@@ -42,8 +43,8 @@ export class OIDCFlow {
         if (typeof response_type !== "string") {
             throw new Error("response_type is not provided")
         }
-        if (!["code"].includes(response_type)) {
-            throw new Error("response_type must be 'code'")
+        if (!OIDCResponseTypes.supportedResponseTypes.includes(response_type)) {
+            throw new Error("response_type must be 'code' or 'id_token'")
         }
         if (typeof redirect_uri !== "string") {
             throw new Error("redirect_uri is not provided")
@@ -131,6 +132,10 @@ export class OIDCFlow {
         return this.scopes.includes("openid")
     }
 
+    get isImplicit() {
+        return this.flowData.response_type === "id_token"
+    }
+
     /**
      * Returns a subset of the requested scopes that have not yet been granted by the user, as well as the scopes
      * that have been granted.
@@ -171,21 +176,37 @@ export class OIDCFlow {
         return this.flowData.redirect_uri + "?" + q.toString()
     }
 
-    async successExitURL(userId: string) {
-        const authCode = new AuthorizationCode({
-            userId,
-            clientId: this.flowData.client_id,
-            scope: this.flowData.scope,
-            redirectURI: this.flowData.redirect_uri,
-            nonce: this.flowData.nonce,
-        })
+    async successExitURL(userId: string, tx: TransactionType = DBClient.getClient()) {
+        const url = this.flowData.redirect_uri
         const q = new URLSearchParams()
-        q.append("code", await authCode.sign())
         const state = this.flowData.state
         if (state) {
             q.append("state", state)
         }
-        return this.flowData.redirect_uri + "?" + q.toString()
+
+        if (this.isImplicit) {
+            const clientController = await this.oauthClientController(tx)
+            if (!clientController) throw new Error("failed to init OAuth Client Controller")
+            const tokenManager = TokenManager.fromOAuthClientController(
+                clientController, 
+                userId, 
+                tx
+            )
+            const idToken = await tokenManager.generateIdToken(calculateTokenExpiry("Access"), this.flowData.nonce)
+
+            q.append("id_token", idToken)
+        } else {
+            const authCode = new AuthorizationCode({
+                userId,
+                clientId: this.flowData.client_id,
+                scope: this.flowData.scope,
+                redirectURI: this.flowData.redirect_uri,
+                nonce: this.flowData.nonce,
+            })
+            q.append("code", await authCode.sign())
+        }
+
+        return url + "?" + q.toString()
     }
 
     toJSON() {

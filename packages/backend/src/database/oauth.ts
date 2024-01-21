@@ -13,10 +13,10 @@ export type OAuthControllerClient = Prisma.OAuthClientGetPayload<{
 
 export class OAuthClientController {
     private readonly oauthClient: OAuthControllerClient
-    private dbClient: TransactionType
+    private tx: TransactionType
     private constructor(client: OAuthControllerClient, dbClient: TransactionType) {
         this.oauthClient = client
-        this.dbClient = dbClient
+        this.tx = dbClient
     }
 
     static async getByClientId(clientId: string, dbClient: TransactionType = DBClient.getClient()) {
@@ -132,7 +132,7 @@ export class OAuthClientController {
     }
 
     getTokenManager(userId: string) {
-        return TokenManager.fromOAuthClientController(this, userId)
+        return TokenManager.fromOAuthClientController(this, userId, this.tx)
     }
 
     private static async generateClientSecret() {
@@ -162,7 +162,7 @@ export class OAuthClientController {
     }
 
     async delete() {
-        await this.dbClient.oAuthClient.delete({
+        await this.tx.oAuthClient.delete({
             where: {
                 clientId: this.oauthClient.clientId,
             }
@@ -170,7 +170,7 @@ export class OAuthClientController {
     }
 
     async update(data: Pick<OAuthClient, "usageDescription">) {
-        await this.dbClient.oAuthClient.update({
+        await this.tx.oAuthClient.update({
             where: {
                 clientId: this.oauthClient.clientId,
             },
@@ -181,7 +181,7 @@ export class OAuthClientController {
     }
 
     addRedirectURI(uri: string) {
-        return this.dbClient.oAuthClientRedirectURI.create({
+        return this.tx.oAuthClientRedirectURI.create({
             data: {
                 clientId: this.oauthClient.clientId,
                 uri,
@@ -190,7 +190,7 @@ export class OAuthClientController {
     }
 
     async deleteRedirectURI(id: string) {
-        await this.dbClient.oAuthClientRedirectURI.delete({
+        await this.tx.oAuthClientRedirectURI.delete({
             where: {
                 id,
             }

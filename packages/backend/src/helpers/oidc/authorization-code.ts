@@ -8,6 +8,7 @@ type AuthorizationCodeData = {
     scope: string
     redirectURI: string
     nonce?: string
+    "https://auth.palk.me/isAuthCode": true,
 }
 export type AuthorizationCodeWithOriginal = AuthorizationCodeData & {
     originalCode: string
@@ -16,8 +17,11 @@ export type AuthorizationCodeWithOriginal = AuthorizationCodeData & {
 export class AuthorizationCode {
     data: AuthorizationCodeData
 
-    constructor(data: AuthorizationCodeData) {
-        this.data = data
+    constructor(data: Omit<AuthorizationCodeData, "https://auth.palk.me/isAuthCode">) {
+        this.data = {
+            ...data,
+            "https://auth.palk.me/isAuthCode": true,
+        }
     }
 
     sign() {
@@ -30,6 +34,9 @@ export class AuthorizationCode {
     static async parse(from: string) {
         const verifiedToken = await JWTSigner.parse<AuthorizationCodeData>(from, false)
         if (!verifiedToken) return undefined
+        if (verifiedToken["https://auth.palk.me/isAuthCode"] !== true) {
+            return undefined
+        }
         return new AuthorizationCode(verifiedToken)
     }
 }

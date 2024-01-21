@@ -30,6 +30,7 @@ import DevModeSettings from "./helpers/constants/devMode.js";
 import iamRouter from "./routes/iam.js";
 import { initSessionManager } from "./helpers/session.js";
 import groupsRouter from "./routes/groups.js";
+import { DBClient } from "./database/client.js";
 
 const app = express()
 app.set("view engine", "pug")
@@ -37,6 +38,7 @@ app.set("views", "./templates")
 app.use("/static", express.static("static"))
 
 await initSessionManager(app)
+await DBClient.init()
 
 app.use(bodyParser.urlencoded({
     extended: false,

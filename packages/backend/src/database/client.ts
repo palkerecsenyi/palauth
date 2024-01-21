@@ -28,6 +28,9 @@ export class DBClient {
         await this.client.$disconnect()
         this.disconnected = true
     }
+    static async init() {
+        return this.client.$connect()
+    }
 
     static async interruptibleTransaction<T>(callback: (tx: InterruptibleTransaction) => Promise<T>) {
         const client = DBClient.getClient()

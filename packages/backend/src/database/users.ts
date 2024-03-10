@@ -128,6 +128,7 @@ export class UserController {
         const obj: OIDCUserInfoResponse = {
             sub: this.user.id,
             name: this.user.displayName,
+            nickname: this.user.displayName,
         }
         if (includeEmail) {
             obj.email = this.user.email

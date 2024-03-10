@@ -50,6 +50,7 @@ export class DBClient {
                 },
                 {
                     isolationLevel: "Serializable",
+                    timeout: 10000,
                 },
             )
         } catch (e) {

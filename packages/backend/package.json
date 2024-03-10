@@ -50,8 +50,8 @@
 		"prod": "node build/index.js",
 		"start": "tsx src/index.ts",
 		"build": "tsc && cp -r src/database/generated-models build/database",
-		"db:generate": "yarn pnpify prisma generate",
-		"db:migrate:dev": "yarn pnpify prisma migrate dev",
-		"db:deploy": "yarn pnpify prisma migrate deploy"
+		"db:generate": "prisma generate",
+		"db:migrate:dev": "prisma migrate dev",
+		"db:deploy": "prisma migrate deploy"
 	}
 }

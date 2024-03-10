@@ -23,6 +23,7 @@ jobs:
         with:
           image: ${{ env.IMAGE_NAME }}
           tags: latest ${{ github.sha }}
+          platforms: linux/amd64, linux/arm64/v8
           containerfiles: |
             ./Containerfile
 

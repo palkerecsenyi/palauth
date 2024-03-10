@@ -9,7 +9,7 @@ COPY packages/webauthn-frontend/package.json ./packages/webauthn-frontend/packag
 RUN bun install
 
 COPY . .
-RUN bun run --cwd packages/webauthn-frontend build-prod
+RUN npm run -w @paltiverse/palauth-webauthn-frontend build-prod
 RUN bun run --cwd packages/backend db:generate
 RUN bun run --cwd packages/backend build
 

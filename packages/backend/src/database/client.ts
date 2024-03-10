@@ -49,7 +49,7 @@ export class DBClient {
                     })
                 },
                 {
-                    isolationLevel: "Serializable",
+                    isolationLevel: "RepeatableRead",
                     timeout: 10000,
                 },
             )

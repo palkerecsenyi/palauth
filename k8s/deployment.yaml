@@ -34,10 +34,14 @@ spec:
             requests:
               cpu: 300m
           readinessProbe:
+            timeoutSeconds: 3
+            failureThreshold: 5
             httpGet:
               path: /healthz
               port: 8080
           livenessProbe:
+            timeoutSeconds: 3
+            failureThreshold: 5
             httpGet:
               path: /healthz
               port: 8080

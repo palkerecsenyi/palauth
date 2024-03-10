@@ -25,6 +25,7 @@ spec:
       containers:
         - name: palauth
           image: ghcr.io/palkerecsenyi/palauth:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           resources:

@@ -1,7 +1,7 @@
 {
 	"ignore": [],
 	"watch": ["src"],
-	"exec": "yarn run start",
+	"exec": "bun run start",
 	"ext": "ts",
 	"delay": 2000
 }

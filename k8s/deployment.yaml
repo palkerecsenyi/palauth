@@ -33,6 +33,14 @@ spec:
               cpu: 700m
             requests:
               cpu: 300m
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
           env:
             - name: PORT
               value: "8080"

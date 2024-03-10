@@ -54,6 +54,10 @@ app.use((req, res, next) => {
     next()
 })
 
+app.get("/healthz", (_, res) => {
+    res.status(200).send("healthy :)")
+})
+
 app.use("/.well-known", wellKnownRouter)
 app.use("/oidc", oidcRouter)
 app.use("/dev", devRouter)

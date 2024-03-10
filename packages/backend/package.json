@@ -47,7 +47,7 @@
 	},
 	"scripts": {
 		"dev": "nodemon",
-		"prod": "node build/index.js",
+		"prod": "bun build/index.js",
 		"start": "tsx src/index.ts",
 		"build": "tsc && cp -r src/database/generated-models build/database",
 		"db:generate": "prisma generate",

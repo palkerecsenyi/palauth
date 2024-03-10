@@ -1,21 +1,25 @@
-import express, { Response } from "express";
-import { OAuthClientController } from "../database/oauth.js";
-import { OIDCFlow } from "../helpers/oidc/oidc-flow.js";
-import { authMiddleware, setUserId } from "../helpers/auth.js";
-import { AuthenticatedRequest, BearerTokenRequest, OIDCFlowRequest } from "../types/express.js";
-import { OAuthAccessTokenResponse, OIDCScopes } from "../types/oidc.js";
-import { AuthorizationCode } from "../helpers/oidc/authorization-code.js";
-import { OAuthToken } from "../database/generated-models/index.js";
-import { DateTime } from "luxon";
-import { OAuthTokenWrapper } from "../database/tokens.js";
-import { UserController } from "../database/users.js";
-import { valueFromQueryOrBody } from "../helpers/express.js";
-import { TokenManager } from "../database/token-manager.js";
-import { DBClient } from "../database/client.js";
+import express, { Response } from "express"
+import { OAuthClientController } from "../database/oauth.js"
+import { OIDCFlow } from "../helpers/oidc/oidc-flow.js"
+import { authMiddleware, setUserId } from "../helpers/auth.js"
+import {
+    AuthenticatedRequest,
+    BearerTokenRequest,
+    OIDCFlowRequest,
+} from "../types/express.js"
+import { OAuthAccessTokenResponse, OIDCScopes } from "../types/oidc.js"
+import { AuthorizationCode } from "../helpers/oidc/authorization-code.js"
+import { OAuthToken } from "../database/generated-models/index.js"
+import { DateTime } from "luxon"
+import { OAuthTokenWrapper } from "../database/tokens.js"
+import { UserController } from "../database/users.js"
+import { valueFromQueryOrBody } from "../helpers/express.js"
+import { TokenManager } from "../database/token-manager.js"
+import { DBClient } from "../database/client.js"
 
 const oidcRouter = express.Router()
 
-const oauthErrorPage = (res: Response, error: any) => {
+const oauthErrorPage = (res: Response, error: unknown) => {
     let errorMessage = "Unknown error; see server logs"
     if (error instanceof Error) {
         errorMessage = error.message
@@ -48,11 +52,17 @@ oidcRouter.get(
         }
 
         if (!oauthClient.checkRedirectURI(flow.flowData.redirect_uri)) {
-            return oauthErrorPage(res, "redirect_uri is not acceptable for the client")
+            return oauthErrorPage(
+                res,
+                "redirect_uri is not acceptable for the client",
+            )
         }
 
         if (!flow.isOpenID) {
-            return oauthErrorPage(res, "For now, only OIDC requests are supported. Please add the openid scope.")
+            return oauthErrorPage(
+                res,
+                "For now, only OIDC requests are supported. Please add the openid scope.",
+            )
         }
 
         flow.save(req)
@@ -60,31 +70,33 @@ oidcRouter.get(
         const u = req.user
         if (!u || flow.flowData.prompt === "login") {
             if (flow.flowData.prompt === "none") {
-                return oauthErrorPage(res, "prompt='none' but there is no authenticated user")
+                return oauthErrorPage(
+                    res,
+                    "prompt='none' but there is no authenticated user",
+                )
             }
 
             setUserId(req, undefined)
-            res.redirect(
-                "/auth/signin?destination=/oidc/auth/grant-scopes"
-            )
+            res.redirect("/auth/signin?destination=/oidc/auth/grant-scopes")
             return
         }
 
         res.redirect("/oidc/auth/grant-scopes")
-    }
+    },
 )
 
 oidcRouter.get(
     "/auth/grant-scopes",
     authMiddleware({
         authRequirement: "require-authenticated",
-        redirectTo: "/auth/signin?destination=/oidc/auth/grant-scopes"
+        redirectTo: "/auth/signin?destination=/oidc/auth/grant-scopes",
     }),
     OIDCFlow.middleware(),
     async (req: AuthenticatedRequest & OIDCFlowRequest, res) => {
         const flow = req.oidcFlow!
 
-        const { nonGrantedScopes, grantedScopes } = await flow.checkScopeGrantStatus(req.user!.id)
+        const { nonGrantedScopes, grantedScopes } =
+            await flow.checkScopeGrantStatus(req.user!.id)
         if (nonGrantedScopes.length === 0) {
             flow.end(req)
             res.redirect(await flow.successExitURL(req.user!.id))
@@ -101,7 +113,7 @@ oidcRouter.get(
             scopesToGrant: nonGrantedScopes,
             grantedScopes,
         })
-    }
+    },
 )
 
 oidcRouter.get(
@@ -117,132 +129,153 @@ oidcRouter.get(
         const scopesGranted = req.query.grant === "yes"
         if (!scopesGranted) {
             flow.end(req)
-            res.redirect(flow.errorExitURL("access_denied", "client did not grant the requested scope(s)"))
+            res.redirect(
+                flow.errorExitURL(
+                    "access_denied",
+                    "client did not grant the requested scope(s)",
+                ),
+            )
             return
         }
 
-        const { nonGrantedScopes } = await flow.checkScopeGrantStatus(req.user!.id)
+        const { nonGrantedScopes } = await flow.checkScopeGrantStatus(
+            req.user!.id,
+        )
         await flow.grantScopes(nonGrantedScopes, req.user!.id)
 
         flow.end(req)
         res.redirect(await flow.successExitURL(req.user!.id))
-    }
+    },
 )
 
-oidcRouter.post(
-    "/token",
-    async (req, res) => {
-        const { grant_type } = req.body
+oidcRouter.post("/token", async (req, res) => {
+    const { grant_type } = req.body
 
-        if (grant_type === "refresh_token") {
-            const { client_id } = req.body
-            const oauthClient = await OAuthClientController.getByClientId(client_id)
-            if (!oauthClient) {
-                res.json({
-                    error: "invalid_request",
-                    error_description: "Could not find client specified by client_id"
-                } as OAuthAccessTokenResponse)
-                return
-            }
+    if (grant_type === "refresh_token") {
+        const { client_id } = req.body
+        const oauthClient = await OAuthClientController.getByClientId(client_id)
+        if (!oauthClient) {
+            res.json({
+                error: "invalid_request",
+                error_description:
+                    "Could not find client specified by client_id",
+            } as OAuthAccessTokenResponse)
+            return
+        }
 
-            if (!(await oauthClient.checkClientSecretFromHeaders(req, res))) {
-                return
-            }
+        if (!(await oauthClient.checkClientSecretFromHeaders(req, res))) {
+            return
+        }
 
-            const { refresh_token } = req.body
-            const refreshTokenWrapper = await OAuthTokenWrapper.fromTokenValue(refresh_token)
-            if (!refreshTokenWrapper
-                || refreshTokenWrapper.data.type !== "Refresh"
-                || !refreshTokenWrapper.isRefreshToken
-                || !refreshTokenWrapper.isValid
-                || !refreshTokenWrapper.belongsToClient(client_id)
-            ) {
+        const { refresh_token } = req.body
+        const refreshTokenWrapper =
+            await OAuthTokenWrapper.fromTokenValue(refresh_token)
+        if (
+            !refreshTokenWrapper ||
+            refreshTokenWrapper.data.type !== "Refresh" ||
+            !refreshTokenWrapper.isRefreshToken ||
+            !refreshTokenWrapper.isValid ||
+            !refreshTokenWrapper.belongsToClient(client_id)
+        ) {
+            res.json({
+                error: "invalid_grant",
+            } as OAuthAccessTokenResponse)
+            return
+        }
+
+        const tm = oauthClient.getTokenManager(refreshTokenWrapper.userId)
+        const newAccessToken = await tm.refresh(refreshTokenWrapper)
+
+        res.json({
+            access_token: newAccessToken.code,
+            token_type: "Bearer",
+            expires_in: Math.round(
+                DateTime.fromJSDate(newAccessToken.tokenObject.expires)
+                    .diffNow()
+                    .as("seconds"),
+            ),
+        } as OAuthAccessTokenResponse)
+    } else if (grant_type === "authorization_code") {
+        const { code, redirect_uri } = req.body
+
+        const parsedCode = await AuthorizationCode.parse(code)
+        if (!parsedCode) {
+            res.json({
+                error: "invalid_grant",
+            } as OAuthAccessTokenResponse)
+            return
+        }
+
+        if (parsedCode.data.redirectURI !== redirect_uri) {
+            res.json({
+                error: "invalid_grant",
+            } as OAuthAccessTokenResponse)
+            return
+        }
+
+        const oauthClient = await OAuthClientController.getByClientId(
+            parsedCode.data.clientId,
+        )
+        if (!oauthClient) {
+            res.json({
+                error: "invalid_request",
+                error_description: "Could not find client specified in code",
+            } as OAuthAccessTokenResponse)
+            return
+        }
+
+        if (!(await oauthClient.checkClientSecretFromHeaders(req, res))) return
+
+        await DBClient.interruptibleTransaction(async (tx) => {
+            const tm = oauthClient.getTokenManager(parsedCode.data.userId)
+            let accessToken: string
+            let refreshToken: string
+            let accessTokenObject: OAuthToken
+            try {
+                const response = await tm.codeExchange({
+                    ...parsedCode.data,
+                    originalCode: code,
+                })
+                accessToken = response.accessToken.code
+                accessTokenObject = response.accessToken.tokenObject
+                refreshToken = response.refreshToken.code
+            } catch (e) {
+                console.error(e)
                 res.json({
                     error: "invalid_grant",
                 } as OAuthAccessTokenResponse)
-                return
+                return tx.rollback()
             }
 
-            const tm = oauthClient.getTokenManager(refreshTokenWrapper.userId)
-            const newAccessToken = await tm.refresh(refreshTokenWrapper)
-
+            const tokenExpiry = DateTime.fromJSDate(accessTokenObject.expires)
+            const idToken = await tm.generateIdToken(
+                tokenExpiry,
+                parsedCode.data.nonce,
+            )
             res.json({
-                access_token: newAccessToken.code,
+                access_token: accessToken,
+                refresh_token: refreshToken,
+                expires_in: Math.round(tokenExpiry.diffNow().as("seconds")),
                 token_type: "Bearer",
-                expires_in: Math.round(DateTime.fromJSDate(newAccessToken.tokenObject.expires).diffNow().as("seconds")),
+                id_token: idToken,
             } as OAuthAccessTokenResponse)
-        } else if (grant_type === "authorization_code") {
-            const { code, redirect_uri } = req.body
-
-            const parsedCode = await AuthorizationCode.parse(code)
-            if (!parsedCode) {
-                res.json({
-                    error: "invalid_grant"
-                } as OAuthAccessTokenResponse)
-                return
-            }
-
-            if (parsedCode.data.redirectURI !== redirect_uri) {
-                res.json({
-                    error: "invalid_grant"
-                } as OAuthAccessTokenResponse)
-                return
-            }
-
-            const oauthClient = await OAuthClientController.getByClientId(parsedCode.data.clientId)
-            if (!oauthClient) {
-                res.json({
-                    error: "invalid_request",
-                    error_description: "Could not find client specified in code"
-                } as OAuthAccessTokenResponse)
-                return
-            }
-
-            if (!(await oauthClient.checkClientSecretFromHeaders(req, res))) return
-
-            await DBClient.interruptibleTransaction(async tx => {
-                const tm = oauthClient.getTokenManager(parsedCode.data.userId)
-                let accessToken: string
-                let refreshToken: string
-                let accessTokenObject: OAuthToken
-                try {
-                    const response = await tm.codeExchange({
-                        ...parsedCode.data,
-                        originalCode: code,
-                    })
-                    accessToken = response.accessToken.code
-                    accessTokenObject = response.accessToken.tokenObject
-                    refreshToken = response.refreshToken.code
-                } catch (e) {
-                    console.error(e)
-                    res.json({
-                        error: "invalid_grant",
-                    } as OAuthAccessTokenResponse)
-                    return tx.rollback()
-                }
-
-                const tokenExpiry = DateTime.fromJSDate(accessTokenObject.expires)
-                const idToken = await tm.generateIdToken(tokenExpiry, parsedCode.data.nonce)
-                res.json({
-                    access_token: accessToken,
-                    refresh_token: refreshToken,
-                    expires_in: Math.round(tokenExpiry.diffNow().as("seconds")),
-                    token_type: "Bearer",
-                    id_token: idToken,
-                } as OAuthAccessTokenResponse)
-            })
-        } else {
-            res.json({
-                error: "unsupported_grant_type",
-                error_description: "Only 'authorization_code' and 'refresh_token' are supported",
-            } as OAuthAccessTokenResponse)
-        }
+        })
+    } else {
+        res.json({
+            error: "unsupported_grant_type",
+            error_description:
+                "Only 'authorization_code' and 'refresh_token' are supported",
+        } as OAuthAccessTokenResponse)
     }
-)
+})
 
 const userInfoHandler = async (req: BearerTokenRequest, res: Response) => {
     const user = await req.tokenWrapper!.mustGetUser()
-    res.json(UserController.for(user).toUserInfo(req.tokenWrapper!.hasScope(OIDCScopes.Email)))
+    res.json(
+        UserController.for(user).toUserInfo(
+            req.tokenWrapper!.hasScope(OIDCScopes.Email),
+        ),
+    )
 }
 const openIdScopeMiddleware = OAuthTokenWrapper.middleware([OIDCScopes.Profile])
 oidcRouter
@@ -282,12 +315,14 @@ const endSessionHandler = async (req: AuthenticatedRequest, res: Response) => {
         return oauthErrorPage(res, "id_token_hint does not refer to client_id")
     }
 
-    const clientController = await OAuthClientController.getByClientId(parsedIdToken.aud)
+    const clientController = await OAuthClientController.getByClientId(
+        parsedIdToken.aud,
+    )
     if (!clientController) {
         return oauthErrorPage(res, "client ID not found")
     }
 
-    if (isSignedIn && (req.user!.id !== parsedIdToken.sub) || !logoutUri) {
+    if ((isSignedIn && req.user!.id !== parsedIdToken.sub) || !logoutUri) {
         res.render("oauth/signout.pug", {
             user: req.user,
             appName: clientController.getClient().name,
@@ -296,12 +331,15 @@ const endSessionHandler = async (req: AuthenticatedRequest, res: Response) => {
     }
 
     if (!clientController.checkPostLogoutURI(logoutUri)) {
-        return oauthErrorPage(res, "post_logout_redirect_uri not registered for client")
+        return oauthErrorPage(
+            res,
+            "post_logout_redirect_uri not registered for client",
+        )
     }
 
     const state = valueFromQueryOrBody(req, "state")
     if (state) {
-        logoutUri += "?state=" + state
+        logoutUri += `?state=${state}`
     }
 
     setUserId(req, undefined)

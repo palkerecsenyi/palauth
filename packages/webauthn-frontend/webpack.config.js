@@ -1,5 +1,5 @@
 import * as path from "path"
-import {fileURLToPath} from "url";
+import { fileURLToPath } from "url"
 
 export default {
     entry: "./src/index.ts",
@@ -14,13 +14,17 @@ export default {
     resolve: {
         extensions: [".ts", ".tsx"],
         alias: {
-            "react": "preact/compat",
+            react: "preact/compat",
             "react-dom": "preact/compat",
-            "react/jsx-runtime": "preact/jsx-runtime"
-        }
+            "react/jsx-runtime": "preact/jsx-runtime",
+        },
     },
     output: {
         filename: "webauthn.js",
-        path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../backend", "static/js"),
-    }
+        path: path.resolve(
+            path.dirname(fileURLToPath(import.meta.url)),
+            "../backend",
+            "static/js",
+        ),
+    },
 }

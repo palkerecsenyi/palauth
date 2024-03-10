@@ -1,22 +1,22 @@
-import {$Enums, Prisma} from "../../database/generated-models/index.js";
-import {DBClient} from "../../database/client.js";
-import {DateTime} from "luxon";
-import {EmailMessage} from "./message.js";
-import {TransactionType} from "../../types/prisma.js";
-import {randomInt} from "crypto";
-import {ValidatedRequest} from "../../types/express.js";
+import { $Enums, Prisma } from "../../database/generated-models/index.js"
+import { DBClient } from "../../database/client.js"
+import { DateTime } from "luxon"
+import { EmailMessage } from "./message.js"
+import { TransactionType } from "../../types/prisma.js"
+import { randomInt } from "crypto"
+import { ValidatedRequest } from "../../types/express.js"
 
 class VerificationEmailMessage extends EmailMessage {
     constructor(code: string, to: string) {
         const subject = "Please verify your PalAuth account"
         const body = `Enter this code to verify your account: ${code}`
 
-        super(to, subject, body);
+        super(to, subject, body)
     }
 }
 
 type VerificationMessageWithPayload = Prisma.VerificationMessageGetPayload<{
-    include: {user: true}
+    include: { user: true }
 }>
 
 export default class VerificationMessageController {
@@ -46,16 +46,16 @@ export default class VerificationMessageController {
     static async create(
         userId: string,
         purpose: $Enums.VerificationMessagePurpose,
-        tx: TransactionType = DBClient.getClient()
+        tx: TransactionType = DBClient.getClient(),
     ) {
-        const code = this.generateCode()
+        const code = VerificationMessageController.generateCode()
 
         // Delete all existing verifications first
         await tx.verificationMessage.deleteMany({
             where: {
                 userId,
                 purpose,
-            }
+            },
         })
 
         const newInstance = await tx.verificationMessage.create({
@@ -67,7 +67,7 @@ export default class VerificationMessageController {
             },
             include: {
                 user: true,
-            }
+            },
         })
 
         return new VerificationMessageController(newInstance, tx)
@@ -87,7 +87,7 @@ export default class VerificationMessageController {
     static async fromRequest(
         req: ValidatedRequest,
         purpose: $Enums.VerificationMessagePurpose,
-        tx: TransactionType = DBClient.getClient()
+        tx: TransactionType = DBClient.getClient(),
     ) {
         const { code, email } = req.validatedData!
         const verification = await tx.verificationMessage.findFirst({
@@ -95,40 +95,46 @@ export default class VerificationMessageController {
                 code,
                 user: {
                     email,
-                }
+                },
             },
             include: {
                 user: true,
-            }
+            },
         })
-        
-        if (!VerificationMessageController.validateVerificationMessage(
-            verification,
-            purpose,
-        )) return undefined
+
+        if (
+            !VerificationMessageController.validateVerificationMessage(
+                verification,
+                purpose,
+            )
+        )
+            return undefined
         return new VerificationMessageController(verification, tx)
     }
 
     static async fromEmailAddress(
         emailAddress: string,
         purpose: $Enums.VerificationMessagePurpose,
-        tx: TransactionType = DBClient.getClient()
+        tx: TransactionType = DBClient.getClient(),
     ) {
         const verification = await tx.verificationMessage.findFirst({
             where: {
                 user: {
                     email: emailAddress,
-                }
+                },
             },
             include: {
                 user: true,
-            }
+            },
         })
 
-        if (!VerificationMessageController.validateVerificationMessage(
-            verification,
-            purpose,
-        )) return undefined
+        if (
+            !VerificationMessageController.validateVerificationMessage(
+                verification,
+                purpose,
+            )
+        )
+            return undefined
         return new VerificationMessageController(verification, tx)
     }
 
@@ -137,7 +143,10 @@ export default class VerificationMessageController {
     }
 
     async send() {
-        const msg = new VerificationEmailMessage(this.code, this.data.user.email)
+        const msg = new VerificationEmailMessage(
+            this.code,
+            this.data.user.email,
+        )
         await msg.send()
         await this.tx.verificationMessage.update({
             where: {
@@ -145,7 +154,7 @@ export default class VerificationMessageController {
             },
             data: {
                 sentAt: new Date(),
-            }
+            },
         })
     }
 
@@ -153,7 +162,7 @@ export default class VerificationMessageController {
         await this.tx.verificationMessage.delete({
             where: {
                 id: this.data.id,
-            }
+            },
         })
     }
 }

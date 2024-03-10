@@ -1,29 +1,40 @@
-import { DateTime, Duration } from "luxon";
-import { getJWKAlg, getJWTPrivateKey, getJWTPublicKey } from "../constants/secretKeys.js";
+import { DateTime, Duration } from "luxon"
+import {
+    getJWKAlg,
+    getJWTPrivateKey,
+    getJWTPublicKey,
+} from "../constants/secretKeys.js"
 import * as jose from "jose"
-import { getProjectOIDCID } from "../constants/hostname.js";
-import type { IDTokenCustomClaims } from "../../types/oidc.js";
+import { getProjectOIDCID } from "../constants/hostname.js"
+import type { IDTokenCustomClaims } from "../../types/oidc.js"
 
 export class JWTSigner {
-    static async sign(data: any, duration?: Duration) {
+    static async sign(data: object, duration?: Duration) {
         const privKey = await getJWTPrivateKey()
 
-        const jwt = new jose.SignJWT(data)
+        const jwt = new jose.SignJWT(data as jose.JWTPayload)
         if (duration) {
             jwt.setExpirationTime(DateTime.now().plus(duration).toUnixInteger())
         }
         jwt.setProtectedHeader({
-            alg: getJWKAlg()
+            alg: getJWKAlg(),
         })
         return jwt.sign(privKey)
     }
 
-    static async parse<ExpectedType extends jose.JWTPayload = jose.JWTPayload & IDTokenCustomClaims>(data: string, allowExpired = false) {
+    static async parse<
+        ExpectedType extends jose.JWTPayload = jose.JWTPayload &
+            IDTokenCustomClaims,
+    >(data: string, allowExpired = false) {
         try {
             const pubKey = await getJWTPublicKey()
-            const verifiedToken = await jose.jwtVerify<ExpectedType>(data, pubKey, {
-                issuer: getProjectOIDCID(),
-            })
+            const verifiedToken = await jose.jwtVerify<ExpectedType>(
+                data,
+                pubKey,
+                {
+                    issuer: getProjectOIDCID(),
+                },
+            )
 
             if (!allowExpired) {
                 const exp = verifiedToken.payload.exp

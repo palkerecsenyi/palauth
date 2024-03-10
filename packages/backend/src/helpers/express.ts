@@ -1,7 +1,7 @@
-import { Request } from "express";
+import { Request } from "express"
 
 export const valueFromQueryOrBody = (req: Request, key: string) => {
-    let val: any
+    let val: unknown
     if (req.method === "POST") {
         val = req.body[key]
     } else {
@@ -10,7 +10,7 @@ export const valueFromQueryOrBody = (req: Request, key: string) => {
 
     if (typeof val !== "string") {
         return undefined
-    } else {
-        return val
     }
+
+    return val
 }

@@ -17,20 +17,20 @@
  */
 
 import express from "express"
-import authRouter, {signOutRoute} from "./routes/auth.js";
-import bodyParser from "body-parser";
+import authRouter, { signOutRoute } from "./routes/auth.js"
+import bodyParser from "body-parser"
 import cookieParser from "cookie-parser"
-import {getCaptchaURL} from "./helpers/constants/secretKeys.js";
+import { getCaptchaURL } from "./helpers/constants/secretKeys.js"
 import flash from "connect-flash"
-import accountRouter from "./routes/account.js";
-import oidcRouter from "./routes/oidc.js";
-import wellKnownRouter from "./routes/well-known.js";
-import devRouter from "./routes/developer.js";
-import DevModeSettings from "./helpers/constants/devMode.js";
-import iamRouter from "./routes/iam.js";
-import { initSessionManager } from "./helpers/session.js";
-import groupsRouter from "./routes/groups.js";
-import { DBClient } from "./database/client.js";
+import accountRouter from "./routes/account.js"
+import oidcRouter from "./routes/oidc.js"
+import wellKnownRouter from "./routes/well-known.js"
+import devRouter from "./routes/developer.js"
+import DevModeSettings from "./helpers/constants/devMode.js"
+import iamRouter from "./routes/iam.js"
+import { initSessionManager } from "./helpers/session.js"
+import groupsRouter from "./routes/groups.js"
+import { DBClient } from "./database/client.js"
 
 const app = express()
 app.set("view engine", "pug")
@@ -40,9 +40,11 @@ app.use("/static", express.static("static"))
 await initSessionManager(app)
 await DBClient.init()
 
-app.use(bodyParser.urlencoded({
-    extended: false,
-}))
+app.use(
+    bodyParser.urlencoded({
+        extended: false,
+    }),
+)
 app.use(cookieParser())
 app.use(flash())
 app.use((req, res, next) => {
@@ -62,7 +64,7 @@ app.get("/favicon.ico", (_, res) => res.sendStatus(404))
 app.use("/iam", iamRouter)
 app.use("/", accountRouter)
 
-const envPort = process.env["PORT"]
+const envPort = process.env.PORT
 let port: number
 if (envPort) {
     port = parseInt(envPort)

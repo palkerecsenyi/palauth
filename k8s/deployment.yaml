@@ -22,11 +22,9 @@ spec:
       labels:
         app: palauth
     spec:
-      imagePullSecrets:
-        - name: paltiverse-docker
       containers:
         - name: palauth
-          image: gitea.palk.me/paltiverse/palauth:$CI_COMMIT_SHA
+          image: ghcr.io/palkerecsenyi/palauth:latest
           ports:
             - containerPort: 8080
           resources:

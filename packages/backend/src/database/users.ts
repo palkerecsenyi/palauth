@@ -1,21 +1,23 @@
-import {$Enums, OAuthClient, Prisma, User} from "./generated-models/index.js";
+import { $Enums, OAuthClient, Prisma, User } from "./generated-models/index.js"
 import argon2 from "argon2"
-import {DBClient} from "./client.js";
-import {TransactionType} from "../types/prisma.js";
-import {OIDCUserInfoResponse} from "../types/oidc.js";
-import TwoFactorController from "../helpers/2fa/2fa.js";
+import { DBClient } from "./client.js"
+import { TransactionType } from "../types/prisma.js"
+import { OIDCUserInfoResponse } from "../types/oidc.js"
+import TwoFactorController from "../helpers/2fa/2fa.js"
 
 export type UserControllerUser = Prisma.UserGetPayload<{
     include: {
-        oauthGrants: {include: {client: true}},
-        ownedClients: true,
-        secondFactors: true,
+        oauthGrants: { include: { client: true } }
+        ownedClients: true
+        secondFactors: true
     }
 }>
 export class UserController {
     static async createUser(
         {
-            displayName, email, password,
+            displayName,
+            email,
+            password,
         }: Pick<User, "displayName" | "email"> & {
             password: string
         },
@@ -25,9 +27,11 @@ export class UserController {
         const passwordHash = await UserController.hashPassword(password)
         const user = await tx.user.create({
             data: {
-                displayName, email, passwordHash,
+                displayName,
+                email,
+                passwordHash,
                 emailVerified: autoVerifyEmail,
-            }
+            },
         })
 
         return user.id
@@ -35,15 +39,24 @@ export class UserController {
 
     user: UserControllerUser
     transaction: TransactionType
-    private constructor(user: UserControllerUser, transaction: TransactionType) {
+    private constructor(
+        user: UserControllerUser,
+        transaction: TransactionType,
+    ) {
         this.user = user
         this.transaction = transaction
     }
-    static for(user: UserControllerUser, transaction: TransactionType = DBClient.getClient()) {
+    static for(
+        user: UserControllerUser,
+        transaction: TransactionType = DBClient.getClient(),
+    ) {
         return new UserController(user, transaction)
     }
 
-    static getById(userId: string, client: TransactionType = DBClient.getClient()) {
+    static getById(
+        userId: string,
+        client: TransactionType = DBClient.getClient(),
+    ) {
         return client.user.findFirst({
             where: {
                 id: userId,
@@ -56,11 +69,14 @@ export class UserController {
                 },
                 ownedClients: true,
                 secondFactors: true,
-            }
+            },
         })
     }
 
-    static getByEmail(email: string, client: TransactionType = DBClient.getClient()) {
+    static getByEmail(
+        email: string,
+        client: TransactionType = DBClient.getClient(),
+    ) {
         return client.user.findFirst({
             where: {
                 email,
@@ -69,11 +85,11 @@ export class UserController {
                 oauthGrants: {
                     include: {
                         client: true,
-                    }
+                    },
                 },
                 ownedClients: true,
                 secondFactors: true,
-            }
+            },
         })
     }
 
@@ -92,7 +108,7 @@ export class UserController {
             },
             data: {
                 emailVerified: true,
-            }
+            },
         })
     }
 
@@ -126,7 +142,9 @@ export class UserController {
             scopes: string[]
         }[] = []
         for (const grant of this.user.oauthGrants) {
-            const existingClient = clients.find(e => e.client.clientId === grant.clientId)
+            const existingClient = clients.find(
+                (e) => e.client.clientId === grant.clientId,
+            )
             if (existingClient) {
                 existingClient.scopes.push(grant.scope)
             } else {
@@ -157,6 +175,9 @@ export class UserController {
     }
     get hasPasskey() {
         const tfa = this.getTwoFactorController()
-        return tfa.registrationOfTypeExists("SecurityKey") && tfa.securityKey.hasPasskey
+        return (
+            tfa.registrationOfTypeExists("SecurityKey") &&
+            tfa.securityKey.hasPasskey
+        )
     }
 }

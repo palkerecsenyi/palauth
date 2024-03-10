@@ -1,6 +1,6 @@
 export default class DevModeSettings {
     private static allowed(variable: string) {
-        const variableTrue = process.env["PAL_DEV_" + variable] === "true"
+        const variableTrue = process.env[`PAL_DEV_${variable}`] === "true"
 
         if (!variableTrue) return false
         if (process.env.NODE_ENV !== "development") {
@@ -10,13 +10,13 @@ export default class DevModeSettings {
     }
 
     public static isCaptchaDisabled() {
-        return this.allowed("CAPTCHA_DISABLE")
+        return DevModeSettings.allowed("CAPTCHA_DISABLE")
     }
     public static isInsecurePasswordsAllowed() {
-        return this.allowed("ALLOW_INSECURE_PASSWORD")
+        return DevModeSettings.allowed("ALLOW_INSECURE_PASSWORD")
     }
     public static skipEmailVerification() {
-        return this.allowed("SKIP_EMAIL_VERIFICATION")
+        return DevModeSettings.allowed("SKIP_EMAIL_VERIFICATION")
     }
     public static isNodeDevMode() {
         return process.env.NODE_ENV === "development"

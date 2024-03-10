@@ -15,7 +15,8 @@ export interface IDToken {
 export type IDTokenCustomClaims = Pick<IDToken, "https://auth.palk.me/groups">
 
 export type OIDCPromptType = "login" | "none"
-export type OAuthAuthorizationError = "invalid_request"
+export type OAuthAuthorizationError =
+    | "invalid_request"
     | "unauthorized_client"
     | "access_denied"
     | "unsupported_request_type"
@@ -23,7 +24,8 @@ export type OAuthAuthorizationError = "invalid_request"
     | "server_error"
     | "temporarily_unavailable"
 
-export type OAuthAccessTokenError = "invalid_request"
+export type OAuthAccessTokenError =
+    | "invalid_request"
     | "invalid_client"
     | "invalid_grant"
     | "unauthorized_client"
@@ -43,7 +45,9 @@ export interface OAuthAccessTokenSuccessResponse {
     token_type: "Bearer"
 }
 
-export type OAuthAccessTokenResponse = OAuthAccessTokenErrorResponse | OAuthAccessTokenSuccessResponse
+export type OAuthAccessTokenResponse =
+    | OAuthAccessTokenErrorResponse
+    | OAuthAccessTokenSuccessResponse
 
 export interface OIDCUserInfoResponse {
     sub: string
@@ -72,20 +76,13 @@ export class OIDCScopes {
     static Profile = "profile"
     static Email = "email"
 
-    static supportedScopes = [
-        this.OpenID,
-        this.Profile,
-        this.Email,
-    ]
+    static supportedScopes = [this.OpenID, this.Profile, this.Email]
 }
 
 export class OIDCResponseTypes {
     static Code = "code"
     static IDToken = "id_token"
 
-    static supportedResponseTypes = [
-        this.Code,
-        this.IDToken,
-    ]
+    static supportedResponseTypes = [this.Code, this.IDToken]
 }
 export type OIDCResponseType = "code" | "id_token"

@@ -1,25 +1,31 @@
-import {OAuthClient, Prisma} from "./generated-models/index.js";
-import {DBClient} from "./client.js";
-import argon2 from "argon2";
-import {TokenManager} from "./token-manager.js";
-import {TransactionType} from "../types/prisma.js";
-import {Request, Response} from "express";
-import {OAuthAccessTokenResponse} from "../types/oidc.js";
-import { getProjectOIDCID } from "../helpers/constants/hostname.js";
+import { OAuthClient, Prisma } from "./generated-models/index.js"
+import { DBClient } from "./client.js"
+import argon2 from "argon2"
+import { TokenManager } from "./token-manager.js"
+import { TransactionType } from "../types/prisma.js"
+import { Request, Response } from "express"
+import { OAuthAccessTokenResponse } from "../types/oidc.js"
+import { getProjectOIDCID } from "../helpers/constants/hostname.js"
 
 export type OAuthControllerClient = Prisma.OAuthClientGetPayload<{
-    include: { redirectURIs: true, postLogoutURIs: true, admin: true, },
+    include: { redirectURIs: true; postLogoutURIs: true; admin: true }
 }>
 
 export class OAuthClientController {
     private readonly oauthClient: OAuthControllerClient
     private tx: TransactionType
-    private constructor(client: OAuthControllerClient, dbClient: TransactionType) {
+    private constructor(
+        client: OAuthControllerClient,
+        dbClient: TransactionType,
+    ) {
         this.oauthClient = client
         this.tx = dbClient
     }
 
-    static async getByClientId(clientId: string, dbClient: TransactionType = DBClient.getClient()) {
+    static async getByClientId(
+        clientId: string,
+        dbClient: TransactionType = DBClient.getClient(),
+    ) {
         try {
             const oauthClient = await dbClient.oAuthClient.findFirst({
                 where: {
@@ -29,7 +35,7 @@ export class OAuthClientController {
                     redirectURIs: true,
                     postLogoutURIs: true,
                     admin: true,
-                }
+                },
             })
             if (!oauthClient) return undefined
             return new OAuthClientController(oauthClient, dbClient)
@@ -38,20 +44,22 @@ export class OAuthClientController {
         }
     }
 
-    static async getAllPublicClients(dbClient: TransactionType = DBClient.getClient()) {
+    static async getAllPublicClients(
+        dbClient: TransactionType = DBClient.getClient(),
+    ) {
         const clients = await dbClient.oAuthClient.findMany({
             where: {
                 initiateURI: {
                     not: null,
-                }
+                },
             },
             include: {
                 redirectURIs: true,
                 postLogoutURIs: true,
                 admin: true,
-            }
+            },
         })
-        return clients.map(c => new OAuthClientController(c, dbClient))
+        return clients.map((c) => new OAuthClientController(c, dbClient))
     }
 
     getClient() {
@@ -68,11 +76,14 @@ export class OAuthClientController {
             const authHeader = req.headers.authorization
             if (authHeader?.startsWith("Basic ")) {
                 const base64Auth = authHeader.substring(6)
-                const decodedAuth = Buffer.from(base64Auth, "base64").toString("utf-8").split(":")
+                const decodedAuth = Buffer.from(base64Auth, "base64")
+                    .toString("utf-8")
+                    .split(":")
                 if (decodedAuth.length !== 2) {
                     res.json({
                         error: "invalid_request",
-                        error_description: "Did not understand Authorization header"
+                        error_description:
+                            "Did not understand Authorization header",
                     } as OAuthAccessTokenResponse)
                     return
                 }
@@ -84,7 +95,7 @@ export class OAuthClientController {
                 if (decodedSecret.length === 0) {
                     res.json({
                         error: "invalid_request",
-                        error_description: "Bearer token not long enough"
+                        error_description: "Bearer token not long enough",
                     } as OAuthAccessTokenResponse)
                     return
                 }
@@ -111,17 +122,24 @@ export class OAuthClientController {
     }
 
     checkRedirectURI(redirectURI: string) {
-        return this.oauthClient.redirectURIs.find(e => e.uri === redirectURI) !== undefined
+        return (
+            this.oauthClient.redirectURIs.find((e) => e.uri === redirectURI) !==
+            undefined
+        )
     }
 
     checkPostLogoutURI(postLogoutURI: string) {
-        return this.oauthClient.postLogoutURIs.find(e => e.uri === postLogoutURI) !== undefined
+        return (
+            this.oauthClient.postLogoutURIs.find(
+                (e) => e.uri === postLogoutURI,
+            ) !== undefined
+        )
     }
 
     get isPublic() {
         return this.oauthClient.initiateURI !== null
     }
-    
+
     generateInitiateURI() {
         if (!this.isPublic) {
             throw new Error("Cannot initiate a non-public client")
@@ -139,12 +157,15 @@ export class OAuthClientController {
         const raw = TokenManager.generateCode()
         return {
             raw,
-            hashed: await argon2.hash(raw)
+            hashed: await argon2.hash(raw),
         }
     }
 
-    static async create(data: Pick<OAuthClient, "name" | "usageDescription" | "adminId">, dbClient: TransactionType = DBClient.getClient()) {
-        const {raw, hashed} = await this.generateClientSecret()
+    static async create(
+        data: Pick<OAuthClient, "name" | "usageDescription" | "adminId">,
+        dbClient: TransactionType = DBClient.getClient(),
+    ) {
+        const { raw, hashed } = await this.generateClientSecret()
 
         const newClient = await dbClient.oAuthClient.create({
             data: {
@@ -152,7 +173,7 @@ export class OAuthClientController {
                 name: data.name,
                 usageDescription: data.usageDescription,
                 clientSecretHash: hashed,
-            }
+            },
         })
 
         return {
@@ -165,7 +186,7 @@ export class OAuthClientController {
         await this.tx.oAuthClient.delete({
             where: {
                 clientId: this.oauthClient.clientId,
-            }
+            },
         })
     }
 
@@ -185,7 +206,7 @@ export class OAuthClientController {
             data: {
                 clientId: this.oauthClient.clientId,
                 uri,
-            }
+            },
         })
     }
 
@@ -193,7 +214,7 @@ export class OAuthClientController {
         await this.tx.oAuthClientRedirectURI.delete({
             where: {
                 id,
-            }
+            },
         })
     }
 }

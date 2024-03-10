@@ -1,7 +1,6 @@
-.yarn/*
-.pnp.*
 build
-.idea
+.idea/*
+.vscode/*
 .env
 /packages/backend/src/database/generated-models/
 *.key
@@ -10,4 +9,5 @@ build
 /packages/backend/static/js
 .DS_Store
 *.dev.yaml
-.idea/*
+node_modules/*
+/packages/**/node_modules/*

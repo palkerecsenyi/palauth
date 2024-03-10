@@ -1,13 +1,13 @@
 # PalAuth
 
-PalAuth is an authentication and IAM provider with support for OIDC. It's similar to [Keycloak](https://www.keycloak.org/) but is **not** written in Java.
+PalAuth is an authentication and IAM provider with support for OIDC. It's similar to [Keycloak](https://www.keycloak.org/) but aims to be simpler and easier to install/maintain.
 
 Here are some features:
 
 - Secure password authentication using argon2id
 - (Relatively) easy set up process with a ready-made Dockerfile
 - Support for TOTP and Webauthn based 2FA
-- Support for passkeys
+- Support for passkeys (passwordless sign-in with Webauthn)
 - RBAC IAM with a user-friendly dashboard and a REST HTTP API
 - Sessions stored in Redis
 - Uses MySQL with Prisma schemas for an easy development experience
@@ -17,7 +17,7 @@ Here are some features:
 ## Prerequisites
 
 - You need a MySQL database. You can set the database name and credentials to be whatever you'd like, as you will need to supply a full database URL to PalAuth.
-    - Make sure to run migrations for this database by running `yarn db:migrate:prod` with the `PAL_DB_STRING` environment variable specified. Currently, these have to be run manually; PalAuth will not run them for you, even if there are new migrations required.
+    - Make sure to run migrations for this database by running `bun run --cwd packages/backend db:migrate:prod` with the `PAL_DB_STRING` environment variable specified. Currently, these have to be run manually; PalAuth will not run them for you, even if there are new migrations required.
 - You need a Redis instance.
 - You need a self-hosted [friendly-lite-server](https://github.com/FriendlyCaptcha/friendly-lite-server).
 
@@ -25,12 +25,12 @@ Here are some features:
 
 ### Node JS
 1. Clone this repository
-2. Go into the `webauthn-frontend` directory
-2. Run `yarn install` to install dependencies
-3. Run `yarn build`
-4. Repeat 2 & 3 inside the project root directory
-5. Configure (see below)
-6. Run `yarn prod`
+2. Run `bun install`
+3. Run `bun run --cwd packages/webauthn-frontend build-prod`
+4. Run `bun run --cwd packages/backend db:generate`
+5. Run `bun run --cwd packages/backend build`
+6. Configure (see below)
+7. Run `bun run --cwd packages/backend prod`
 
 ### Docker
 1. Clone this repository
@@ -39,7 +39,7 @@ Here are some features:
 4. Run!
 
 ## From Docker Hub
-PalAuth is available as `docker.io/palkerecs/palauth`. For now, this only has one tag `latest`, with images available for `linux/amd64` and `linux/arm64/v8`.
+PalAuth is available as `ghcr.io/palkerecsenyi/palauth`. For now, this only has one tag `latest`, with images available for `linux/amd64` and `linux/arm64/v8`.
 
 ## On Kubernetes
 As a containerised app, you can easily deploy PalAuth on Kubernetes. The configuration used at auth.palk.me is available in `k8s/deployment.yaml`.

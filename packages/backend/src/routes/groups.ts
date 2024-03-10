@@ -1,7 +1,13 @@
 import express from "express"
 import { authMiddleware } from "../helpers/auth.js"
-import groupsManagementMiddleware, { getGroupMiddleware } from "../helpers/groups/groups-middleware.js"
-import { GroupRequest, GroupsManagementRequest, ValidatedRequest } from "../types/express.js"
+import groupsManagementMiddleware, {
+    getGroupMiddleware,
+} from "../helpers/groups/groups-middleware.js"
+import {
+    GroupRequest,
+    GroupsManagementRequest,
+    ValidatedRequest,
+} from "../types/express.js"
 import { body } from "express-validator"
 import { ensureValidators } from "../helpers/validators.js"
 import { verifyCaptcha } from "../helpers/captcha.js"
@@ -9,37 +15,36 @@ import { doubleCsrfProtection, generateToken } from "../helpers/csrf.js"
 import { DBClient } from "../database/client.js"
 
 const groupsRouter = express.Router()
-groupsRouter.use(authMiddleware({
-    authRequirement: "require-authenticated",
-    redirectTo: "/auth/signin?destination=/groups",
-}))
+groupsRouter.use(
+    authMiddleware({
+        authRequirement: "require-authenticated",
+        redirectTo: "/auth/signin?destination=/groups",
+    }),
+)
 groupsRouter.use(groupsManagementMiddleware)
 groupsRouter.use(doubleCsrfProtection)
 
-groupsRouter.get(
-    "/",
-    async (req: GroupsManagementRequest, res) => {
-        res.render("groups/list.pug", {
-            groups: await req.groupsController!.listMyGroups()
-        })
-    }
-)
+groupsRouter.get("/", async (req: GroupsManagementRequest, res) => {
+    res.render("groups/list.pug", {
+        groups: await req.groupsController!.listMyGroups(),
+    })
+})
 
-groupsRouter.get(
-    "/add",
-    async (req: GroupsManagementRequest, res) => {
-        res.render("groups/add.pug", {
-            csrf: generateToken(req, res),
-        })
-    }
-)
+groupsRouter.get("/add", async (req: GroupsManagementRequest, res) => {
+    res.render("groups/add.pug", {
+        csrf: generateToken(req, res),
+    })
+})
 
 groupsRouter.post(
     "/create",
-    body("systemName").trim().isLength({
-        min: 2,
-        max: 20,
-    }).matches(/^[\w\d-]*$/),
+    body("systemName")
+        .trim()
+        .isLength({
+            min: 2,
+            max: 20,
+        })
+        .matches(/^[\w\d-]*$/),
     body("displayName").trim().isLength({
         min: 2,
         max: 40,
@@ -63,7 +68,7 @@ groupsRouter.post(
             req.flash("error", DBClient.generateErrorMessage(e))
             res.redirect("/groups/add")
         }
-    }
+    },
 )
 
 groupsRouter.get(
@@ -77,7 +82,7 @@ groupsRouter.get(
             req.flash("error", DBClient.generateErrorMessage(e))
         }
         res.redirect("/groups")
-    }
+    },
 )
 
 groupsRouter.get(
@@ -85,9 +90,9 @@ groupsRouter.get(
     getGroupMiddleware,
     async (req: GroupRequest, res) => {
         res.render("groups/members-list.pug", {
-            group: req.group!
+            group: req.group!,
         })
-    }
+    },
 )
 
 groupsRouter.get(
@@ -98,7 +103,7 @@ groupsRouter.get(
             group: req.group!,
             csrf: generateToken(req, res),
         })
-    }
+    },
 )
 
 groupsRouter.post(
@@ -120,7 +125,7 @@ groupsRouter.post(
             return
         }
         res.redirect(`/groups/${req.params.groupId}/members`)
-    }
+    },
 )
 
 groupsRouter.get(
@@ -129,14 +134,14 @@ groupsRouter.get(
         try {
             await req.groupsController!.unassignFromGroup(
                 req.params.userId,
-                req.params.groupId
+                req.params.groupId,
             )
             req.flash("success", "Unassigned user from group!")
         } catch (e) {
             req.flash("error", DBClient.generateErrorMessage(e))
         }
         res.redirect(`/groups/${req.params.groupId}/members`)
-    }
+    },
 )
 
 groupsRouter.get(
@@ -145,7 +150,7 @@ groupsRouter.get(
         res.render("groups/apps-list.pug", {
             group: await req.groupsController!.getGroupForRequest(req),
         })
-    }
+    },
 )
 
 groupsRouter.get(
@@ -155,7 +160,7 @@ groupsRouter.get(
             csrf: generateToken(req, res),
             group: await req.groupsController!.getGroupForRequest(req),
         })
-    }
+    },
 )
 
 groupsRouter.post(
@@ -176,7 +181,7 @@ groupsRouter.post(
             res.redirect(`/groups/${req.params.groupId}/apps/assign`)
         }
         res.redirect(`/groups/${req.params.groupId}/apps`)
-    }
+    },
 )
 
 groupsRouter.get(
@@ -192,7 +197,7 @@ groupsRouter.get(
             req.flash("error", DBClient.generateErrorMessage(e))
         }
         res.redirect(`/groups/${req.params.groupId}/apps`)
-    }
+    },
 )
 
 export default groupsRouter

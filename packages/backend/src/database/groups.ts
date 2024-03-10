@@ -1,8 +1,8 @@
-import { TransactionType } from "../types/prisma.js";
-import { DBClient } from "./client.js";
-import { Group } from "./generated-models/index.js";
-import { Pick } from "./generated-models/runtime/library.js";
-import type { Request } from "express";
+import { TransactionType } from "../types/prisma.js"
+import { DBClient } from "./client.js"
+import { Group } from "./generated-models/index.js"
+import { Pick } from "./generated-models/runtime/library.js"
+import type { Request } from "express"
 
 export default class GroupsController {
     private tx: TransactionType
@@ -12,8 +12,14 @@ export default class GroupsController {
         this.tx = tx
     }
 
-    public static forUser(managerUserId: string, tx: TransactionType = DBClient.getClient()) {
-        if (typeof managerUserId !== "string") throw new Error("Tried to construct GroupsController with invalid user ID")
+    public static forUser(
+        managerUserId: string,
+        tx: TransactionType = DBClient.getClient(),
+    ) {
+        if (typeof managerUserId !== "string")
+            throw new Error(
+                "Tried to construct GroupsController with invalid user ID",
+            )
         return new GroupsController(managerUserId, tx)
     }
 
@@ -49,22 +55,22 @@ export default class GroupsController {
             include: {
                 onlyApplyTo: true,
                 members: true,
-            }
+            },
         })
     }
 
-    public async createGroup(
-        {
-            systemName,
-            displayName,
-            description
-        }: Pick<Group, "systemName" | "displayName" | "description">
-    ) {
+    public async createGroup({
+        systemName,
+        displayName,
+        description,
+    }: Pick<Group, "systemName" | "displayName" | "description">) {
         const resp = await this.tx.group.create({
             data: {
-                systemName, displayName, description,
+                systemName,
+                displayName,
+                description,
                 managedById: this.managerUserId,
-            }
+            },
         })
         return resp.id
     }
@@ -78,7 +84,7 @@ export default class GroupsController {
             include: {
                 onlyApplyTo: true,
                 members: true,
-            }
+            },
         })
     }
 
@@ -93,7 +99,7 @@ export default class GroupsController {
             where: {
                 id: groupId ?? "",
                 managedById: this.managerUserId,
-            }
+            },
         })
     }
 

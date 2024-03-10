@@ -1,5 +1,5 @@
-import { Request } from "express";
-import BaseTwoFactorController from "./general.js";
+import { Request } from "express"
+import BaseTwoFactorController from "./general.js"
 import speakeasy from "speakeasy"
 import QRCode from "qrcode"
 
@@ -16,7 +16,7 @@ export default class TwoFactorTOTPController extends BaseTwoFactorController {
         req.session.twoFactor = {
             totp: {
                 secret: secret.ascii,
-            }
+            },
         }
         return {
             qrCodeUrl: await QRCode.toDataURL(url),
@@ -26,7 +26,8 @@ export default class TwoFactorTOTPController extends BaseTwoFactorController {
 
     private verifySecret(token: string, secret: string) {
         return speakeasy.totp.verify({
-            secret, token,
+            secret,
+            token,
             encoding: "ascii",
             window: 2,
         })
@@ -48,7 +49,7 @@ export default class TwoFactorTOTPController extends BaseTwoFactorController {
                 userId: this.user.id,
                 type: "TOTP",
                 totpSecret: sessionSecret,
-            }
+            },
         })
         return true
     }

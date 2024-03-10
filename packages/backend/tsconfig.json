@@ -1,9 +1,9 @@
 {
-  "extends": "@tsconfig/node20/tsconfig.json",
-  "include": ["src/**/*.ts", "src/database/generated-models"],
-  "compilerOptions": {
-    "outDir": "build",
-    "strict": true,
-    "allowSyntheticDefaultImports": true,
-  }
+	"extends": "@tsconfig/node20/tsconfig.json",
+	"include": ["src/**/*.ts", "src/database/generated-models"],
+	"compilerOptions": {
+		"outDir": "build",
+		"strict": true,
+		"allowSyntheticDefaultImports": true
+	}
 }

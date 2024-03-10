@@ -1,5 +1,5 @@
-import { OIDCScopes } from "../../types/oidc.js";
-import { getProjectOIDCID } from "../constants/hostname.js";
+import { OIDCScopes } from "../../types/oidc.js"
+import { getProjectOIDCID } from "../constants/hostname.js"
 
 export const getOIDCDiscoveryData = () => {
     const oidcUrl = getProjectOIDCID()

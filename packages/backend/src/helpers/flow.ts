@@ -1,5 +1,5 @@
-import {NextFunction, Request, Response} from "express";
-import {getProjectHostname} from "./constants/hostname.js";
+import { NextFunction, Request, Response } from "express"
+import { getProjectHostname } from "./constants/hostname.js"
 
 export class FlowManager {
     private readonly flowName: string
@@ -8,7 +8,7 @@ export class FlowManager {
     }
 
     static parseDestination(req: Request) {
-        const destination = req.query["destination"]
+        const destination = req.query.destination
         if (typeof destination !== "string") {
             throw new Error("destination missing")
         }
@@ -18,7 +18,10 @@ export class FlowManager {
             throw new Error("incorrect hostname in request")
         }
 
-        const parsedDestination = new URL(destination, `${req.protocol}://${hostname}`)
+        const parsedDestination = new URL(
+            destination,
+            `${req.protocol}://${hostname}`,
+        )
         if (parsedDestination.hostname !== hostname) {
             throw new Error("destination must be on the same hostname")
         }
@@ -28,7 +31,8 @@ export class FlowManager {
 
     saveDestination(req: Request) {
         const existingDestination = this.extractDestinationFromSession(req)
-        if (existingDestination && !req.query.hasOwnProperty("destination")) return existingDestination
+        if (existingDestination && !Object.hasOwn(req.query, "destination"))
+            return existingDestination
 
         const destination = FlowManager.parseDestination(req)
         req.session.flow = {

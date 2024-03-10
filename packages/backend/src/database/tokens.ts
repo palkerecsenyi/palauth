@@ -1,12 +1,12 @@
-import {Prisma} from "./generated-models/index.js";
-import {DBClient} from "./client.js";
-import {NextFunction, Response} from "express";
-import {DateTime} from "luxon";
-import {BearerTokenRequest} from "../types/express.js";
-import {UserController} from "./users.js";
+import { Prisma } from "./generated-models/index.js"
+import { DBClient } from "./client.js"
+import { NextFunction, Response } from "express"
+import { DateTime } from "luxon"
+import { BearerTokenRequest } from "../types/express.js"
+import { UserController } from "./users.js"
 
 type OAuthTokenWrapperData = Prisma.OAuthTokenGetPayload<{
-    include: {scopes: true}
+    include: { scopes: true }
 }>
 
 export class OAuthTokenWrapper {
@@ -23,7 +23,7 @@ export class OAuthTokenWrapper {
             },
             include: {
                 scopes: true,
-            }
+            },
         })
         if (!tokenObj) {
             return undefined
@@ -41,7 +41,7 @@ export class OAuthTokenWrapper {
     }
 
     get scopes() {
-        return this.data.scopes.map(e => e.scope)
+        return this.data.scopes.map((e) => e.scope)
     }
 
     hasScope(scope: string) {
@@ -77,49 +77,72 @@ export class OAuthTokenWrapper {
         return u
     }
 
-    static middleware(
-        requiredScopes: string[]
-    ) {
-        return async (req: BearerTokenRequest, res: Response, next: NextFunction) => {
+    static middleware(requiredScopes: string[]) {
+        return async (
+            req: BearerTokenRequest,
+            res: Response,
+            next: NextFunction,
+        ) => {
             const authHeader = req.headers.authorization
             if (!authHeader) {
                 // https://datatracker.ietf.org/doc/html/rfc6750#section-3.1
-                res.setHeader("WWW-Authenticate", `Bearer error="invalid_request"`)
+                res.setHeader(
+                    "WWW-Authenticate",
+                    `Bearer error="invalid_request"`,
+                )
                 res.sendStatus(401)
                 return
             }
 
             if (!authHeader.startsWith("Bearer ")) {
                 // https://datatracker.ietf.org/doc/html/rfc6750#section-3
-                res.setHeader("WWW-Authenticate", `Bearer error="invalid_token"`)
+                res.setHeader(
+                    "WWW-Authenticate",
+                    `Bearer error="invalid_token"`,
+                )
                 res.sendStatus(401)
                 return
             }
 
             const bearerToken = authHeader.substring(7)
-            const tokenWrapper = await OAuthTokenWrapper.fromTokenValue(bearerToken)
+            const tokenWrapper =
+                await OAuthTokenWrapper.fromTokenValue(bearerToken)
             if (!tokenWrapper) {
-                res.setHeader("WWW-Authenticate", `Bearer error="invalid_token"`)
+                res.setHeader(
+                    "WWW-Authenticate",
+                    `Bearer error="invalid_token"`,
+                )
                 res.sendStatus(401)
                 return
             }
 
             // cannot use a refresh token for authenticating requests
             if (tokenWrapper.isRefreshToken) {
-                res.setHeader("WWW-Authenticate", `Bearer error="invalid_token", error_description="Cannot use a refresh token"`)
+                res.setHeader(
+                    "WWW-Authenticate",
+                    `Bearer error="invalid_token", error_description="Cannot use a refresh token"`,
+                )
                 res.sendStatus(401)
                 return
             }
 
             if (!tokenWrapper.isValid) {
-                res.setHeader("WWW-Authenticate", `Bearer error="invalid_token", error_description="Token expired"`)
+                res.setHeader(
+                    "WWW-Authenticate",
+                    `Bearer error="invalid_token", error_description="Token expired"`,
+                )
                 res.sendStatus(401)
                 return
             }
 
-            const scopesMet = requiredScopes.every(requiredScope => tokenWrapper.scopes.includes(requiredScope))
+            const scopesMet = requiredScopes.every((requiredScope) =>
+                tokenWrapper.scopes.includes(requiredScope),
+            )
             if (!scopesMet) {
-                res.setHeader("WWW-Authenticate", `Bearer error="insufficient_scope"`)
+                res.setHeader(
+                    "WWW-Authenticate",
+                    `Bearer error="insufficient_scope"`,
+                )
                 res.sendStatus(401)
                 return
             }

@@ -1,7 +1,7 @@
-import * as jose from "jose";
+import * as jose from "jose"
 
 export const getSecretKey = () => {
-    const secret = process.env["PAL_SECRET"]
+    const secret = process.env.PAL_SECRET
     if (!secret) {
         throw new Error("PAL_SECRET not defined")
     }
@@ -32,9 +32,9 @@ export const getJWTPublicKey = () => getJWT("PAL_PUBLIC_JWK")
 export const getJWTRawPublicKey = () => getJSONEnv("PAL_PUBLIC_JWK")
 export const getJWKAlg = () => "RS256"
 
-export const getCaptchaURL = () => process.env["PAL_CAPTCHA_URL"]
-export const getCaptchaAPIKey = () => process.env["PAL_CAPTCHA_KEY"]
+export const getCaptchaURL = () => process.env.PAL_CAPTCHA_URL
+export const getCaptchaAPIKey = () => process.env.PAL_CAPTCHA_KEY
 
-export const getMailgunHost = () => process.env["PAL_MAILGUN_HOST"]
-export const getMailgunSecret = () => process.env["PAL_MAILGUN_KEY"]
-export const getRedisSecret = () => process.env["PAL_REDIS_URL"]
+export const getMailgunHost = () => process.env.PAL_MAILGUN_HOST
+export const getMailgunSecret = () => process.env.PAL_MAILGUN_KEY
+export const getRedisSecret = () => process.env.PAL_REDIS_URL

@@ -1,28 +1,36 @@
-import { OAuthClientController } from "./oauth.js";
-import { AuthorizationCodeWithOriginal } from "../helpers/oidc/authorization-code.js";
-import { DBClient } from "./client.js";
-import { createHash, randomBytes } from "crypto";
-import { OAuthToken } from "./generated-models/index.js";
-import { DateTime } from "luxon";
-import { IDToken } from "../types/oidc.js";
-import { getProjectOIDCID } from "../helpers/constants/hostname.js";
-import { JWTSigner } from "../helpers/oidc/jwt.js";
-import { OAuthTokenWrapper } from "./tokens.js";
-import { calculateTokenExpiry } from "../helpers/constants/token-duration.js";
-import GroupsController from "./groups.js";
-import { TransactionType } from "../types/prisma.js";
+import { OAuthClientController } from "./oauth.js"
+import { AuthorizationCodeWithOriginal } from "../helpers/oidc/authorization-code.js"
+import { DBClient } from "./client.js"
+import { createHash, randomBytes } from "crypto"
+import { OAuthToken } from "./generated-models/index.js"
+import { DateTime } from "luxon"
+import { IDToken } from "../types/oidc.js"
+import { getProjectOIDCID } from "../helpers/constants/hostname.js"
+import { JWTSigner } from "../helpers/oidc/jwt.js"
+import { OAuthTokenWrapper } from "./tokens.js"
+import { calculateTokenExpiry } from "../helpers/constants/token-duration.js"
+import GroupsController from "./groups.js"
+import { TransactionType } from "../types/prisma.js"
 
 export class TokenManager {
     userId: string
     clientController: OAuthClientController
     tx: TransactionType
-    private constructor(userId: string, clientController: OAuthClientController, tx: TransactionType) {
+    private constructor(
+        userId: string,
+        clientController: OAuthClientController,
+        tx: TransactionType,
+    ) {
         this.userId = userId
         this.clientController = clientController
         this.tx = tx
     }
 
-    static fromOAuthClientController(clientController: OAuthClientController, userId: string, tx: TransactionType = DBClient.getClient()) {
+    static fromOAuthClientController(
+        clientController: OAuthClientController,
+        userId: string,
+        tx: TransactionType = DBClient.getClient(),
+    ) {
         return new TokenManager(userId, clientController, tx)
     }
 
@@ -31,17 +39,15 @@ export class TokenManager {
         return buf.toString("hex")
     }
 
-    private async createToken(
-        {
-            type,
-            expires,
-            fromCode,
-            scopes,
-        }: Pick<OAuthToken, "type" | "fromCode"> & {
-            expires: DateTime
-            scopes: string[]
-        }
-    ) {
+    private async createToken({
+        type,
+        expires,
+        fromCode,
+        scopes,
+    }: Pick<OAuthToken, "type" | "fromCode"> & {
+        expires: DateTime
+        scopes: string[]
+    }) {
         const code = TokenManager.generateCode()
         const tokenObject = await this.tx.oAuthToken.create({
             data: {
@@ -52,7 +58,7 @@ export class TokenManager {
                 userId: this.userId,
                 clientId: this.clientController.getClient().clientId,
                 scopes: {
-                    create: scopes.map(scope => ({
+                    create: scopes.map((scope) => ({
                         scope,
                     })),
                 },
@@ -66,7 +72,9 @@ export class TokenManager {
     }
 
     async codeExchange(data: AuthorizationCodeWithOriginal) {
-        const hashedCode = createHash("sha256").update(data.originalCode).digest("hex")
+        const hashedCode = createHash("sha256")
+            .update(data.originalCode)
+            .digest("hex")
 
         const existingCodeUsage = await this.tx.oAuthToken.findFirst({
             where: {
@@ -76,9 +84,9 @@ export class TokenManager {
                     },
                     {
                         fromCode: hashedCode,
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         })
         if (existingCodeUsage) {
             throw new Error("code already used")
@@ -99,7 +107,8 @@ export class TokenManager {
         })
 
         return {
-            accessToken, refreshToken,
+            accessToken,
+            refreshToken,
         }
     }
 
@@ -125,7 +134,7 @@ export class TokenManager {
             aud: clientId,
             exp: expires.toUnixInteger(),
             iat: DateTime.now().toUnixInteger(),
-            "https://auth.palk.me/groups": groups.map(g => g.systemName),
+            "https://auth.palk.me/groups": groups.map((g) => g.systemName),
             nonce,
         }
 
@@ -138,19 +147,21 @@ export class TokenManager {
             return undefined
         }
 
-        if ([
-            payload.iss,
-            payload.sub,
-            payload.aud,
-            payload.exp,
-            payload.iat,
-        ].some(e => e === undefined)) {
+        if (
+            [
+                payload.iss,
+                payload.sub,
+                payload.aud,
+                payload.exp,
+                payload.iat,
+            ].some((e) => e === undefined)
+        ) {
             return undefined
         }
 
         if (payload["https://auth.palk.me/groups"] === undefined) {
             payload["https://auth.palk.me/groups"] = []
-        } else if (!(payload["https://auth.palk.me/groups"] instanceof Array)) {
+        } else if (!Array.isArray(payload["https://auth.palk.me/groups"])) {
             return undefined
         }
 
@@ -174,13 +185,13 @@ export class TokenManager {
         await this.tx.userOAuthGrant.deleteMany({
             where: {
                 AND: query,
-            }
+            },
         })
 
         await this.tx.oAuthToken.deleteMany({
             where: {
                 AND: query,
-            }
+            },
         })
     }
 }

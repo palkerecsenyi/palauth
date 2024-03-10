@@ -1,19 +1,26 @@
-import express, {NextFunction, Response, Request} from "express";
-import {authMiddleware, setProvisionalUserId, setUserId} from "../helpers/auth.js";
-import {AuthenticatedRequest, ValidatedRequest} from "../types/express.js";
-import {doubleCsrfProtection, generateToken} from "../helpers/csrf.js";
-import {DBClient} from "../database/client.js";
-import {UserController} from "../database/users.js";
-import {FlowManager} from "../helpers/flow.js";
-import {verifyCaptcha} from "../helpers/captcha.js";
-import {body} from "express-validator"
-import {ensureValidators} from "../helpers/validators.js";
-import {InviteController} from "../database/invites.js";
-import {Prisma, SecondAuthenticationFactorType} from "../database/generated-models/index.js";
-import bodyParser from "body-parser";
-import DevModeSettings from "../helpers/constants/devMode.js";
-import TwoFactorSecurityKeyController from "../helpers/2fa/securityKey.js";
-import VerificationMessageController from "../helpers/mail/verification.js";
+import express, { NextFunction, Response, Request } from "express"
+import {
+    authMiddleware,
+    setProvisionalUserId,
+    setUserId,
+} from "../helpers/auth.js"
+import { AuthenticatedRequest, ValidatedRequest } from "../types/express.js"
+import { doubleCsrfProtection, generateToken } from "../helpers/csrf.js"
+import { DBClient } from "../database/client.js"
+import { UserController } from "../database/users.js"
+import { FlowManager } from "../helpers/flow.js"
+import { verifyCaptcha } from "../helpers/captcha.js"
+import { body } from "express-validator"
+import { ensureValidators } from "../helpers/validators.js"
+import { InviteController } from "../database/invites.js"
+import {
+    Prisma,
+    SecondAuthenticationFactorType,
+} from "../database/generated-models/index.js"
+import bodyParser from "body-parser"
+import DevModeSettings from "../helpers/constants/devMode.js"
+import TwoFactorSecurityKeyController from "../helpers/2fa/securityKey.js"
+import VerificationMessageController from "../helpers/mail/verification.js"
 
 const authRouter = express.Router()
 
@@ -30,15 +37,23 @@ const provisionalAuthenticatedMiddleware = authMiddleware({
 
 const flowManager = new FlowManager("authentication")
 
-const passwordValidatorMiddleware = (req: Request, res: Response, next: NextFunction) => {
+const passwordValidatorMiddleware = (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
     if (DevModeSettings.isInsecurePasswordsAllowed()) {
         return body("password").notEmpty()(req, res, next)
     }
 
-    body("password").isStrongPassword({
-        minLength: 11,
-        minNumbers: 1,
-    }).withMessage("Must be at least 12 characters with 1 number, 1 uppercase, 1 lowercase, and 1 symbol.")(req, res, next)
+    body("password")
+        .isStrongPassword({
+            minLength: 11,
+            minNumbers: 1,
+        })
+        .withMessage(
+            "Must be at least 12 characters with 1 number, 1 uppercase, 1 lowercase, and 1 symbol.",
+        )(req, res, next)
 }
 
 authRouter.get(
@@ -48,13 +63,14 @@ authRouter.get(
     async (req: AuthenticatedRequest, res) => {
         res.render("auth/signin.pug", {
             csrf: generateToken(req, res),
-            keyOptions: await TwoFactorSecurityKeyController.generateKeyAuthenticationOptions(
-                req,
-                [],
-                true,
-            ),
+            keyOptions:
+                await TwoFactorSecurityKeyController.generateKeyAuthenticationOptions(
+                    req,
+                    [],
+                    true,
+                ),
         })
-    }
+    },
 )
 
 authRouter.post(
@@ -67,7 +83,7 @@ authRouter.post(
     flowManager.ensureCanContinue("/auth/signin"),
     verifyCaptcha("/auth/signin"),
     async (req: AuthenticatedRequest & ValidatedRequest, res) => {
-        const {email, password} = req.validatedData!
+        const { email, password } = req.validatedData!
 
         const user = await UserController.getByEmail(email)
         if (!user) {
@@ -80,7 +96,10 @@ authRouter.post(
             req.session.signIn = {
                 verifyEmail: user.email,
             }
-            req.flash("error", "Please verify your email to continue signing in")
+            req.flash(
+                "error",
+                "Please verify your email to continue signing in",
+            )
             res.redirect("/auth/verify")
             return
         }
@@ -101,7 +120,7 @@ authRouter.post(
 
         setUserId(req, user.id)
         flowManager.continueToDestination(req, res, "/auth/signin")
-    }
+    },
 )
 
 authRouter.post(
@@ -111,14 +130,17 @@ authRouter.post(
     bodyParser.json(),
     async (req: AuthenticatedRequest, res) => {
         try {
-            const user = await TwoFactorSecurityKeyController.identifyKeyAuthentication(req)
+            const user =
+                await TwoFactorSecurityKeyController.identifyKeyAuthentication(
+                    req,
+                )
             setUserId(req, user.id)
             res.sendStatus(204)
         } catch (e) {
             console.warn("Passkey: ", e)
             res.sendStatus(403)
         }
-    }
+    },
 )
 
 authRouter.get(
@@ -136,7 +158,7 @@ authRouter.get(
         res.render("auth/2fa-method.pug", {
             methods: uc.twoFactorMethods,
         })
-    }
+    },
 )
 
 authRouter.get(
@@ -147,9 +169,12 @@ authRouter.get(
         const uc = UserController.for(req.user!)
         const twoFaController = uc.getTwoFactorController()
 
-        const twoFaMethod = req.params["method"] as SecondAuthenticationFactorType
+        const twoFaMethod = req.params.method as SecondAuthenticationFactorType
         if (!twoFaController.registrationOfTypeExists(twoFaMethod)) {
-            req.flash("error", "Your account isn't registered for that method of 2FA")
+            req.flash(
+                "error",
+                "Your account isn't registered for that method of 2FA",
+            )
             res.redirect("/auth/signin/2fa")
             return
         }
@@ -157,10 +182,11 @@ authRouter.get(
         if (twoFaMethod === "SecurityKey") {
             res.render("auth/2fa-verify.pug", {
                 method: twoFaMethod,
-                keyOptions: await twoFaController.securityKey.generateKeyAuthenticationOptions(
-                    req,
-                    false,
-                ),
+                keyOptions:
+                    await twoFaController.securityKey.generateKeyAuthenticationOptions(
+                        req,
+                        false,
+                    ),
             })
         } else if (twoFaMethod === "TOTP") {
             res.render("auth/2fa-verify.pug", {
@@ -169,7 +195,7 @@ authRouter.get(
         } else {
             res.send("Unimplemented")
         }
-    }
+    },
 )
 
 authRouter.post(
@@ -181,7 +207,7 @@ authRouter.post(
         const uc = UserController.for(req.user!)
         const twoFaController = uc.getTwoFactorController()
 
-        const twoFaMethod = req.params["method"] as SecondAuthenticationFactorType
+        const twoFaMethod = req.params.method as SecondAuthenticationFactorType
         if (!twoFaController.registrationOfTypeExists(twoFaMethod)) {
             res.sendStatus(204)
             return
@@ -217,7 +243,7 @@ authRouter.post(
         } else {
             res.redirect("/auth/continue")
         }
-    }
+    },
 )
 
 authRouter.get(
@@ -225,7 +251,7 @@ authRouter.get(
     flowManager.ensureCanContinue("/auth/signin"),
     (req, res) => {
         flowManager.continueToDestination(req, res, "/auth/signin")
-    }
+    },
 )
 
 authRouter.get(
@@ -236,7 +262,7 @@ authRouter.get(
             csrf: generateToken(req, res),
             inviteToken: req.query.invite,
         })
-    }
+    },
 )
 
 authRouter.post(
@@ -251,13 +277,8 @@ authRouter.post(
     ensureValidators("/auth/signup"),
     verifyCaptcha("/auth/signup"),
     async (req: AuthenticatedRequest & ValidatedRequest, res) => {
-        const {
-            displayName,
-            email,
-            password,
-            passwordConfirm,
-            token,
-        } = req.validatedData!
+        const { displayName, email, password, passwordConfirm, token } =
+            req.validatedData!
 
         if (password !== passwordConfirm) {
             req.flash("Your two passwords don't match")
@@ -265,7 +286,7 @@ authRouter.post(
             return
         }
 
-        const userId = await DBClient.interruptibleTransaction(async tx => {
+        const userId = await DBClient.interruptibleTransaction(async (tx) => {
             const inviteController = new InviteController(tx)
             const invite = await inviteController.lookupInvite(token)
             if (!invite) {
@@ -276,11 +297,20 @@ authRouter.post(
 
             let userId: string
             try {
-                userId = await UserController.createUser({
-                    displayName, email, password
-                }, DevModeSettings.skipEmailVerification(), tx)
+                userId = await UserController.createUser(
+                    {
+                        displayName,
+                        email,
+                        password,
+                    },
+                    DevModeSettings.skipEmailVerification(),
+                    tx,
+                )
             } catch (e) {
-                if (e instanceof Prisma.PrismaClientKnownRequestError && e.meta?.target === "User_email_key") {
+                if (
+                    e instanceof Prisma.PrismaClientKnownRequestError &&
+                    e.meta?.target === "User_email_key"
+                ) {
                     req.flash("error", "That email address is already in use")
                     tx.rollback()
                     return
@@ -294,11 +324,19 @@ authRouter.post(
 
             if (!DevModeSettings.skipEmailVerification()) {
                 try {
-                    const emailVerification = await VerificationMessageController.create(userId, "VerifyEmail", tx)
+                    const emailVerification =
+                        await VerificationMessageController.create(
+                            userId,
+                            "VerifyEmail",
+                            tx,
+                        )
                     await emailVerification.send()
                 } catch (e) {
                     console.error("Sending new user verification email:", e)
-                    req.flash("error", "We failed to send your verification email for some reason. Your account has not been created; please try again.")
+                    req.flash(
+                        "error",
+                        "We failed to send your verification email for some reason. Your account has not been created; please try again.",
+                    )
                     tx.rollback()
                     return
                 }
@@ -313,7 +351,10 @@ authRouter.post(
         }
 
         if (DevModeSettings.skipEmailVerification()) {
-            req.flash("success", "DEV: skipping email verification, signup complete")
+            req.flash(
+                "success",
+                "DEV: skipping email verification, signup complete",
+            )
             res.redirect("/auth/signin")
             return
         }
@@ -321,8 +362,8 @@ authRouter.post(
         req.session.signIn = {
             verifyEmail: email,
         }
-        res.redirect(`/auth/verify`)
-    }
+        res.redirect("/auth/verify")
+    },
 )
 
 authRouter.get(
@@ -340,7 +381,7 @@ authRouter.get(
             csrf: generateToken(req, res),
             email: verifyEmail,
         })
-    }
+    },
 )
 
 authRouter.get(
@@ -353,7 +394,11 @@ authRouter.get(
             return
         }
 
-        const verificationController = await VerificationMessageController.fromEmailAddress(verifyEmail, "VerifyEmail")
+        const verificationController =
+            await VerificationMessageController.fromEmailAddress(
+                verifyEmail,
+                "VerifyEmail",
+            )
         if (!verificationController) {
             req.flash("error", "Can't find which email to resend to")
             res.redirect("/auth/verify")
@@ -363,24 +408,25 @@ authRouter.get(
         await verificationController.send()
         req.flash("success", "Resent the verification email!")
         res.redirect("/auth/verify")
-    }
+    },
 )
 
 authRouter.post(
     "/verify",
     doubleCsrfProtection,
     flowManager.ensureCanContinue("/auth/signin"),
-    body("code").notEmpty().trim().isLength({min: 6, max: 6}),
+    body("code").notEmpty().trim().isLength({ min: 6, max: 6 }),
     body("email").notEmpty(),
     ensureValidators("/auth/verify"),
     verifyCaptcha("/auth/verify"),
     async (req, res) => {
-        const success = await DBClient.interruptibleTransaction(async tx => {
-            const verificationController = await VerificationMessageController.fromRequest(
-                req,
-                "VerifyEmail",
-                tx,
-            )
+        const success = await DBClient.interruptibleTransaction(async (tx) => {
+            const verificationController =
+                await VerificationMessageController.fromRequest(
+                    req,
+                    "VerifyEmail",
+                    tx,
+                )
             if (!verificationController) {
                 req.flash("error", "That code was not found")
                 tx.rollback()
@@ -388,7 +434,10 @@ authRouter.post(
             }
 
             await verificationController.delete()
-            const user = await UserController.getById(verificationController.userId, tx)
+            const user = await UserController.getById(
+                verificationController.userId,
+                tx,
+            )
             await UserController.for(user!).markEmailVerified()
             return true
         })
@@ -398,9 +447,12 @@ authRouter.post(
             return
         }
 
-        req.flash("success", "Your email was verified! Please sign in to continue.")
+        req.flash(
+            "success",
+            "Your email was verified! Please sign in to continue.",
+        )
         res.redirect("/auth/signin")
-    }
+    },
 )
 
 authRouter.get(
@@ -408,7 +460,7 @@ authRouter.get(
     flowManager.ensureCanContinue("/auth/signin"),
     (_, res) => {
         res.render("auth/recover.pug")
-    }
+    },
 )
 
 authRouter.get(
@@ -423,7 +475,7 @@ authRouter.get(
         } else {
             res.render("auth/recover-fail.pug")
         }
-    }
+    },
 )
 
 authRouter.post(
@@ -434,11 +486,11 @@ authRouter.post(
     ensureValidators("/auth/recover/password"),
     verifyCaptcha("/auth/recover/password"),
     async (req: ValidatedRequest, res) => {
-        const {email} = req.validatedData!
-        
-        res.redirect("/auth/recover/password/code?email=" + email)
+        const { email } = req.validatedData!
 
-        await DBClient.interruptibleTransaction(async tx => {
+        res.redirect(`/auth/recover/password/code?email=${email}`)
+
+        await DBClient.interruptibleTransaction(async (tx) => {
             const user = await UserController.getByEmail(email, tx)
             if (!user) return
 
@@ -449,7 +501,7 @@ authRouter.post(
             )
             await verification.send()
         })
-    }
+    },
 )
 
 authRouter.get(
@@ -466,7 +518,7 @@ authRouter.get(
             csrf: generateToken(req, res),
             email: req.query.email,
         })
-    }
+    },
 )
 
 authRouter.post(
@@ -480,14 +532,14 @@ authRouter.post(
     ensureValidators("/auth/recover/password"),
     verifyCaptcha("/auth/recover/password"),
     async (req: ValidatedRequest, res) => {
-        const {password, passwordConfirm, email} = req.validatedData!
+        const { password, passwordConfirm, email } = req.validatedData!
         if (password !== passwordConfirm) {
             req.flash("error", "Your passwords don't match")
-            res.redirect("/auth/recover/password/code?email=" + email)
+            res.redirect(`/auth/recover/password/code?email=${email}`)
             return
         }
 
-        await DBClient.interruptibleTransaction(async tx => {
+        await DBClient.interruptibleTransaction(async (tx) => {
             const vmc = await VerificationMessageController.fromRequest(
                 req,
                 "PasswordReset",
@@ -513,9 +565,12 @@ authRouter.post(
             await uc.updatePassword(password)
         })
 
-        req.flash("success", "Updated password successfully! You can sign in now :)")
+        req.flash(
+            "success",
+            "Updated password successfully! You can sign in now :)",
+        )
         res.redirect("/auth/signin")
-    }
+    },
 )
 
 export default authRouter

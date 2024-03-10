@@ -1,13 +1,19 @@
-import { NextFunction, Request, Response } from "express";
-import { OIDCFlowRequest } from "../../types/express.js";
-import { OAuthAuthorizationError, OIDCPromptType, OIDCResponseType, OIDCResponseTypes, OIDCScopes } from "../../types/oidc.js";
-import { DBClient } from "../../database/client.js";
-import { URLSearchParams } from "url";
-import { AuthorizationCode } from "./authorization-code.js";
-import { TransactionType } from "../../types/prisma.js";
-import { OAuthClientController } from "../../database/oauth.js";
-import { TokenManager } from "../../database/token-manager.js";
-import { calculateTokenExpiry } from "../constants/token-duration.js";
+import { NextFunction, Request, Response } from "express"
+import { OIDCFlowRequest } from "../../types/express.js"
+import {
+    OAuthAuthorizationError,
+    OIDCPromptType,
+    OIDCResponseType,
+    OIDCResponseTypes,
+    OIDCScopes,
+} from "../../types/oidc.js"
+import { DBClient } from "../../database/client.js"
+import { URLSearchParams } from "url"
+import { AuthorizationCode } from "./authorization-code.js"
+import { TransactionType } from "../../types/prisma.js"
+import { OAuthClientController } from "../../database/oauth.js"
+import { TokenManager } from "../../database/token-manager.js"
+import { calculateTokenExpiry } from "../constants/token-duration.js"
 
 export interface OIDCFlowData {
     client_id: string
@@ -26,17 +32,15 @@ export class OIDCFlow {
         this.flowData = data
     }
 
-    private static validateAndConstruct(
-        {
-            client_id,
-            response_type,
-            redirect_uri,
-            scope,
-            nonce,
-            prompt,
-            state,
-        }: Record<string, any>
-    ) {
+    private static validateAndConstruct({
+        client_id,
+        response_type,
+        redirect_uri,
+        scope,
+        nonce,
+        prompt,
+        state,
+    }: Record<string, unknown>) {
         if (typeof client_id !== "string") {
             throw new Error("client_id not provided")
         }
@@ -53,14 +57,21 @@ export class OIDCFlow {
             throw new Error("scope is not provided")
         }
 
-        if (scope.split(" ").some(s => !OIDCScopes.supportedScopes.includes(s))) {
+        if (
+            scope
+                .split(" ")
+                .some((s) => !OIDCScopes.supportedScopes.includes(s))
+        ) {
             throw new Error("scope not recognised")
         }
 
         if (nonce !== undefined && typeof nonce !== "string") {
             throw new Error("nonce is not a valid string")
         }
-        if (prompt !== undefined && !["none", "login"].includes(prompt)) {
+        if (
+            prompt !== undefined &&
+            (typeof prompt !== "string" || !["none", "login"].includes(prompt))
+        ) {
             throw new Error("prompt must be 'none', 'login', or unspecified")
         }
         if (state !== undefined && typeof state !== "string") {
@@ -73,7 +84,7 @@ export class OIDCFlow {
             redirect_uri,
             scope,
             nonce,
-            prompt,
+            prompt: prompt as OIDCPromptType,
             state,
         })
     }
@@ -88,8 +99,14 @@ export class OIDCFlow {
             prompt,
             state,
         } = req.query
-        return this.validateAndConstruct({
-            client_id, response_type, redirect_uri, scope, nonce, prompt, state,
+        return OIDCFlow.validateAndConstruct({
+            client_id,
+            response_type,
+            redirect_uri,
+            scope,
+            nonce,
+            prompt,
+            state,
         })
     }
 
@@ -102,9 +119,11 @@ export class OIDCFlow {
             }
 
             try {
-                req.oidcFlow = OIDCFlow.fromJSON(obj)
+                req.oidcFlow = OIDCFlow.fromJSON(
+                    obj as unknown as Record<string, unknown>,
+                )
             } catch (e) {
-                delete req.session["oidcFlow"]
+                req.session.oidcFlow = undefined
                 console.error(e)
                 res.sendStatus(500)
                 return
@@ -120,7 +139,7 @@ export class OIDCFlow {
 
     end(req: Request) {
         if (req.session.oidcFlow) {
-            delete req.session["oidcFlow"]
+            req.session.oidcFlow = undefined
         }
     }
 
@@ -147,25 +166,27 @@ export class OIDCFlow {
             where: {
                 userId,
                 clientId: this.flowData.client_id,
-            }
+            },
         })
 
         return {
-            nonGrantedScopes: this.scopes.filter(s => grantedScopes.find(e => e.scope === s) === undefined),
-            grantedScopes: grantedScopes.map(e => e.scope),
+            nonGrantedScopes: this.scopes.filter(
+                (s) => grantedScopes.find((e) => e.scope === s) === undefined,
+            ),
+            grantedScopes: grantedScopes.map((e) => e.scope),
         }
     }
 
     async grantScopes(scopes: string[], userId: string) {
         const dbClient = DBClient.getClient()
         await dbClient.userOAuthGrant.createMany({
-            data: scopes.map(s => {
+            data: scopes.map((s) => {
                 return {
                     scope: s,
                     userId,
                     clientId: this.flowData.client_id,
                 }
-            })
+            }),
         })
     }
 
@@ -173,10 +194,13 @@ export class OIDCFlow {
         const q = new URLSearchParams()
         q.append("error", code)
         q.append("description", description)
-        return this.flowData.redirect_uri + "?" + q.toString()
+        return `${this.flowData.redirect_uri}?${q.toString()}`
     }
 
-    async successExitURL(userId: string, tx: TransactionType = DBClient.getClient()) {
+    async successExitURL(
+        userId: string,
+        tx: TransactionType = DBClient.getClient(),
+    ) {
         const url = this.flowData.redirect_uri
         const q = new URLSearchParams()
         const state = this.flowData.state
@@ -186,13 +210,17 @@ export class OIDCFlow {
 
         if (this.isImplicit) {
             const clientController = await this.oauthClientController(tx)
-            if (!clientController) throw new Error("failed to init OAuth Client Controller")
+            if (!clientController)
+                throw new Error("failed to init OAuth Client Controller")
             const tokenManager = TokenManager.fromOAuthClientController(
-                clientController, 
-                userId, 
-                tx
+                clientController,
+                userId,
+                tx,
             )
-            const idToken = await tokenManager.generateIdToken(calculateTokenExpiry("Access"), this.flowData.nonce)
+            const idToken = await tokenManager.generateIdToken(
+                calculateTokenExpiry("Access"),
+                this.flowData.nonce,
+            )
 
             q.append("id_token", idToken)
         } else {
@@ -206,7 +234,7 @@ export class OIDCFlow {
             q.append("code", await authCode.sign())
         }
 
-        return url + "?" + q.toString()
+        return `${url}?${q.toString()}`
     }
 
     toJSON() {
@@ -217,7 +245,7 @@ export class OIDCFlow {
         return OAuthClientController.getByClientId(this.flowData.client_id, tx)
     }
 
-    static fromJSON(json: Record<string, any>) {
-        return this.validateAndConstruct(json)
+    static fromJSON(json: Record<string, unknown>) {
+        return OIDCFlow.validateAndConstruct(json)
     }
 }

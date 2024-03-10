@@ -1,29 +1,36 @@
-import { TransactionType } from "../types/prisma.js";
-import { DBClient } from "./client.js";
-import { Prisma } from "./generated-models/index.js";
+import { TransactionType } from "../types/prisma.js"
+import { DBClient } from "./client.js"
+import { Prisma } from "./generated-models/index.js"
 
 export type IAMControllerRoleType = Prisma.IAMRoleGetPayload<{
-    include: {permissions: true}
+    include: { permissions: true }
 }>
 
 export default class IAMController {
     private clientId: string
     private roles: IAMControllerRoleType[]
     private tx: TransactionType
-    private constructor(clientId: string, roles: IAMControllerRoleType[], tx: TransactionType) {
+    private constructor(
+        clientId: string,
+        roles: IAMControllerRoleType[],
+        tx: TransactionType,
+    ) {
         this.clientId = clientId
         this.roles = roles
         this.tx = tx
     }
 
-    static async forOAuthClient(clientId: string, tx: TransactionType = DBClient.getClient()) {
+    static async forOAuthClient(
+        clientId: string,
+        tx: TransactionType = DBClient.getClient(),
+    ) {
         const scopes = await tx.iAMRole.findMany({
             where: {
                 ownerId: clientId,
             },
             include: {
                 permissions: true,
-            }
+            },
         })
         return new IAMController(clientId, scopes, tx)
     }
@@ -37,7 +44,7 @@ export default class IAMController {
     }
 
     private findRoleByName(roleName: string) {
-        return this.roles.find(r => r.name === roleName)
+        return this.roles.find((r) => r.name === roleName)
     }
 
     listRoles() {
@@ -45,7 +52,7 @@ export default class IAMController {
     }
 
     getRoleById(id: string) {
-        return this.roles.find(r => r.id === id)
+        return this.roles.find((r) => r.id === id)
     }
 
     listRolesForUser(userId: string) {
@@ -54,12 +61,12 @@ export default class IAMController {
                 assignments: {
                     every: {
                         userId,
-                    }
-                }
+                    },
+                },
             },
             include: {
                 permissions: true,
-            }
+            },
         })
     }
 
@@ -70,9 +77,9 @@ export default class IAMController {
                     some: {
                         role: {
                             ownerId: this.clientId,
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             include: {
                 iamRoles: {
@@ -82,16 +89,16 @@ export default class IAMController {
                     where: {
                         role: {
                             ownerId: this.clientId,
-                        }
-                    }
+                        },
+                    },
                 },
-            }
+            },
         })
     }
 
     async checkPermission(request: {
-        userId: string,
-        permissionName: string,
+        userId: string
+        permissionName: string
     }) {
         const role = await this.tx.iAMRole.findFirst({
             where: {
@@ -99,15 +106,15 @@ export default class IAMController {
                     some: {
                         name: request.permissionName,
                         ownerId: this.clientId,
-                    }
+                    },
                 },
                 assignments: {
                     some: {
                         userId: request.userId,
-                    }
+                    },
                 },
                 ownerId: this.clientId,
-            }
+            },
         })
 
         return role !== null
@@ -166,8 +173,8 @@ export default class IAMController {
     }
 
     private resolveRoleByNameOrId(d: {
-        roleName?: string,
-        roleId?: string,
+        roleName?: string
+        roleId?: string
     }) {
         const { roleName } = d
         let { roleId } = d
@@ -186,9 +193,9 @@ export default class IAMController {
     }
 
     async assignRole(request: {
-        userId: string,
-        roleName?: string,
-        roleId?: string,
+        userId: string
+        roleName?: string
+        roleId?: string
     }) {
         const roleId = this.resolveRoleByNameOrId(request)
         await this.tx.iAMRoleAssignment.upsert({
@@ -196,29 +203,29 @@ export default class IAMController {
                 userId_roleId: {
                     userId: request.userId,
                     roleId: roleId,
-                }
+                },
             },
             update: {},
             create: {
                 userId: request.userId,
                 roleId: roleId,
-            }
+            },
         })
     }
 
     async removeRole(request: {
-        userId: string,
-        roleName?: string,
-        roleId?: string,
+        userId: string
+        roleName?: string
+        roleId?: string
     }) {
         const roleId = this.resolveRoleByNameOrId(request)
         await this.tx.iAMRoleAssignment.delete({
             where: {
                 userId_roleId: {
-                    userId: request.userId, 
+                    userId: request.userId,
                     roleId: roleId,
-                }
-            }
+                },
+            },
         })
     }
 }

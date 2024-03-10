@@ -1,10 +1,17 @@
-import { browserSupportsWebAuthn, startAuthentication } from "@simplewebauthn/browser"
+import {
+    browserSupportsWebAuthn,
+    startAuthentication,
+} from "@simplewebauthn/browser"
+import {
+    AuthenticationResponseJSON,
+    PublicKeyCredentialRequestOptionsJSON,
+} from "@simplewebauthn/typescript-types"
 import wretch from "wretch"
 
 export const authenticate = (
-    options: any,
+    options: PublicKeyCredentialRequestOptionsJSON,
     autocomplete?: boolean,
-    passkey = autocomplete
+    passkey = autocomplete,
 ) => {
     return async () => {
         if (autocomplete) {
@@ -12,15 +19,16 @@ export const authenticate = (
             // The function _might_ not be defined in older browsers
             // @ts-expect-error
             if (window.PublicKeyCredential?.isConditionalMediationAvailable) {
-                isSupported = await PublicKeyCredential.isConditionalMediationAvailable()
+                isSupported =
+                    await PublicKeyCredential.isConditionalMediationAvailable()
             }
 
             if (!isSupported) {
                 console.log("Browser doesn't support PKC CMA")
                 return
-            } else {
-                console.log("Browser supports PKC CMA")
             }
+
+            console.log("Browser supports PKC CMA")
         }
 
         if (!browserSupportsWebAuthn()) {
@@ -29,7 +37,7 @@ export const authenticate = (
             return
         }
 
-        let credential: any
+        let credential: AuthenticationResponseJSON
         try {
             credential = await startAuthentication(options, autocomplete)
         } catch (e) {
@@ -50,11 +58,7 @@ export const authenticate = (
         }
 
         try {
-            await wretch()
-                .json(credential)
-                .url(url)
-                .post()
-                .res()
+            await wretch().json(credential).url(url).post().res()
         } catch (e) {
             alert("Something went wrong. Please try a different key.")
             return

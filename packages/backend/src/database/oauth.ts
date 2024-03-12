@@ -165,7 +165,7 @@ export class OAuthClientController {
         data: Pick<OAuthClient, "name" | "usageDescription" | "adminId">,
         dbClient: TransactionType = DBClient.getClient(),
     ) {
-        const { raw, hashed } = await this.generateClientSecret()
+        const { raw, hashed } = await OAuthClientController.generateClientSecret()
 
         const newClient = await dbClient.oAuthClient.create({
             data: {

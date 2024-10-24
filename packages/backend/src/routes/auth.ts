@@ -1,10 +1,10 @@
-import express, { NextFunction, Response, Request } from "express"
+import express, { type NextFunction, type Response, type Request } from "express"
 import {
     authMiddleware,
     setProvisionalUserId,
     setUserId,
 } from "../helpers/auth.js"
-import { AuthenticatedRequest, ValidatedRequest } from "../types/express.js"
+import type { AuthenticatedRequest, ValidatedRequest } from "../types/express.js"
 import { doubleCsrfProtection, generateToken } from "../helpers/csrf.js"
 import { DBClient } from "../database/client.js"
 import { UserController } from "../database/users.js"
@@ -13,7 +13,7 @@ import { verifyCaptcha } from "../helpers/captcha.js"
 import { body } from "express-validator"
 import { ensureValidators } from "../helpers/validators.js"
 import { InviteController } from "../database/invites.js"
-import {
+import type {
     Prisma,
     SecondAuthenticationFactorType,
 } from "../database/generated-models/index.js"

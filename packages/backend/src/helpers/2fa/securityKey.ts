@@ -102,7 +102,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
     ) {
         const options = await generateAuthenticationOptions({
             allowCredentials,
-            userVerification: passkey ? "preferred" : "discouraged",
+            userVerification: passkey ? "preferred" : undefined,
             rpID,
         })
 
@@ -179,8 +179,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
 
         const matchingKey = this.securityKeyFactors.find(
             (f) =>
-                f.keyPublicKeyId === keyId ||
-                f.keyPublicKeyId === req.body.id,
+                f.keyPublicKeyId === keyId || f.keyPublicKeyId === req.body.id,
         )
         if (!matchingKey) {
             throw new Error("Did not match any saved 2FA keys")

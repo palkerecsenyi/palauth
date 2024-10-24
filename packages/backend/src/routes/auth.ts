@@ -13,9 +13,9 @@ import { verifyCaptcha } from "../helpers/captcha.js"
 import { body } from "express-validator"
 import { ensureValidators } from "../helpers/validators.js"
 import { InviteController } from "../database/invites.js"
-import type {
+import {
     Prisma,
-    SecondAuthenticationFactorType,
+    type SecondAuthenticationFactorType,
 } from "../database/generated-models/index.js"
 import bodyParser from "body-parser"
 import DevModeSettings from "../helpers/constants/devMode.js"

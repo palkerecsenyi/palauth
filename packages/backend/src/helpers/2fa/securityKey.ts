@@ -1,8 +1,8 @@
 import BaseTwoFactorController from "./general.js"
 import { getProjectHostname, getProjectOIDCID } from "../constants/hostname.js"
-import { Request } from "express"
+import type { Request } from "express"
 import {
-    VerifiedRegistrationResponse,
+    type VerifiedRegistrationResponse,
     generateAuthenticationOptions,
     generateRegistrationOptions,
     verifyAuthenticationResponse,
@@ -13,9 +13,9 @@ import type {
     PublicKeyCredentialDescriptorFuture,
     RegistrationResponseJSON,
 } from "@simplewebauthn/typescript-types"
-import { Pick } from "../../database/generated-models/runtime/library.js"
-import { SecondAuthenticationFactor } from "../../database/generated-models/index.js"
-import { TransactionType } from "../../types/prisma.js"
+import type { Pick } from "../../database/generated-models/runtime/library.js"
+import type { SecondAuthenticationFactor } from "../../database/generated-models/index.js"
+import type { TransactionType } from "../../types/prisma.js"
 import { DBClient } from "../../database/client.js"
 import TwoFactorController from "./2fa.js"
 

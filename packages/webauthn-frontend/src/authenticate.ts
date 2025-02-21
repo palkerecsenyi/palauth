@@ -2,7 +2,7 @@ import {
     browserSupportsWebAuthn,
     startAuthentication,
 } from "@simplewebauthn/browser"
-import {
+import type {
     AuthenticationResponseJSON,
     PublicKeyCredentialRequestOptionsJSON,
 } from "@simplewebauthn/typescript-types"
@@ -39,7 +39,10 @@ export const authenticate = (
 
         let credential: AuthenticationResponseJSON
         try {
-            credential = await startAuthentication(options, autocomplete)
+            credential = await startAuthentication({
+                optionsJSON: options,
+                useBrowserAutofill: autocomplete,
+            })
         } catch (e) {
             console.error(e)
             if (!autocomplete) {

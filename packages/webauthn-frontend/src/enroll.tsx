@@ -1,10 +1,11 @@
 import { startRegistration } from "@simplewebauthn/browser"
-import {
+import type {
     PublicKeyCredentialCreationOptionsJSON,
     RegistrationResponseJSON,
 } from "@simplewebauthn/typescript-types"
+// biome-ignore lint/style/useNodejsImportProtocol: We're using the buffer package, not NodeJS
 import { Buffer } from "buffer"
-import { render, JSX } from "preact"
+import { render, type JSX } from "preact"
 import { useCallback, useState } from "preact/hooks"
 
 const RenderButton = ({
@@ -23,7 +24,7 @@ const RenderButton = ({
 
             let credential: RegistrationResponseJSON
             try {
-                credential = await startRegistration(options)
+                credential = await startRegistration({ optionsJSON: options })
             } catch (e) {
                 console.error(e)
                 alert("Process cancelled - please try again")
@@ -37,7 +38,7 @@ const RenderButton = ({
             )
             setLoading(false)
         },
-        [],
+        [options],
     )
 
     return (

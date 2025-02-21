@@ -1,15 +1,15 @@
-import express, { Response } from "express"
+import express, { type Response } from "express"
 import { OAuthClientController } from "../database/oauth.js"
 import { OIDCFlow } from "../helpers/oidc/oidc-flow.js"
 import { authMiddleware, setUserId } from "../helpers/auth.js"
-import {
+import type {
     AuthenticatedRequest,
     BearerTokenRequest,
     OIDCFlowRequest,
 } from "../types/express.js"
-import { OAuthAccessTokenResponse, OIDCScopes } from "../types/oidc.js"
+import { type OAuthAccessTokenResponse, OIDCScopes } from "../types/oidc.js"
 import { AuthorizationCode } from "../helpers/oidc/authorization-code.js"
-import { OAuthToken } from "../database/generated-models/index.js"
+import type { OAuthToken } from "../database/generated-models/index.js"
 import { DateTime } from "luxon"
 import { OAuthTokenWrapper } from "../database/tokens.js"
 import { UserController } from "../database/users.js"

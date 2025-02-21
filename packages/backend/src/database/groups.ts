@@ -1,7 +1,7 @@
-import { TransactionType } from "../types/prisma.js"
+import type { TransactionType } from "../types/prisma.js"
 import { DBClient } from "./client.js"
-import { Group } from "./generated-models/index.js"
-import { Pick } from "./generated-models/runtime/library.js"
+import type { Group } from "./generated-models/index.js"
+import type { Pick } from "./generated-models/runtime/library.js"
 import type { Request } from "express"
 
 export default class GroupsController {

@@ -1,4 +1,4 @@
-import { OIDCFlowData } from "../helpers/oidc/oidc-flow.js"
+import type { OIDCFlowData } from "../helpers/oidc/oidc-flow.js"
 
 declare module "express-session" {
     interface SessionData {

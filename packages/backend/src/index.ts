@@ -71,7 +71,7 @@ app.use("/", accountRouter)
 const envPort = process.env.PORT
 let port: number
 if (envPort) {
-    port = parseInt(envPort)
+    port = Number.parseInt(envPort)
 } else {
     port = 8080
 }

@@ -1,16 +1,16 @@
-import { OAuthClientController } from "./oauth.js"
-import { AuthorizationCodeWithOriginal } from "../helpers/oidc/authorization-code.js"
+import type { OAuthClientController } from "./oauth.js"
+import type { AuthorizationCodeWithOriginal } from "../helpers/oidc/authorization-code.js"
 import { DBClient } from "./client.js"
 import { createHash, randomBytes } from "crypto"
-import { OAuthToken } from "./generated-models/index.js"
+import type { OAuthToken } from "./generated-models/index.js"
 import { DateTime } from "luxon"
-import { IDToken } from "../types/oidc.js"
+import type { IDToken } from "../types/oidc.js"
 import { getProjectOIDCID } from "../helpers/constants/hostname.js"
 import { JWTSigner } from "../helpers/oidc/jwt.js"
-import { OAuthTokenWrapper } from "./tokens.js"
+import type { OAuthTokenWrapper } from "./tokens.js"
 import { calculateTokenExpiry } from "../helpers/constants/token-duration.js"
 import GroupsController from "./groups.js"
-import { TransactionType } from "../types/prisma.js"
+import type { TransactionType } from "../types/prisma.js"
 
 export class TokenManager {
     userId: string

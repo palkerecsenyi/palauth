@@ -3,7 +3,7 @@ import { authMiddleware } from "../helpers/auth.js"
 import groupsManagementMiddleware, {
     getGroupMiddleware,
 } from "../helpers/groups/groups-middleware.js"
-import {
+import type {
     GroupRequest,
     GroupsManagementRequest,
     ValidatedRequest,

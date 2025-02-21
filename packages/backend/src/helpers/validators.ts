@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express"
+import type { NextFunction, Request, Response } from "express"
 import { matchedData, validationResult } from "express-validator"
 import type { ValidatedRequest } from "../types/express.ts"
 

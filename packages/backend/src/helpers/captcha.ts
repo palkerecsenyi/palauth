@@ -1,7 +1,7 @@
-import { NextFunction, Request, Response } from "express"
+import type { NextFunction, Request, Response } from "express"
 import { getCaptchaAPIKey, getCaptchaURL } from "./constants/secretKeys.js"
 import DevModeSettings from "./constants/devMode.js"
-import axios, { AxiosResponse } from "axios"
+import axios, { type AxiosResponse } from "axios"
 
 export const verifyCaptcha =
     (failureURL: string | ((req: Request) => string)) =>

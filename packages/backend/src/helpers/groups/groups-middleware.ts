@@ -1,5 +1,5 @@
 import type { NextFunction, Response } from "express"
-import {
+import type {
     AuthenticatedRequest,
     GroupRequest,
     GroupsManagementRequest,

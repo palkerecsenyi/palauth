@@ -2,7 +2,7 @@ import type {
     Prisma,
     SecondAuthenticationFactorType,
 } from "../../database/generated-models/index.js"
-import { TransactionType } from "../../types/prisma.js"
+import type { TransactionType } from "../../types/prisma.js"
 
 export type UserWithSecondFactors = Prisma.UserGetPayload<{
     include: { secondFactors: true }

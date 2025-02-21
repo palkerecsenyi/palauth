@@ -1,8 +1,8 @@
-import { Prisma } from "./generated-models/index.js"
+import type { Prisma } from "./generated-models/index.js"
 import { DBClient } from "./client.js"
-import { NextFunction, Response } from "express"
+import type { NextFunction, Response } from "express"
 import { DateTime } from "luxon"
-import { BearerTokenRequest } from "../types/express.js"
+import type { BearerTokenRequest } from "../types/express.js"
 import { UserController } from "./users.js"
 
 type OAuthTokenWrapperData = Prisma.OAuthTokenGetPayload<{

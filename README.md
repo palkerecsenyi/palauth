@@ -41,9 +41,6 @@ Here are some features:
 ## From Docker Hub
 PalAuth is available as `ghcr.io/palkerecsenyi/palauth`. For now, this only has one tag `latest`, with images available for `linux/amd64` and `linux/arm64/v8`.
 
-## On Kubernetes
-As a containerised app, you can easily deploy PalAuth on Kubernetes. The configuration used at auth.palk.me is available in `k8s/deployment.yaml`.
-
 # Configuration
 Currently, PalAuth can be configured through a number of environment variables prefixed with `PAL_`.
 

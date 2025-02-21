@@ -1,12 +1,12 @@
 import express from "express"
 import { authMiddleware } from "../helpers/auth.js"
-import { AuthenticatedRequest } from "../types/express.js"
+import type { AuthenticatedRequest } from "../types/express.js"
 import { UserController } from "../database/users.js"
 import { OAuthClientController } from "../database/oauth.js"
 import TwoFactorController from "../helpers/2fa/2fa.js"
 import { doubleCsrfProtection, generateToken } from "../helpers/csrf.js"
 import { verifyCaptcha } from "../helpers/captcha.js"
-import { RegistrationResponseJSON } from "@simplewebauthn/typescript-types"
+import type { RegistrationResponseJSON } from "@simplewebauthn/typescript-types"
 
 const accountRouter = express.Router()
 accountRouter.use(

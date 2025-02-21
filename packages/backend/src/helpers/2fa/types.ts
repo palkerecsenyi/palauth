@@ -1,5 +1,5 @@
-import TwoFactorSecurityKeyController from "./securityKey.js"
-import TwoFactorTOTPController from "./totp.js"
+import type TwoFactorSecurityKeyController from "./securityKey.js"
+import type TwoFactorTOTPController from "./totp.js"
 
 export type TwoFactorMethodController =
     | typeof TwoFactorSecurityKeyController

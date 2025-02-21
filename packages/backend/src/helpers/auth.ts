@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from "express"
-import { AuthenticatedRequest } from "../types/express.js"
+import type { AuthenticatedRequest } from "../types/express.js"
 import { UserController } from "../database/users.js"
 import { FlowManager } from "./flow.js"
-import { SessionData } from "express-session"
+import type { SessionData } from "express-session"
 
 const sessionGetterSetters = (key: keyof SessionData["signIn"]) => {
     return {

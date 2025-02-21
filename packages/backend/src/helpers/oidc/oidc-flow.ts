@@ -1,16 +1,16 @@
-import { NextFunction, Request, Response } from "express"
-import { OIDCFlowRequest } from "../../types/express.js"
+import type { NextFunction, Request, Response } from "express"
+import type { OIDCFlowRequest } from "../../types/express.js"
 import {
-    OAuthAuthorizationError,
-    OIDCPromptType,
-    OIDCResponseType,
+    type OAuthAuthorizationError,
+    type OIDCPromptType,
+    type OIDCResponseType,
     OIDCResponseTypes,
     OIDCScopes,
 } from "../../types/oidc.js"
 import { DBClient } from "../../database/client.js"
-import { URLSearchParams } from "url"
+import { URLSearchParams } from "node:url"
 import { AuthorizationCode } from "./authorization-code.js"
-import { TransactionType } from "../../types/prisma.js"
+import type { TransactionType } from "../../types/prisma.js"
 import { OAuthClientController } from "../../database/oauth.js"
 import { TokenManager } from "../../database/token-manager.js"
 import { calculateTokenExpiry } from "../constants/token-duration.js"

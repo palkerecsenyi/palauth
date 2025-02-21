@@ -1,4 +1,4 @@
-import { Express } from "express"
+import type { Express } from "express"
 import expressSession from "express-session"
 import { sessionDurationMillis } from "./constants/token-duration.js"
 import { getRedisSecret, getSecretKey } from "./constants/secretKeys.js"

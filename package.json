@@ -1,12 +1,6 @@
 {
-  "name": "@paltiverse/palauth",
-  "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.3",
-    "typescript": "latest"
-  }
+	"name": "@paltiverse/palauth",
+	"version": "1.0.0",
+	"private": true,
+	"workspaces": ["packages/*"]
 }

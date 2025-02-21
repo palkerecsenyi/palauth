@@ -1,7 +1,7 @@
-import express, { Response } from "express"
+import express, { type Response } from "express"
 import { oidcSecretMiddleware } from "../helpers/iam/oidc-middleware.js"
 import { iamMiddleware } from "../helpers/iam/iam-middleware.js"
-import { IAMRequest } from "../types/express.js"
+import type { IAMRequest } from "../types/express.js"
 import bodyParser from "body-parser"
 
 const iamRouter = express.Router()

@@ -1,5 +1,5 @@
 import { PrismaClient } from "./generated-models/index.js"
-import { TransactionType } from "../types/prisma.js"
+import type { TransactionType } from "../types/prisma.js"
 import { PrismaClientKnownRequestError } from "./generated-models/runtime/library.js"
 
 class TransactionInterruptError extends Error {

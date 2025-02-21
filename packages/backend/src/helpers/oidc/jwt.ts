@@ -1,4 +1,4 @@
-import { DateTime, Duration } from "luxon"
+import { DateTime, type Duration } from "luxon"
 import {
     getJWKAlg,
     getJWTPrivateKey,

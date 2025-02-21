@@ -1,5 +1,5 @@
-import { NextFunction, Response } from "express"
-import { OIDCSecretRequest } from "../../types/express.js"
+import type { NextFunction, Response } from "express"
+import type { OIDCSecretRequest } from "../../types/express.js"
 import { OAuthClientController } from "../../database/oauth.js"
 
 export const oidcSecretMiddleware = async (

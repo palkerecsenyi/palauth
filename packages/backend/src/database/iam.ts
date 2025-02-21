@@ -1,6 +1,6 @@
-import { TransactionType } from "../types/prisma.js"
+import type { TransactionType } from "../types/prisma.js"
 import { DBClient } from "./client.js"
-import { Prisma } from "./generated-models/index.js"
+import type { Prisma } from "./generated-models/index.js"
 
 export type IAMControllerRoleType = Prisma.IAMRoleGetPayload<{
     include: { permissions: true }

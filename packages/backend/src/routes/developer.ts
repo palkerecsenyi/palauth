@@ -1,6 +1,6 @@
-import express, { NextFunction, Response } from "express"
+import express, { type NextFunction, type Response } from "express"
 import { authMiddleware } from "../helpers/auth.js"
-import {
+import type {
     AuthenticatedRequest,
     IAMRequest,
     ValidatedRequest,

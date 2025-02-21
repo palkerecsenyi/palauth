@@ -2,15 +2,16 @@ import BaseTwoFactorController from "./general.js"
 import { getProjectHostname, getProjectOIDCID } from "../constants/hostname.js"
 import type { Request } from "express"
 import {
+    type AuthenticatorTransportFuture,
+    type Base64URLString,
     type VerifiedRegistrationResponse,
+    type WebAuthnCredential,
     generateAuthenticationOptions,
     generateRegistrationOptions,
     verifyAuthenticationResponse,
     verifyRegistrationResponse,
 } from "@simplewebauthn/server"
 import type {
-    AuthenticatorDevice,
-    PublicKeyCredentialDescriptorFuture,
     RegistrationResponseJSON,
 } from "@simplewebauthn/typescript-types"
 import type { Pick } from "../../database/generated-models/runtime/library.js"
@@ -26,6 +27,10 @@ type DBAuthenticator = Pick<
     SecondAuthenticationFactor,
     "keyPublicKeyId" | "keyCounter" | "keyPublicKey"
 >
+type AllowedCredential = {
+    id: Base64URLString
+    transports?: AuthenticatorTransportFuture[]
+}
 const keyStorageEncoding: BufferEncoding = "base64url"
 
 export default class TwoFactorSecurityKeyController extends BaseTwoFactorController {
@@ -33,46 +38,36 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         return this.getFactors("SecurityKey")
     }
     private get allowCredentials() {
-        return this.securityKeyFactors.map((f) => {
-            const encodedKeyId = f.keyPublicKeyId
-            if (!encodedKeyId) {
-                return []
-            }
-
-            return {
-                type: "public-key" as const,
-                id: Buffer.from(encodedKeyId, keyStorageEncoding),
-            }
-        }) as PublicKeyCredentialDescriptorFuture[]
+        return this.securityKeyFactors
+            .map((f) => f.keyPublicKeyId)
+            .filter((id) => !!id)
+            .map((id) => {
+                return {
+                    id,
+                } as AllowedCredential
+            })
     }
 
     private static ui8aToString(clientId: Uint8Array) {
         return Buffer.from(clientId).toString(keyStorageEncoding)
     }
 
-    private static authenticatorDataToDB(
-        authenticator: AuthenticatorDevice,
+    private static credentialToDB(
+        credential: WebAuthnCredential,
     ): DBAuthenticator {
         return {
-            keyCounter: authenticator.counter,
-            keyPublicKeyId: TwoFactorSecurityKeyController.ui8aToString(
-                authenticator.credentialID,
-            ),
+            keyCounter: credential.counter,
+            keyPublicKeyId: credential.id,
             keyPublicKey: TwoFactorSecurityKeyController.ui8aToString(
-                authenticator.credentialPublicKey,
+                credential.publicKey,
             ),
         }
     }
-    private static dbToAuthenticatorData(
-        db: DBAuthenticator,
-    ): AuthenticatorDevice {
+    private static dbToCredential(db: DBAuthenticator): WebAuthnCredential {
         return {
             counter: db.keyCounter!,
-            credentialID: Buffer.from(db.keyPublicKeyId!, keyStorageEncoding),
-            credentialPublicKey: Buffer.from(
-                db.keyPublicKey!,
-                keyStorageEncoding,
-            ),
+            id: db.keyPublicKeyId!,
+            publicKey: Buffer.from(db.keyPublicKey!, keyStorageEncoding),
         }
     }
 
@@ -97,7 +92,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
 
     static async generateKeyAuthenticationOptions(
         req: Request,
-        allowCredentials: PublicKeyCredentialDescriptorFuture[],
+        allowCredentials: AllowedCredential[],
         passkey: boolean,
     ) {
         const options = await generateAuthenticationOptions({
@@ -190,10 +185,8 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
             expectedChallenge: clientChallenge,
             expectedOrigin: rpOrigin,
             expectedRPID: rpID,
-            authenticator:
-                TwoFactorSecurityKeyController.dbToAuthenticatorData(
-                    matchingKey,
-                ),
+            credential:
+                TwoFactorSecurityKeyController.dbToCredential(matchingKey),
             requireUserVerification: passkey,
         })
 
@@ -216,7 +209,7 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         const options = await generateRegistrationOptions({
             rpName,
             rpID,
-            userID: this.user.id,
+            userID: Buffer.from(this.user.id, keyStorageEncoding),
             userName: this.user.displayName,
             attestationType: "none",
             authenticatorSelection: passkey
@@ -274,8 +267,8 @@ export default class TwoFactorSecurityKeyController extends BaseTwoFactorControl
         }
 
         const dbAuthenticatorData =
-            TwoFactorSecurityKeyController.authenticatorDataToDB(
-                registrationInfo,
+            TwoFactorSecurityKeyController.credentialToDB(
+                registrationInfo.credential,
             )
         if (dbAuthenticatorData.keyPublicKeyId === null) {
             throw new TypeError("keyPublicKeyId should not have been null")

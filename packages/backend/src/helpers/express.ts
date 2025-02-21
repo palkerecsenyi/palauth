@@ -1,4 +1,4 @@
-import { Request } from "express"
+import type { Request } from "express"
 
 export const valueFromQueryOrBody = (req: Request, key: string) => {
     let val: unknown

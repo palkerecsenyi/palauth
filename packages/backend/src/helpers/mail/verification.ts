@@ -1,10 +1,10 @@
-import { $Enums, Prisma } from "../../database/generated-models/index.js"
+import type { $Enums, Prisma } from "../../database/generated-models/index.js"
 import { DBClient } from "../../database/client.js"
 import { DateTime } from "luxon"
 import { EmailMessage } from "./message.js"
-import { TransactionType } from "../../types/prisma.js"
-import { randomInt } from "crypto"
-import { ValidatedRequest } from "../../types/express.js"
+import type { TransactionType } from "../../types/prisma.js"
+import { randomInt } from "node:crypto"
+import type { ValidatedRequest } from "../../types/express.js"
 
 class VerificationEmailMessage extends EmailMessage {
     constructor(code: string, to: string) {

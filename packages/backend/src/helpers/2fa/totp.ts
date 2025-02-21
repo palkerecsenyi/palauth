@@ -1,4 +1,4 @@
-import { Request } from "express"
+import type { Request } from "express"
 import BaseTwoFactorController from "./general.js"
 import speakeasy from "speakeasy"
 import QRCode from "qrcode"

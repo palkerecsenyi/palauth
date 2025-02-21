@@ -1,6 +1,6 @@
 // @ts-ignore
 import { doubleCsrf } from "csrf-csrf"
-import { Request } from "express"
+import type { Request } from "express"
 import { getSecretKey } from "./constants/secretKeys.js"
 import DevModeSettings from "./constants/devMode.js"
 

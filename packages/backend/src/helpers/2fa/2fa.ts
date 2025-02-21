@@ -1,9 +1,11 @@
-import { TransactionType } from "../../types/prisma.js"
-import { AuthenticatedRequest } from "../../types/express.js"
+import type { TransactionType } from "../../types/prisma.js"
+import type { AuthenticatedRequest } from "../../types/express.js"
 import { DBClient } from "../../database/client.js"
-import BaseTwoFactorController, { UserWithSecondFactors } from "./general.js"
+import BaseTwoFactorController, {
+    type UserWithSecondFactors,
+} from "./general.js"
 import TwoFactorSecurityKeyController from "./securityKey.js"
-import { $Enums } from "../../database/generated-models/index.js"
+import type { $Enums } from "../../database/generated-models/index.js"
 import TwoFactorTOTPController from "./totp.js"
 import type {
     TwoFactorMethodController,

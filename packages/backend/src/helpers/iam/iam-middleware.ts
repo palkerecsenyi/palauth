@@ -1,4 +1,4 @@
-import { NextFunction, Response } from "express"
+import type { NextFunction, Response } from "express"
 import type { IAMRequest, OIDCSecretRequest } from "../../types/express.js"
 import IAMController from "../../database/iam.js"
 

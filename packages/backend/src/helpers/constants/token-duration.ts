@@ -1,4 +1,4 @@
-import { OAuthTokenType } from "../../database/generated-models/index.js"
+import type { OAuthTokenType } from "../../database/generated-models/index.js"
 import { DateTime, Duration } from "luxon"
 
 export const sessionDurationMillis = () => 1 * 60 * 60 * 1000

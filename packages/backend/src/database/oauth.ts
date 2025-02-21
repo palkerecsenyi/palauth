@@ -1,10 +1,10 @@
-import { OAuthClient, Prisma } from "./generated-models/index.js"
+import type { OAuthClient, Prisma } from "./generated-models/index.js"
 import { DBClient } from "./client.js"
 import argon2 from "argon2"
 import { TokenManager } from "./token-manager.js"
-import { TransactionType } from "../types/prisma.js"
-import { Request, Response } from "express"
-import { OAuthAccessTokenResponse } from "../types/oidc.js"
+import type { TransactionType } from "../types/prisma.js"
+import type { Request, Response } from "express"
+import type { OAuthAccessTokenResponse } from "../types/oidc.js"
 import { getProjectOIDCID } from "../helpers/constants/hostname.js"
 
 export type OAuthControllerClient = Prisma.OAuthClientGetPayload<{

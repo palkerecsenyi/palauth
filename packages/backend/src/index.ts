@@ -46,6 +46,7 @@ app.use(
     }),
 )
 app.use(cookieParser())
+// @ts-ignore Strange bug with typings: https://github.com/expressjs/express/issues/5987
 app.use(flash())
 app.use((req, res, next) => {
     res.locals.messages = req.flash()

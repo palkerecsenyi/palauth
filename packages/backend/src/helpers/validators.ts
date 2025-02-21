@@ -8,7 +8,7 @@ export const ensureValidators =
         const result = validationResult(req)
 
         if (result.isEmpty()) {
-            req.validatedData = matchedData(req)
+            req.validatedData = matchedData(req) as Record<string, string>
             next()
             return
         }
